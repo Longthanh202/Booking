@@ -1,6 +1,7 @@
 ﻿using Container_App.Core.Interface.RefreshTokens;
 using Container_App.Core.Model.RefreshTokens;
 using Container_App.Core.Model.TienIchs;
+using Container_App.Core.Model.Users;
 using Container_App.Data.Connection;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,25 @@ namespace Container_App.Service.Services.RefreshTokens
         {
             _executor = executor;
         }
+
+        public async Task<RefreshToken> CheckStatusefreshToken(string token)
+        {
+            try
+            {
+                var arr = new[]
+                {
+                    new SqlParameter("@Token", token)
+                };
+                return await _executor.QuerySingleAsync<RefreshToken>("sp_CheckStatusRefreshToken", arr);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message, "Error when CheckStatusefreshToken");
+
+                throw;
+            }
+        }
+
         public async Task<int> InsertRefreshToken(RefreshToken refreshToken)
         {
             try

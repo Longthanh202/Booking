@@ -48,28 +48,66 @@ namespace Container_App.Controllers
         [Route("api/login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            // 1. Kiểm tra đầu vào
             if (string.IsNullOrEmpty(dto.username) || string.IsNullOrEmpty(dto.password))
             {
                 return BadRequest(new { status = false, message = "Username hoặc Password không được để trống" });
             }
 
-            // 2. Xác thực người dùng
             var user = await _userServices.Login(dto.username, dto.password);
             if (user == null)
             {
                 return Unauthorized(new { status = false, message = "Tên đăng nhập hoặc mật khẩu không chính xác" });
             }
+            var token = GenerateToken(user);
+            var refreshToken = GenerateRefreshToken();
 
-            // 3. Xử lý Cache Quyền hạn (Phải theo UserId)
-            var cacheKey = $"Permission_Role_{user.RoleId}";
-            List<Permission> permissions;
-            if (!_memoryCache.TryGetValue(cacheKey, out List<string> permissionKeys))
+            await _refreshTokenService.InsertRefreshToken(new RefreshToken
             {
-                permissions = (await _permissionServices.GetListPermissionByUser(user.Id)).ToList();
+                UserId = user.Id,
+                Token = refreshToken,
+                ExpireDate = 30,
+                FullName = user.FullName,
+                RoleId = user.RoleId,
+                RoleName = user.RoleName,
+            });
+
+            Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTime.UtcNow.AddDays(30)
+            });
+
+            return Ok(new
+            {
+                status = true,
+                token = token,
+                message = "Đăng nhập thành công"
+            });
+        }
+
+        [HttpGet]
+        [Route("api/me")]
+        public async Task<IActionResult> GetProfile()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var roleId = User.FindFirst(ClaimTypes.Role)?.Value;
+
+            if (userId == null || roleId == null)
+            {
+                return Unauthorized();
+            }
+
+            var cacheKey = $"Permission_Role_{roleId}";
+            List<string> permissionKeys;
+
+            if (!_memoryCache.TryGetValue(cacheKey, out permissionKeys))
+            {
+                var permissions = (await _permissionServices.GetListPermissionByUser(Guid.Parse(userId))).ToList();
 
                 permissionKeys = permissions
-                    .Select(p => $"{p.ResourceName.ToUpper()}_{p.Action.ToUpper()}")
+                    .Select(p => $"{p.ResourceName.ToLower()}_{p.Action.ToLower()}")
                     .ToList();
 
                 _memoryCache.Set(cacheKey, permissionKeys, new MemoryCacheEntryOptions
@@ -79,58 +117,37 @@ namespace Container_App.Controllers
                 });
             }
 
+            var user = await _userServices.GetById(Guid.Parse(userId));
 
-            // 4. Tạo Token
-            var token = GenerateToken(user);
-            var refreshToken = GenerateRefreshToken();
-
-            int insertRefreshToken = await _refreshTokenService.InsertRefreshToken(
-                new RefreshToken
-                {
-                    UserId = user.Id,
-                    Token = refreshToken,
-                    ExpireDate = 30
-                });
-            if(insertRefreshToken != -1)
-            {
-                Response.Cookies.Append("refreshToken", refreshToken, new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = true,
-                    SameSite = SameSiteMode.Strict,
-                    Expires = DateTime.UtcNow.AddDays(30)
-                });
-            }
-
-            // 5. Trả về kết quả
             return Ok(new
             {
-                status = true,
-                Token = token,
-                RefreshToken = refreshToken,
-                FullName = user.FullName,
-                Permissions = permissionKeys,
-                message = "Đăng nhập thành công"
+                fullName = user.FullName,
+                permissions = permissionKeys
             });
         }
 
         [HttpPost("refresh-token")]
-        public IActionResult RefreshToken()
+        public async Task<IActionResult> RefreshToken()
         {
             if (!Request.Cookies.TryGetValue("refreshToken", out var refreshToken))
                 return Unauthorized();
 
-            // TODO: Kiểm tra refreshToken trong Database (nếu dùng rotation)
-            // Ở đây demo đơn giản, giả sử hợp lệ
+            var existingToken = await _refreshTokenService.CheckStatusefreshToken(refreshToken);
+            if(existingToken == null)
+                return Unauthorized();
 
-            //var newAccessToken = GenerateToken();
-            var newRefreshToken = GenerateRefreshToken();
+            var newAccessToken = GenerateToken(new UserProfile
+            {
+                Id = existingToken.UserId,
+                FullName = existingToken.FullName,
+                RoleId = existingToken.RoleId,
+                RoleName = existingToken.RoleName
+            });
         
-
-            return Ok(new { });
+            return Ok(new { token = newAccessToken });
         }
 
-        [HasPermission("User", "insert")]
+        [HasPermission("user", "insert")]
         [HttpPost]
         [Route("api/insert-user")]
         public async Task<IActionResult> Insert([FromBody] UserProfile u)

@@ -164,7 +164,7 @@ go
 
 
 
-create proc sp_LayDanhSachKhachSanAdmin
+alter proc sp_LayDanhSachKhachSanAdmin
  @Keyword nvarchar(255),
  @ThanhPho nvarchar(255),
  @ViDo float,
@@ -181,8 +181,8 @@ create proc sp_LayDanhSachKhachSanAdmin
 	SET @sql = N'
         SELECT  *
         FROM (
-            SELECT ks.Id, ks.TenKhachSan, ks.Mota, ks.DiaChi, 
-			ks.ThanhPho, ks.KinhDo, ks.ViDo, ks.SoSao,
+            SELECT ks.Id, ks.TenKhachSan, ks.DiaChi, 
+			ks.ThanhPho, ks.SoSao,
 			convert(nvarchar(10), ks.GioNhanPhong, 108) as GioNhanPhong, 
 			convert(nvarchar(10), ks.GioTraPhong, 108) as GioTraPhong, 
 			ks.TrangThai, up.FullName,
@@ -236,7 +236,7 @@ create proc sp_LayDanhSachKhachSanAdmin
 END;
 go
 
-create proc sp_LayDanhSachKhachSanOwner
+alter proc sp_LayDanhSachKhachSanOwner
  @Keyword nvarchar(255),
  @ThanhPho nvarchar(255),
  @ViDo float,
@@ -254,8 +254,8 @@ create proc sp_LayDanhSachKhachSanOwner
 	SET @sql = N'
         SELECT  *
         FROM (
-            SELECT ks.Id, ks.TenKhachSan, ks.Mota, ks.DiaChi, 
-			ks.ThanhPho, ks.KinhDo, ks.ViDo, ks.SoSao,
+            SELECT ks.Id, ks.TenKhachSan, ks.DiaChi, 
+			ks.ThanhPho, ks.SoSao,
 			convert(nvarchar(10), ks.GioNhanPhong, 108) as GioNhanPhong, 
 			convert(nvarchar(10), ks.GioTraPhong, 108) as GioTraPhong, 
 			ks.TrangThai, up.FullName,
@@ -384,3 +384,237 @@ begin
           @EndRow   INT',
         @Keyword, @IsActive, @StartRow, @EndRow;
 end;
+go
+
+create proc sp_GetProfile
+@Id uniqueidentifier
+as
+begin
+	select Id, FullName, Phone, Email, Address from UserProfile where UserLoginId = @Id
+end
+
+go
+
+create proc sp_CheckStatusRefreshToken
+@Token nvarchar(100)
+as
+begin
+	select Id, UserId, FullName, RoleId, RoleName
+	from RefreshToken 
+	where Status = 1
+	and DATEADD(DAY, ExpiryDate, CreatedDate) > GETDATE()
+	and Token = @Token
+end
+go
+
+ALTER PROC sp_FilterHotel
+    @Keyword NVARCHAR(255) = NULL,
+    @ProvinceCode INT = NULL,
+    @SoKhach INT = NULL,
+    @NgayNhanPhong DATE = NULL,
+    @NgayTraPhong DATE = NULL,
+    @StartRow INT = 1,
+    @EndRow INT = 10
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @CheckIn DATETIME = NULL;
+    DECLARE @CheckOut DATETIME = NULL;
+
+    IF @NgayNhanPhong IS NOT NULL
+        SET @CheckIn = DATEADD(HOUR, 14, CAST(@NgayNhanPhong AS DATETIME));
+
+    IF @NgayTraPhong IS NOT NULL
+        SET @CheckOut = DATEADD(HOUR, 11, CAST(@NgayTraPhong AS DATETIME));
+
+    SELECT *
+    FROM
+    (
+        SELECT 
+            ks.Id,
+            ks.TenKhachSan,
+            ks.DiaChi,
+            ks.ThanhPho,
+            ks.SoSao,
+
+            MIN(gp.Gia) AS GiaThapNhat,
+
+            COUNT(DISTINCT p.Id) AS TongSoPhong,
+
+            ISNULL(qc.DiemUuTien, 0) AS DiemUuTien,
+
+            ROW_NUMBER() OVER
+            (
+                ORDER BY 
+                    ISNULL(qc.DiemUuTien, 0) DESC,
+                    ks.NgayTao DESC
+            ) AS RowNum,
+
+            COUNT(*) OVER() AS TotalRow
+
+        FROM KhachSan ks
+
+        LEFT JOIN KhachSanQuangCao qc
+            ON ks.Id = qc.KhachSanId
+            AND qc.TrangThai = 'active'
+            AND GETDATE() BETWEEN qc.NgayBatDau AND qc.NgayKetThuc
+
+        JOIN LoaiPhong lp 
+            ON lp.KhachSanId = ks.Id
+
+        JOIN Phong p 
+            ON p.LoaiPhongId = lp.Id
+
+        OUTER APPLY
+        (
+            SELECT TOP 1 gp.Gia
+            FROM GiaPhong gp
+            WHERE gp.LoaiPhongId = lp.Id
+            ORDER BY gp.Ngay DESC
+        ) gp
+
+        WHERE 1 = 1
+
+        AND (
+            @Keyword IS NULL 
+            OR ks.TenKhachSan LIKE @Keyword + '%'
+        )
+
+        AND (
+            @ProvinceCode IS NULL 
+            OR ks.ThanhPho = @ProvinceCode
+        )
+
+        AND (
+            @SoKhach IS NULL 
+            OR lp.SoKhachToiDa >= @SoKhach
+        )
+
+        -- CHECK HOTEL CÒN ÍT NHẤT 1 PHÒNG TRỐNG
+        AND (
+            @NgayNhanPhong IS NULL
+            OR @NgayTraPhong IS NULL
+            OR EXISTS
+            (
+                SELECT 1
+                FROM Phong p2
+                JOIN LoaiPhong lp2 
+                    ON p2.LoaiPhongId = lp2.Id
+
+                WHERE lp2.KhachSanId = ks.Id
+
+                AND (
+                    @SoKhach IS NULL
+                    OR lp2.SoKhachToiDa >= @SoKhach
+                )
+
+                AND NOT EXISTS
+                (
+                    SELECT 1
+                    FROM DatPhong dp
+                    WHERE dp.PhongId = p2.Id
+                      AND dp.TrangThai IN ('da_dat', 'cho_thanh_toan')
+                      AND dp.NgayNhanPhong < @CheckOut
+                      AND dp.NgayTraPhong > @CheckIn
+                )
+            )
+        )
+
+        GROUP BY 
+            ks.Id,
+            ks.TenKhachSan,
+            ks.DiaChi,
+            ks.ThanhPho,
+            ks.SoSao,
+            ks.NgayTao,
+            qc.DiemUuTien
+
+    ) AS T
+
+    WHERE RowNum BETWEEN @StartRow AND @EndRow
+
+    ORDER BY RowNum;
+
+END
+go
+
+CREATE PROC sp_GetAvailableRooms
+    @KhachSanId uniqueidentifier,
+    @NgayNhanPhong DATE,
+    @NgayTraPhong DATE,
+    @SoKhach INT = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    DECLARE @CheckIn DATETIME;
+    DECLARE @CheckOut DATETIME;
+
+    SET @CheckIn = DATEADD(HOUR, 14, CAST(@NgayNhanPhong AS DATETIME));
+    SET @CheckOut = DATEADD(HOUR, 11, CAST(@NgayTraPhong AS DATETIME));
+
+    SELECT 
+        p.Id AS PhongId,
+        p.SoPhong,
+
+        lp.Id AS LoaiPhongId,
+        lp.TenLoaiPhong,
+        lp.SoKhachToiDa,
+
+        gp.Gia,
+
+        ks.Id AS KhachSanId,
+        ks.TenKhachSan
+
+    FROM Phong p
+
+    JOIN LoaiPhong lp
+        ON p.LoaiPhongId = lp.Id
+
+    JOIN KhachSan ks
+        ON lp.KhachSanId = ks.Id
+
+    OUTER APPLY
+    (
+        SELECT TOP 1 gp.Gia
+        FROM GiaPhong gp
+        WHERE gp.LoaiPhongId = lp.Id
+        ORDER BY gp.Ngay DESC
+    ) gp
+
+    WHERE ks.Id = @KhachSanId
+
+    AND (@SoKhach IS NULL 
+         OR lp.SoKhachToiDa >= @SoKhach)
+
+    AND NOT EXISTS
+    (
+        SELECT 1
+        FROM DatPhong dp
+        WHERE dp.PhongId = p.Id
+          AND dp.TrangThai IN ('da_dat', 'cho_thanh_toan')
+          AND dp.NgayNhanPhong < @CheckOut
+          AND dp.NgayTraPhong > @CheckIn
+    )
+
+    ORDER BY gp.Gia ASC;
+
+END
+go
+
+CREATE PROC sp_GetHotelImages
+    @HotelIds HotelIdList READONLY
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT
+        img.KhachSanId,
+        img.Url
+    FROM KhachSanImages img
+    JOIN @HotelIds ids
+        ON img.KhachSanId = ids.Id
+END
+
+select * from KhachSanImages

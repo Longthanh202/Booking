@@ -10,5 +10,6 @@ namespace Container_App.Core.Interface.RefreshTokens
     public interface IRefreshTokenService
     {
         Task<int> InsertRefreshToken(RefreshToken refreshToken);
+        Task<RefreshToken> CheckStatusefreshToken(string token);
     }
 }

@@ -1,4 +1,5 @@
-﻿using Container_App.Common.Shared;
+﻿using CloudinaryDotNet.Actions;
+using Container_App.Common.Shared;
 using Container_App.Core.Interface.KhachSans;
 using Container_App.Core.Model.KhachSans;
 using Container_App.Data.Connection;
@@ -18,6 +19,36 @@ namespace Container_App.Service.Services.KhachSans
         public KhachSanService(IStoredProcedureExecutor executor)
         {
             _executor = executor;
+        }
+
+        public async Task<IEnumerable<KhachSan>> FilterHotels(string? keyword,
+    int? provinceCode,
+    int? soKhach,
+    DateTime? ngayNhanPhong,
+    DateTime? ngayTraPhong,
+    int startRow,
+    int endRow)
+        {
+            try
+            {
+                var arr = new SqlParameter[]
+                {
+                    new SqlParameter("@Keyword",   SqlDbType.NVarChar, 255) { Value = (object?)keyword   ?? DBNull.Value },
+                    new SqlParameter("@ProvinceCode",  SqlDbType.Int) { Value = (object?)provinceCode  ?? DBNull.Value },
+                    new SqlParameter("@SoKhach",      SqlDbType.Int)         { Value = (object?)soKhach      ?? DBNull.Value },
+                    new SqlParameter("@NgayNhanPhong",    SqlDbType.Date)         { Value = (object?)ngayNhanPhong    ?? DBNull.Value },
+                    new SqlParameter("@NgayTraPhong",    SqlDbType.Date)         { Value = (object?)ngayTraPhong    ?? DBNull.Value },
+                    new SqlParameter("@StartRow",  SqlDbType.Int)           { Value = startRow },
+                    new SqlParameter("@EndRow",    SqlDbType.Int)           { Value = endRow }
+                };
+                return await _executor.QueryAsync<KhachSan>("sp_FilterHotel", arr);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error when FilterHotels: {ex.Message}");
+
+                return Enumerable.Empty<KhachSan>();
+            }
         }
 
         public async Task<IEnumerable<KhachSan>> LayDanhSachKhachSanAdmin(string keyword, string thanhPho, double viDo, double kinhDo, int soSao, string trangThai, int startRow, int endRow)
@@ -76,7 +107,7 @@ namespace Container_App.Service.Services.KhachSans
             try
             {
                 var tb = new DataTable();
-                tb.Columns.Add("Url", typeof(string));              
+                tb.Columns.Add("Url", typeof(string));
                 foreach (var item in ks.Urls)
                 {
                     tb.Rows.Add(item);

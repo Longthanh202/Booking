@@ -37,7 +37,7 @@ namespace Container_App.Controllers
             _cloudinaryService = cloudinaryService;
         }
 
-        [HasPermission("KHACHSAN", "INSERT")]
+        [HasPermission("khachsan", "insert")]
         [HttpPost]
         [Route("api/khachsan/tao")]
         public async Task<IActionResult> TaoKhachSan([FromForm] KhachSanCreateDto dto)
@@ -122,7 +122,7 @@ namespace Container_App.Controllers
             return BadRequest(new { Message = "Thêm phòng thất bại" });
         }
 
-        [HasPermission("KHACHSAN", "VIEW")]
+        [HasPermission("khachsan", "view")]
         [HttpPost]
         [Route("api/khachsans/get")]
         public async Task<IActionResult> GetKhachSans([FromBody] KhachSanFilterDto dto)
@@ -152,30 +152,9 @@ namespace Container_App.Controllers
                dto.SoSao, dto.TrangThai, Guid.Parse(userId), startRow, endRow);
             }
 
-            var listKhachSanResponse = khachSans.Select(kh => new
-            {
-                kh.Id,
-                kh.TenKhachSan,
-                kh.ThanhPho,
-                kh.DiaChi,
-                kh.GioNhanPhong,
-                kh.GioTraPhong,
-                kh.SoSao,
-                kh.TrangThai,
-                kh.FullName,
-            }).ToList();
             int totalRow = khachSans.FirstOrDefault()?.TotalRow ?? 0;
             int totalPage = Paginations.GetTotalPages(totalRow, PAGE_SIZE);
-            return Ok(new { Data = listKhachSanResponse, TotalPage = totalPage });
-        }
-
-        [HttpPost]
-        [Route("api/upload")]
-        public async Task<IActionResult> Upload(IFormFile file)
-        {
-            var url = await _cloudinaryService.UploadImageAsync(file);
-
-            return Ok(new { imageUrl = url });
+            return Ok(new { Data = khachSans, TotalPage = totalPage });
         }
     }
 }

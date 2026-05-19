@@ -220,6 +220,12 @@ create table KhachSanQuangCao
 	CreatedDate datetime
 )
 
+alter table DatPhong
+add PhongId uniqueidentifier
+
+alter table Phong
+add KhachSanId uniqueidentifier
+
 
 SELECT *
 FROM KhachSan ks
