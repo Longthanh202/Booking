@@ -9,6 +9,7 @@ using Container_App.Core.Interface.RolePermissions;
 using Container_App.Core.Interface.TienIchs;
 using Container_App.Core.Interface.Users;
 using Container_App.Data.Connection;
+using Container_App.Middleware;
 using Container_App.Service.Services.Banners;
 using Container_App.Service.Services.Cloudinarys;
 using Container_App.Service.Services.KhachSans;
@@ -56,6 +57,7 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddScoped<CloudinaryService>();
 builder.Services.AddScoped<IBannerService, BannerService>();
+builder.Services.AddScoped<IKhachSanImageService, KhachSanImageService>();
 #endregion
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
@@ -147,7 +149,6 @@ builder.Services.AddMemoryCache();
 
 
 var app = builder.Build();
-app.UseCors("AllowAll");
 
 if (app.Environment.IsDevelopment())
 {
@@ -159,7 +160,10 @@ if (app.Environment.IsDevelopment())
 }
 
 //app.UseHttpsRedirection(); // Đặt trước UseRouting // bỏ chạy http thâu
+app.UseMiddleware<ExceptionMiddleware>();
 app.UseRouting();
+
+app.UseCors("AllowAll");
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -168,6 +172,7 @@ app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers(); // Không cần gọi MapControllers ở đây
 });
+
 
 //Thêm đoạn code này nếu muốn chạy code first
 //using (var scope = app.Services.CreateScope())

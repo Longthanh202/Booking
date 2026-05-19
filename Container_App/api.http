@@ -1,5 +1,5 @@
 ﻿@baseUrl = http://localhost:5925
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImNkYzM5NGJjLWNjOGQtNGZhMS1iODkwLWE3YTUwOWFlN2UzZSIsIkZ1bGxOYW1lIjoiTMOqIFRow6BuaCBMb25nIiwiUm9sZUlkIjoiOTBiNTU5NWUtOTZhMC00MzJkLWEwNTAtODVmOTY0ZDk5ZDIzIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQWRtaW4iLCJleHAiOjE3NzU4MDEyNjksImlzcyI6ImNvbnRhaW5lci1hcHAiLCJhdWQiOiJjb250YWluZXItY2xpZW50In0.LLDS-SdHL3pRx35SeuwJBnyB1Bm4FYe1r5mdRx5oD5Y
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImNkYzM5NGJjLWNjOGQtNGZhMS1iODkwLWE3YTUwOWFlN2UzZSIsIkZ1bGxOYW1lIjoiTMOqIFRow6BuaCBMb25nIiwiUm9sZUlkIjoiOTBiNTU5NWUtOTZhMC00MzJkLWEwNTAtODVmOTY0ZDk5ZDIzIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQWRtaW4iLCJleHAiOjE3NzkxMjcwMjIsImlzcyI6ImNvbnRhaW5lci1hcHAiLCJhdWQiOiJjb250YWluZXItY2xpZW50In0.ZwoHiAFl-xAw9P89xwxOnp6zk0Fyp2Meu18aOMtfyP0
 ### Login
 POST {{baseUrl}}/api/login
 Content-Type: application/json
@@ -7,6 +7,10 @@ Content-Type: application/json
   "username": "longlt",
   "password": "123"
 }
+
+### Get Profile
+GET {{baseUrl}}/api/me
+Authorization: Bearer {{token}}
 
 ### Insert-User
 POST {{baseUrl}}/api/insert-user
@@ -82,5 +86,18 @@ Authorization: Bearer {{token}}
   "KinhDo": null,
   "SoSao": 0,
   "TrangThai": null,
+  "Page": 1
+}
+
+### Filter hotels
+POST {{baseUrl}}/api/khachsans/filter
+Content-Type: application/json
+
+{
+  "Keyword": null,
+  "ProvinceCode": null,
+  "SoKhach": 2,
+  "NgayNhanPhong": "2026-05-20",
+  "NgayTraPhong": "2026-05-21",
   "Page": 1
 }

@@ -19,7 +19,25 @@ namespace Container_App.Service.Services.Users
         {
             _executor = executor;
         }
-        
+
+        public async Task<UserProfile> GetById(Guid id)
+        {
+            try
+            {
+                var arr = new[]
+                {
+                    new SqlParameter("@Id", id)
+                };
+                return await _executor.QuerySingleAsync<UserProfile>("sp_GetProfile", arr);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message, "Error when GetById");
+
+                throw;
+            }
+        }
+
         public async Task<int> Insert(UserProfile user)
         {
             try

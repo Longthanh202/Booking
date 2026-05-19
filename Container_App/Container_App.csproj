@@ -39,8 +39,4 @@
     <ProjectReference Include="..\Container_App.Service\Container_App.Service.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Middleware\" />
-  </ItemGroup>
-
 </Project>
