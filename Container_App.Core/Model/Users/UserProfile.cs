@@ -24,7 +24,7 @@ namespace Container_App.Core.Model.Users
         public Guid? CreateBy { get; set; }
         public Guid UserLoginId { get; set; }
         public Guid RoleId { get; set; }
-        public string RoleName { get; set; }
+        public string? RoleName { get; set; }
     }
 
     public class Role

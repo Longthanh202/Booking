@@ -24,17 +24,19 @@ namespace Container_App.Controllers
         private readonly ILoaiPhongService _loaiPhongService;
         private readonly IPhongService _phongService;
         private readonly CloudinaryService _cloudinaryService;
+        private readonly IUserServices _userService;
 
         const int PAGE_SIZE = 10;
         public KhachSanController(IKhachSanService khachSanService, ITienIchService tienIchService,
-            ILoaiPhongService loaiPhongService, IPhongService phongService, CloudinaryService cloudinaryService
-            )
+            ILoaiPhongService loaiPhongService, IPhongService phongService, CloudinaryService cloudinaryService, 
+            IUserServices userService)
         {
             _khachSanService = khachSanService;
             _tienIchService = tienIchService;
             _loaiPhongService = loaiPhongService;
             _phongService = phongService;
             _cloudinaryService = cloudinaryService;
+            _userService = userService;
         }
 
         [HasPermission("khachsan", "insert")]
@@ -101,7 +103,13 @@ namespace Container_App.Controllers
         [Route("api/loaiphong/tao")]
         public async Task<IActionResult> ThemLoaiPhong([FromBody] LoaiPhong dto)
         {
-
+            if (!_userService.IsAuthenticated())
+            {
+                return Unauthorized(new
+                {
+                    message = "Vui lòng đăng nhập"
+                });
+            }
             int insert = await _loaiPhongService.TaoLoaiPhong(dto);
             if (insert != -1)
             {

@@ -1,5 +1,5 @@
 ﻿@baseUrl = http://localhost:5925
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImNkYzM5NGJjLWNjOGQtNGZhMS1iODkwLWE3YTUwOWFlN2UzZSIsIkZ1bGxOYW1lIjoiTMOqIFRow6BuaCBMb25nIiwiUm9sZUlkIjoiOTBiNTU5NWUtOTZhMC00MzJkLWEwNTAtODVmOTY0ZDk5ZDIzIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQWRtaW4iLCJleHAiOjE3NzkxMjcwMjIsImlzcyI6ImNvbnRhaW5lci1hcHAiLCJhdWQiOiJjb250YWluZXItY2xpZW50In0.ZwoHiAFl-xAw9P89xwxOnp6zk0Fyp2Meu18aOMtfyP0
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImNkYzM5NGJjLWNjOGQtNGZhMS1iODkwLWE3YTUwOWFlN2UzZSIsIkZ1bGxOYW1lIjoiTMOqIFRow6BuaCBMb25nIiwiUm9sZUlkIjoiOTBiNTU5NWUtOTZhMC00MzJkLWEwNTAtODVmOTY0ZDk5ZDIzIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQWRtaW4iLCJleHAiOjE3ODExNTU0ODQsImlzcyI6ImNvbnRhaW5lci1hcHAiLCJhdWQiOiJjb250YWluZXItY2xpZW50In0.QgBjl8_EO1VRKcTvM4Ka0QKgjNDYf6HNGE5ls1MquTQ
 ### Login
 POST {{baseUrl}}/api/login
 Content-Type: application/json
@@ -56,8 +56,9 @@ Content-Type: application/json
 ### Thêm Loại Phòng
 POST {{baseUrl}}/api/loaiphong/tao
 Content-Type: application/json
+Authorization: Bearer {{token}}
 {
-  "KhachSanId": "43DB82C5-1719-4E21-99A2-3FA278C19CCF",
+  "KhachSanId": "9C18E5C1-F42F-48E9-8874-143CAA75A563",
   "TenLoaiPhong": "Phòng Đơn",
   "SoKhachToiDa": 2,
   "KieuGiuong": "Giường đơn",
@@ -68,7 +69,7 @@ Content-Type: application/json
 POST {{baseUrl}}/api/phong/tao
 Content-Type: application/json
 {
-  "LoaiPhongId": "841D6A63-B470-4BE6-9011-6E916CE1DB7D",
+  "LoaiPhongId": "ED79E281-6A60-455D-92B9-F5B99478A3B5",
   "SoPhong": "01",
   "Tang": 1,
   "TrangThai": "san_sang"

@@ -22,12 +22,12 @@ namespace Container_App.Service.Services.KhachSans
         }
 
         public async Task<IEnumerable<KhachSan>> FilterHotels(string? keyword,
-    int? provinceCode,
-    int? soKhach,
-    DateTime? ngayNhanPhong,
-    DateTime? ngayTraPhong,
-    int startRow,
-    int endRow)
+            int? provinceCode,
+            int? soKhach,
+            DateTime? ngayNhanPhong,
+            DateTime? ngayTraPhong,
+            int startRow,
+            int endRow)
         {
             try
             {

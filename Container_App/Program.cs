@@ -1,21 +1,30 @@
 ﻿using Container_App.Common.Config;
 using Container_App.Core.Interface.Banners;
+using Container_App.Core.Interface.DatPhongs;
+using Container_App.Core.Interface.Emails;
 using Container_App.Core.Interface.KhachSans;
 using Container_App.Core.Interface.LoaiPhongs;
 using Container_App.Core.Interface.Permissions;
 using Container_App.Core.Interface.Phongs;
+using Container_App.Core.Interface.Provinces;
+using Container_App.Core.Interface.RabbitMQ;
 using Container_App.Core.Interface.RefreshTokens;
 using Container_App.Core.Interface.RolePermissions;
 using Container_App.Core.Interface.TienIchs;
 using Container_App.Core.Interface.Users;
+using Container_App.Core.Model.Email;
 using Container_App.Data.Connection;
 using Container_App.Middleware;
 using Container_App.Service.Services.Banners;
 using Container_App.Service.Services.Cloudinarys;
+using Container_App.Service.Services.DatPhongs;
+using Container_App.Service.Services.Emails;
 using Container_App.Service.Services.KhachSans;
 using Container_App.Service.Services.LoaiPhongs;
 using Container_App.Service.Services.Permissions;
 using Container_App.Service.Services.Phongs;
+using Container_App.Service.Services.Provinces;
+using Container_App.Service.Services.RabbitMQ;
 using Container_App.Service.Services.RefreshTokens;
 using Container_App.Service.Services.RolePermissions;
 using Container_App.Service.Services.TienIchs;
@@ -39,6 +48,8 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.Configure<CloudinarySettings>(
     builder.Configuration.GetSection("CloudinarySettings"));
+builder.Services.Configure<MailSettings>(
+    builder.Configuration.GetSection("MailSettings"));
 
 #region Connection String
 #endregion
@@ -58,6 +69,11 @@ builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddScoped<CloudinaryService>();
 builder.Services.AddScoped<IBannerService, BannerService>();
 builder.Services.AddScoped<IKhachSanImageService, KhachSanImageService>();
+builder.Services.AddScoped<IDatPhongService, DatPhongService>();
+builder.Services.AddScoped<IProvinceService, ProvinceService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IRabbitMQPublisher, RabbitMQPublisher>();
+builder.Services.AddHttpContextAccessor();
 #endregion
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
@@ -109,7 +125,7 @@ builder.Services.AddCors(options =>
 });
 
 // Cấu hình ứng dụng lắng nghe HTTP
-builder.WebHost.UseUrls("http://0.0.0.0:5925");
+//builder.WebHost.UseUrls("http://0.0.0.0:5925");
 
 builder.Services.AddSwaggerGen(c =>
 {

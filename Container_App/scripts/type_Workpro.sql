@@ -18,3 +18,11 @@ CREATE TYPE HotelIdList AS TABLE
 (
     Id UNIQUEIDENTIFIER
 )
+
+CREATE TYPE TVP_ChiTietDatPhong AS TABLE
+(
+    LoaiPhongId UNIQUEIDENTIFIER,
+    SoLuongPhong INT,
+    GiaMoiDem DECIMAL(18,2)
+);
+GO
