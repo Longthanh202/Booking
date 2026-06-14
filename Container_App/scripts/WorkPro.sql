@@ -200,13 +200,6 @@ create table GoiQuangCao
 	CreatedDate datetime
 )
 
-INSERT INTO GoiQuangCao
-VALUES 
-(N'Goi Silver', 7, 500000, 10, 1, getdate()),
-(N'Goi Gold', 15, 1200000, 20, 1, getdate()),
-(N'Goi Platinum', 30, 2500000, 30, 1, getdate()),
-(N'Goi VIP', 60, 5000000, 50, 1, getdate());
-go
 
 create table KhachSanQuangCao
 (
@@ -220,8 +213,6 @@ create table KhachSanQuangCao
 	CreatedDate datetime
 )
 
-alter table DatPhong
-add PhongId uniqueidentifier
 
 alter table Phong
 add KhachSanId uniqueidentifier

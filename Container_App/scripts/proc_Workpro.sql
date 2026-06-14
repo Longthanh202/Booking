@@ -616,5 +616,104 @@ BEGIN
     JOIN @HotelIds ids
         ON img.KhachSanId = ids.Id
 END
+go
 
-select * from KhachSanImages
+
+ALTER PROCEDURE sp_DatPhong
+(
+    @KhachHangId UNIQUEIDENTIFIER,
+    @KhachSanId UNIQUEIDENTIFIER,
+    @NgayNhanPhong DATE,
+    @NgayTraPhong DATE,
+    @TongTien DECIMAL(18,2),
+    @DanhSachPhong TVP_ChiTietDatPhong READONLY
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRY
+
+        BEGIN TRANSACTION;
+
+        DECLARE @DatPhongId UNIQUEIDENTIFIER = NEWID();
+
+        INSERT INTO DatPhong
+        (
+            Id,
+            KhachHangId,
+            KhachSanId,      
+            NgayNhanPhong,
+            NgayTraPhong,
+            TongTien,
+            TrangThai
+        )
+        VALUES
+        (
+            @DatPhongId,
+            @KhachHangId,
+            @KhachSanId,      
+            @NgayNhanPhong,
+            @NgayTraPhong,
+            @TongTien,
+            N'CHO_THANH_TOAN'
+        );
+
+        INSERT INTO ChiTietDatPhong
+        (
+            DatPhongId,
+            LoaiPhongId,
+            SoLuongPhong,
+            GiaMoiDem
+        )
+        SELECT
+            @DatPhongId,
+            LoaiPhongId,
+            SoLuongPhong,
+            GiaMoiDem
+        FROM @DanhSachPhong;
+
+        INSERT INTO ThanhToan
+        (
+            Id,
+            DatPhongId,
+            SoTien,
+            TrangThai
+        )
+        VALUES
+        (
+            NEWID(),
+            @DatPhongId,
+            @TongTien,
+            N'CHO_THANH_TOAN'
+        );
+
+        COMMIT;
+
+        SELECT @DatPhongId AS DatPhongId;
+
+    END TRY
+    BEGIN CATCH
+
+        IF @@TRANCOUNT > 0
+            ROLLBACK;
+
+        THROW;
+
+    END CATCH
+END
+go
+
+alter proc sp_GetProvince
+as
+begin
+	select code, name from provinces
+end;
+go
+
+create proc sp_Get3BannerNew
+as
+begin
+	select top 3 * from Banner order by CreatedDate desc
+end;

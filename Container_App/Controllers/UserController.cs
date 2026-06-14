@@ -1,11 +1,15 @@
 ﻿using Container_App.Attributes;
+using Container_App.Core.Interface.Emails;
 using Container_App.Core.Interface.Permissions;
+using Container_App.Core.Interface.RabbitMQ;
 using Container_App.Core.Interface.RefreshTokens;
 using Container_App.Core.Interface.RolePermissions;
 using Container_App.Core.Interface.Users;
+using Container_App.Core.Model.Email;
 using Container_App.Core.Model.Permissions;
 using Container_App.Core.Model.RefreshTokens;
 using Container_App.Core.Model.Users;
+using Container_App.Model.Emails;
 using Container_App.Model.RolePermissions;
 using Container_App.Model.Users;
 using Microsoft.AspNetCore.Authorization;
@@ -32,16 +36,20 @@ namespace Container_App.Controllers
         private readonly IMemoryCache _memoryCache;
         private readonly IRolePermissionService _rolePermissionService;
         private readonly IRefreshTokenService _refreshTokenService;
+        private readonly IEmailService _emailService;
+        private readonly IRabbitMQPublisher _rabbitMQPublisher;
         public UserController(IUserServices userServices, IPermissionService permissionService,
             IConfiguration config, IMemoryCache memoryCache, IRolePermissionService rolePermissionService,
-            IRefreshTokenService refreshTokenService)
+            IRefreshTokenService refreshTokenService, IEmailService emailService, IRabbitMQPublisher rabbitMQPublisher)
         {
             _userServices = userServices;
             _permissionServices = permissionService;
             _config = config;
             _memoryCache = memoryCache;
+            _emailService = emailService;
             _rolePermissionService = rolePermissionService;
             _refreshTokenService = refreshTokenService;
+            _rabbitMQPublisher = rabbitMQPublisher;
         }
 
         [HttpPost]
@@ -91,6 +99,7 @@ namespace Container_App.Controllers
         [Route("api/me")]
         public async Task<IActionResult> GetProfile()
         {
+
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var roleId = User.FindFirst(ClaimTypes.Role)?.Value;
 
@@ -214,6 +223,37 @@ namespace Container_App.Controllers
                 rng.GetBytes(randomNumber);
                 return Convert.ToBase64String(randomNumber);
             }
+        }
+
+        [HttpPost]
+        [Route("api/register")]
+        public async Task<IActionResult> Register([FromBody] UserProfile u)
+        {
+            int result = await _userServices.Insert(u);
+
+            if (result <= 0)
+            {
+                return BadRequest();
+            }
+
+            await _rabbitMQPublisher.PublishAsync(
+                "email_queue",
+                new SendEmailEvent
+                {
+                    ToEmail = u.Email,
+                    Subject =
+                        "Đăng ký tài khoản thành công",
+
+                    Body =
+                        $"Xin chào {u.FullName}"
+                });
+
+            return Ok(new
+            {
+                status = true,
+                message =
+                    "Đăng ký thành công"
+            });
         }
     }
 }

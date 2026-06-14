@@ -11,5 +11,7 @@ namespace Container_App.Core.Interface.Banners
     {
         Task<int> InsertBanner(Banner banner);
         Task<IEnumerable<Banner>> GetAllBanner(string keyword, int isActive, int startRow, int endRow);
+
+        Task<IEnumerable<Banner>> Get3BannerNew();
     }
 }

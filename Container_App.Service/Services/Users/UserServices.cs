@@ -2,6 +2,7 @@
 using Container_App.Core.Interface.Users;
 using Container_App.Core.Model.Users;
 using Container_App.Data.Connection;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -15,11 +16,12 @@ namespace Container_App.Service.Services.Users
     public class UserServices : IUserServices
     {
         private readonly IStoredProcedureExecutor _executor;
-        public UserServices(IStoredProcedureExecutor executor)
+        private readonly IHttpContextAccessor _httpContextAccessor; 
+        public UserServices(IStoredProcedureExecutor executor, IHttpContextAccessor httpContextAccessor)
         {
             _executor = executor;
+            _httpContextAccessor = httpContextAccessor;
         }
-
         public async Task<UserProfile> GetById(Guid id)
         {
             try
@@ -63,6 +65,11 @@ namespace Container_App.Service.Services.Users
 
                 return -1;
             }
+        }
+
+        public bool IsAuthenticated()
+        {
+            return _httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false;
         }
 
         public async Task<UserProfile> Login(string userName, string passWord)
