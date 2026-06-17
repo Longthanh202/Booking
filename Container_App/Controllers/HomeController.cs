@@ -23,6 +23,7 @@ namespace Container_App.Controllers
             _khachSanService = khachSanService;
             _khachSanImageService = khachSanImageService;
         }
+        [HttpGet]
         [Route("/")]
         public IActionResult Home()
         {

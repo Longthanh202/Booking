@@ -1,4 +1,5 @@
 ﻿using Container_App.Common.Config;
+using Container_App.Consumer;
 using Container_App.Core.Interface.Banners;
 using Container_App.Core.Interface.DatPhongs;
 using Container_App.Core.Interface.Emails;
@@ -75,6 +76,9 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IRabbitMQPublisher, RabbitMQPublisher>();
 builder.Services.AddHttpContextAccessor();
 #endregion
+
+//Add consumer
+builder.Services.AddHostedService<EmailConsumer>();
 
 var jwtSection = builder.Configuration.GetSection("Jwt");
 var jwtKey = jwtSection["Key"];
