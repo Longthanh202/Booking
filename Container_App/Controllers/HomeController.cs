@@ -10,6 +10,7 @@ using System.Text;
 
 namespace Container_App.Controllers
 {
+    [Route("api/client")]
     public class HomeController : Controller
     {
         private readonly IConfiguration _configuration;
@@ -24,14 +25,14 @@ namespace Container_App.Controllers
             _khachSanImageService = khachSanImageService;
         }
         [HttpGet]
-        [Route("/")]
+        [Route("view")]
         public IActionResult Home()
         {
             return View();
         }
 
         [HttpPost]
-        [Route("api/khachsans/filter")]
+        [Route("khachsans/filter")]
         public async Task<IActionResult> FilterHotels([FromBody] FilterHotelsDto dto)
         {
 
@@ -76,51 +77,6 @@ namespace Container_App.Controllers
                 // Log the exception (you can use a logging framework like Serilog, NLog, etc.)
                 Console.Error.WriteLine($"SQL Exception: {ex.Message}");
                 return StatusCode(500, "An error occurred while processing your request.");
-            }
-            catch (Exception ex)
-            {
-                // Log the exception
-                Console.Error.WriteLine($"General Exception: {ex.Message}");
-                return StatusCode(500, "An unexpected error occurred.");
-            }
-        }
-
-        [HttpGet("test")]
-        public async Task<IActionResult> Test()
-        {
-            try
-            {
-                var factory = new ConnectionFactory
-                {
-                    HostName = "localhost",
-                    Port = 5672,
-                    UserName = "guest",
-                    Password = "guest"
-                };
-                await using var connection = await factory.CreateConnectionAsync();
-                await using var channel = await connection.CreateChannelAsync();
-
-                await channel.QueueDeclareAsync(
-                    queue: "demo_queue",
-                    durable: true,
-                    exclusive: false,
-                    autoDelete: false
-                );
-
-                var message = $"Hello RabbitMQ - {DateTime.Now}";
-
-                var body = Encoding.UTF8.GetBytes(message);
-
-                await channel.BasicPublishAsync(
-                    exchange: "",
-                    routingKey: "demo_queue",
-                    body: body);
-
-                return Ok(new
-                {
-                    Success = true,
-                    Message = "Đã kết nối RabbitMQ và gửi message thành công."
-                });
             }
             catch (Exception ex)
             {

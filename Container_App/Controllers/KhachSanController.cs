@@ -17,6 +17,7 @@ using System.Security.Claims;
 namespace Container_App.Controllers
 {
     [ApiController]
+    [Route("api/admin")]
     public class KhachSanController : Controller
     {
         private readonly IKhachSanService _khachSanService;
@@ -41,7 +42,7 @@ namespace Container_App.Controllers
 
         [HasPermission("khachsan", "insert")]
         [HttpPost]
-        [Route("api/khachsan/tao")]
+        [Route("khachsan/tao")]
         public async Task<IActionResult> TaoKhachSan([FromForm] KhachSanCreateDto dto)
         {
             if (!TimeSpan.TryParse(dto.GioNhanPhong, out var gioNhan))
@@ -87,7 +88,7 @@ namespace Container_App.Controllers
         }
 
         [HttpPost]
-        [Route("api/tienich/tao")]
+        [Route("tienich/tao")]
         public async Task<IActionResult> ThemTienIch([FromBody] TienIch dto)
         {
 
@@ -100,7 +101,7 @@ namespace Container_App.Controllers
         }
 
         [HttpPost]
-        [Route("api/loaiphong/tao")]
+        [Route("loaiphong/tao")]
         public async Task<IActionResult> ThemLoaiPhong([FromBody] LoaiPhong dto)
         {
             if (!_userService.IsAuthenticated())
@@ -119,7 +120,7 @@ namespace Container_App.Controllers
         }
 
         [HttpPost]
-        [Route("api/phong/tao")]
+        [Route("phong/tao")]
         public async Task<IActionResult> ThemPhong([FromBody] Phong dto)
         {
             int insert = await _phongService.TaoPhong(dto);
@@ -132,7 +133,7 @@ namespace Container_App.Controllers
 
         [HasPermission("khachsan", "view")]
         [HttpPost]
-        [Route("api/khachsans/get")]
+        [Route("khachsans/get")]
         public async Task<IActionResult> GetKhachSans([FromBody] KhachSanFilterDto dto)
         {
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

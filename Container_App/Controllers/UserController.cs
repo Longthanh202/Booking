@@ -135,7 +135,7 @@ namespace Container_App.Controllers
             });
         }
 
-        [HttpPost("refresh-token")]
+        [HttpPost("api/refresh-token")]
         public async Task<IActionResult> RefreshToken()
         {
             if (!Request.Cookies.TryGetValue("refreshToken", out var refreshToken))

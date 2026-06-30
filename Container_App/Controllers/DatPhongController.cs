@@ -9,6 +9,7 @@ using System.Security.Claims;
 namespace Container_App.Controllers
 {
     [ApiController]
+    [Route("api/client")]
     public class DatPhongController : ControllerBase
     {
         private readonly IDatPhongService _datPhongService;
@@ -21,7 +22,7 @@ namespace Container_App.Controllers
         }
 
         [HttpPost]
-        [Route("api/datphong")]
+        [Route("datphong")]
         public async Task<IActionResult> DatPhong(DatPhongRequest input)
         {
             if(!_userServices.IsAuthenticated())
