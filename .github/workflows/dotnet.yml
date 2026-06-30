@@ -21,8 +21,8 @@ jobs:
       with:
         dotnet-version: 8.0.x
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore Container_App/Container_App.sln
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build Container_App/Container_App.sln --no-restore
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test Container_App/Container_App.sln --no-build --verbosity normal
