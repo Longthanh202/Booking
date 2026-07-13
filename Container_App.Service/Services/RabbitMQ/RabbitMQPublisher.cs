@@ -19,42 +19,49 @@ namespace Container_App.Service.Services.RabbitMQ
         {
             _configuration = configuration;
         }
-        public async Task PublishAsync<T>(
-        string queueName,
-        T message)
+        public async Task PublishAsync<T>(string queueName,T message)
         {
-            var factory = new ConnectionFactory
+            try
             {
-                HostName = _configuration["RabbitMQ:Host"],
-                Port = int.Parse(
+                var factory = new ConnectionFactory
+                {
+                    HostName = _configuration["RabbitMQ:Host"],
+                    Port = int.Parse(
                     _configuration["RabbitMQ:Port"]),
 
-                UserName =
+                    UserName =
                     _configuration["RabbitMQ:Username"],
 
-                Password =
+                    Password =
                     _configuration["RabbitMQ:Password"]
-            };
+                };
 
-            using var connection =
-                await factory.CreateConnectionAsync();
+                using var connection =
+                    await factory.CreateConnectionAsync();
 
-            using var channel =
-                await connection.CreateChannelAsync();
+                using var channel =
+                    await connection.CreateChannelAsync();
 
-            await channel.QueueDeclareAsync(
-                queue: queueName,
-                durable: true,
-                exclusive: false,
-                autoDelete: false);
+                await channel.QueueDeclareAsync(
+                    queue: queueName,
+                    durable: true,
+                    exclusive: false,
+                    autoDelete: false);
 
-            var body = Encoding.UTF8.GetBytes(
-                JsonSerializer.Serialize(message));
+                var body = Encoding.UTF8.GetBytes(
+                    JsonSerializer.Serialize(message));
 
-            await channel.BasicPublishAsync(
-                exchange: "",
-                routingKey: queueName,
-                body: body);
+                await channel.BasicPublishAsync(
+                    exchange: "",
+                    routingKey: queueName,
+                    body: body);
+            }
+            catch (Exception ex)
+            {
+                {
+                    Console.WriteLine(ex.ToString());
+                }
+            }
         }
     }
 }

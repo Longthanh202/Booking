@@ -8,7 +8,7 @@ namespace Container_App.Core.Model.KhachSans
 {
     public class KhachSanImages
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
         public Guid KhachSanId { get; set; }
         public string Url { get; set; }
     }

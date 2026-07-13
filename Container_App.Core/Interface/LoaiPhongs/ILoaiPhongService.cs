@@ -11,5 +11,6 @@ namespace Container_App.Core.Interface.LoaiPhongs
     public interface ILoaiPhongService
     {
         Task<int> TaoLoaiPhong(LoaiPhong lp);
+        Task<IEnumerable<LoaiPhong>> GetLoaiPhongByKhachSanId(Guid khachSanId);
     }
 }

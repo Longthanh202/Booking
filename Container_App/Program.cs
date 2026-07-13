@@ -9,6 +9,7 @@ using Container_App.Core.Interface.Permissions;
 using Container_App.Core.Interface.Phongs;
 using Container_App.Core.Interface.Provinces;
 using Container_App.Core.Interface.RabbitMQ;
+using Container_App.Core.Interface.Redis;
 using Container_App.Core.Interface.RefreshTokens;
 using Container_App.Core.Interface.RolePermissions;
 using Container_App.Core.Interface.TienIchs;
@@ -26,6 +27,7 @@ using Container_App.Service.Services.Permissions;
 using Container_App.Service.Services.Phongs;
 using Container_App.Service.Services.Provinces;
 using Container_App.Service.Services.RabbitMQ;
+using Container_App.Service.Services.Redis;
 using Container_App.Service.Services.RefreshTokens;
 using Container_App.Service.Services.RolePermissions;
 using Container_App.Service.Services.TienIchs;
@@ -36,6 +38,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using StackExchange.Redis;
 using System;
 using System.ComponentModel.Design;
 using System.Text;
@@ -56,6 +59,12 @@ builder.Services.Configure<MailSettings>(
 #endregion
 
 builder.Services.AddScoped<IStoredProcedureExecutor, StoredProcedureExecutor>();
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("Redis");
+
+    return ConnectionMultiplexer.Connect(connectionString);
+});
 
 #region Add Service
 builder.Services.AddScoped<IUserServices, UserServices>();
@@ -75,6 +84,7 @@ builder.Services.AddScoped<IProvinceService, ProvinceService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IRabbitMQPublisher, RabbitMQPublisher>();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IRedisService, RedisService>();
 #endregion
 
 //Add consumer

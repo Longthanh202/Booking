@@ -10,5 +10,6 @@ namespace Container_App.Core.Interface.KhachSans
     public interface IKhachSanImageService
     {
         Task<IEnumerable<KhachSanImages>> GetHotelImages(List<Guid> ids);
+        Task<IEnumerable<KhachSanImages>> GetListImageByKhachSanId(Guid khachSanId);
     }
 }

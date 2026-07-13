@@ -18,6 +18,27 @@ namespace Container_App.Service.Services.LoaiPhongs
         {
             _executor = executor;
         }
+
+        public async Task<IEnumerable<LoaiPhong>> GetLoaiPhongByKhachSanId(Guid khachSanId)
+        {
+            try
+            {
+                var arr = new[]
+                {
+                    new SqlParameter("@KhachSanId", khachSanId),
+                 
+                };
+                return await _executor.QueryAsync<LoaiPhong>("sp_GetLoaiPhongByKhachSanId", arr);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message,
+                "Error when GetLoaiPhongByKhachSanId.");
+
+                return Enumerable.Empty<LoaiPhong>();
+            }
+        }
+
         public async Task<int> TaoLoaiPhong(LoaiPhong lp)
         {
             try

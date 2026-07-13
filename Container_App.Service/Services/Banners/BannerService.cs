@@ -21,15 +21,15 @@ namespace Container_App.Service.Services.Banners
             _executor = executor;
         }
 
-        public async Task<IEnumerable<Banner>> Get3BannerNew()
+        public async Task<IEnumerable<Banner>> GetBannerIsActive()
         {
             try
             {              
-                return await _executor.QueryAsync<Banner>("sp_Get3BannerNew");
+                return await _executor.QueryAsync<Banner>("sp_GetBannerIsACtive");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error when get list Get3BannerNew: {ex.Message}");
+                Console.WriteLine($"Error when get list GetBannerIsActive: {ex.Message}");
 
                 return Enumerable.Empty<Banner>();
             }

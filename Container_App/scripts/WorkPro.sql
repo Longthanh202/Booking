@@ -104,12 +104,22 @@ CREATE TABLE Phong (
     TrangThai NVARCHAR(50), -- SAN_SANG | BAO_TRI
 );
 
-CREATE TABLE GiaPhong (
+
+CREATE TABLE GiaPhong
+(
     Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
-    LoaiPhongId UNIQUEIDENTIFIER,
-    Ngay DATE,
-    Gia DECIMAL(18,2),
-    SoPhongCon INT,
+
+    LoaiPhongId UNIQUEIDENTIFIER NOT NULL,
+
+    Gia DECIMAL(18,2) NOT NULL,
+
+    NgayBatDau DATEtime NOT NULL,
+
+    NgayKetThuc DATEtime NOT NULL,
+
+    IsActive BIT NOT NULL DEFAULT 1,
+
+    NgayTao DATETIME DEFAULT GETDATE()
 );
 
 CREATE TABLE DatPhong (
@@ -214,8 +224,24 @@ create table KhachSanQuangCao
 )
 
 
-alter table Phong
-add KhachSanId uniqueidentifier
+CREATE TABLE PhongDat
+(
+    Id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWSEQUENTIALID(),
+
+    ChiTietDatPhongId UNIQUEIDENTIFIER NOT NULL,
+
+    PhongId UNIQUEIDENTIFIER NOT NULL,
+
+    TrangThai NVARCHAR(30),
+
+    CONSTRAINT FK_PhongDat_ChiTietDatPhong
+        FOREIGN KEY (ChiTietDatPhongId)
+        REFERENCES ChiTietDatPhong(Id),
+
+    CONSTRAINT FK_PhongDat_Phong
+        FOREIGN KEY (PhongId)
+        REFERENCES Phong(Id)
+);
 
 
 SELECT *

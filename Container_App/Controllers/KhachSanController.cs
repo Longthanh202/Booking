@@ -165,5 +165,7 @@ namespace Container_App.Controllers
             int totalPage = Paginations.GetTotalPages(totalRow, PAGE_SIZE);
             return Ok(new { Data = khachSans, TotalPage = totalPage });
         }
+
+
     }
 }

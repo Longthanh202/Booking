@@ -419,15 +419,6 @@ AS
 BEGIN
     SET NOCOUNT ON;
 
-    DECLARE @CheckIn DATETIME = NULL;
-    DECLARE @CheckOut DATETIME = NULL;
-
-    IF @NgayNhanPhong IS NOT NULL
-        SET @CheckIn = DATEADD(HOUR, 14, CAST(@NgayNhanPhong AS DATETIME));
-
-    IF @NgayTraPhong IS NOT NULL
-        SET @CheckOut = DATEADD(HOUR, 11, CAST(@NgayTraPhong AS DATETIME));
-
     SELECT *
     FROM
     (
@@ -457,7 +448,7 @@ BEGIN
 
         LEFT JOIN KhachSanQuangCao qc
             ON ks.Id = qc.KhachSanId
-            AND qc.TrangThai = 'active'
+            AND qc.TrangThai = 'ACTIVE'
             AND GETDATE() BETWEEN qc.NgayBatDau AND qc.NgayKetThuc
 
         JOIN LoaiPhong lp 
@@ -468,10 +459,10 @@ BEGIN
 
         OUTER APPLY
         (
-            SELECT TOP 1 gp.Gia
-            FROM GiaPhong gp
-            WHERE gp.LoaiPhongId = lp.Id
-            ORDER BY gp.Ngay DESC
+            SELECT TOP 1 Gia
+			FROM GiaPhong
+			WHERE LoaiPhongId = lp.Id
+			AND @NgayNhanPhong BETWEEN NgayBatDau AND NgayKetThuc
         ) gp
 
         WHERE 1 = 1
@@ -493,33 +484,46 @@ BEGIN
 
         -- CHECK HOTEL CÒN ÍT NHẤT 1 PHÒNG TRỐNG
         AND (
-            @NgayNhanPhong IS NULL
-            OR @NgayTraPhong IS NULL
-            OR EXISTS
-            (
-                SELECT 1
-                FROM Phong p2
-                JOIN LoaiPhong lp2 
-                    ON p2.LoaiPhongId = lp2.Id
+    @NgayNhanPhong IS NULL OR @NgayTraPhong IS NULL
+    OR EXISTS
+    (
+        SELECT 1
+        FROM LoaiPhong lp2
+        WHERE lp2.KhachSanId = ks.Id
+          AND (
+                @SoKhach IS NULL
+                OR lp2.SoKhachToiDa >= @SoKhach
+              )
 
-                WHERE lp2.KhachSanId = ks.Id
-
-                AND (
-                    @SoKhach IS NULL
-                    OR lp2.SoKhachToiDa >= @SoKhach
-                )
-
-                AND NOT EXISTS
+          AND
+          (
+                -- Tổng số phòng của loại phòng
                 (
-                    SELECT 1
-                    FROM DatPhong dp
-                    WHERE dp.PhongId = p2.Id
-                      AND dp.TrangThai IN ('da_dat', 'cho_thanh_toan')
-                      AND dp.NgayNhanPhong < @CheckOut
-                      AND dp.NgayTraPhong > @CheckIn
+                    SELECT COUNT(*)
+                    FROM Phong p
+                    WHERE p.LoaiPhongId = lp2.Id
                 )
-            )
-        )
+
+                >
+
+                -- Tổng số phòng đã được đặt
+                ISNULL
+                (
+                    (
+                        SELECT SUM(ct.SoLuongPhong)
+                        FROM DatPhong dp
+                        INNER JOIN ChiTietDatPhong ct
+                            ON dp.Id = ct.DatPhongId
+                        WHERE ct.LoaiPhongId = lp2.Id
+                          AND dp.TrangThai IN ('DADAT','CHOTHANHTOAN')
+                          AND dp.NgayNhanPhong < @NgayTraPhong
+                          AND dp.NgayTraPhong > @NgayNhanPhong
+                    ),
+                    0
+                )
+          )
+    )
+)
 
         GROUP BY 
             ks.Id,
@@ -539,8 +543,8 @@ BEGIN
 END
 go
 
-CREATE PROC sp_GetAvailableRooms
-    @KhachSanId uniqueidentifier,
+ALTER PROC sp_GetAvailableRooms
+    @KhachSanId UNIQUEIDENTIFIER,
     @NgayNhanPhong DATE,
     @NgayTraPhong DATE,
     @SoKhach INT = NULL
@@ -554,53 +558,92 @@ BEGIN
     SET @CheckIn = DATEADD(HOUR, 14, CAST(@NgayNhanPhong AS DATETIME));
     SET @CheckOut = DATEADD(HOUR, 11, CAST(@NgayTraPhong AS DATETIME));
 
-    SELECT 
-        p.Id AS PhongId,
-        p.SoPhong,
-
+    SELECT
         lp.Id AS LoaiPhongId,
         lp.TenLoaiPhong,
         lp.SoKhachToiDa,
 
         gp.Gia,
 
-        ks.Id AS KhachSanId,
-        ks.TenKhachSan
+        TongSoPhong = COUNT(p.Id),
 
-    FROM Phong p
+        SoPhongDaDat =
+            ISNULL
+            (
+                (
+                    SELECT SUM(ct.SoLuongPhong)
+                    FROM DatPhong dp
+                    INNER JOIN ChiTietDatPhong ct
+                        ON dp.Id = ct.DatPhongId
+                    WHERE ct.LoaiPhongId = lp.Id
+                      AND dp.TrangThai IN ('DADAT','CHOTHANHTOAN')
+                      AND dp.NgayNhanPhong < @CheckOut
+                      AND dp.NgayTraPhong > @CheckIn
+                ),
+                0
+            ),
 
-    JOIN LoaiPhong lp
+        SoPhongCon =
+            COUNT(p.Id)
+            -
+            ISNULL
+            (
+                (
+                    SELECT SUM(ct.SoLuongPhong)
+                    FROM DatPhong dp
+                    INNER JOIN ChiTietDatPhong ct
+                        ON dp.Id = ct.DatPhongId
+                    WHERE ct.LoaiPhongId = lp.Id
+                      AND dp.TrangThai IN ('DADAT','CHOTHANHTOAN')
+                      AND dp.NgayNhanPhong < @CheckOut
+                      AND dp.NgayTraPhong > @CheckIn
+                ),
+                0
+            )
+
+    FROM LoaiPhong lp
+
+    INNER JOIN Phong p
         ON p.LoaiPhongId = lp.Id
-
-    JOIN KhachSan ks
-        ON lp.KhachSanId = ks.Id
 
     OUTER APPLY
     (
-        SELECT TOP 1 gp.Gia
+        SELECT TOP 1 Gia
         FROM GiaPhong gp
         WHERE gp.LoaiPhongId = lp.Id
         ORDER BY gp.Ngay DESC
     ) gp
 
-    WHERE ks.Id = @KhachSanId
+    WHERE lp.KhachSanId = @KhachSanId
+      AND (@SoKhach IS NULL OR lp.SoKhachToiDa >= @SoKhach)
 
-    AND (@SoKhach IS NULL 
-         OR lp.SoKhachToiDa >= @SoKhach)
+    GROUP BY
+        lp.Id,
+        lp.TenLoaiPhong,
+        lp.SoKhachToiDa,
+        gp.Gia
 
-    AND NOT EXISTS
-    (
-        SELECT 1
-        FROM DatPhong dp
-        WHERE dp.PhongId = p.Id
-          AND dp.TrangThai IN ('da_dat', 'cho_thanh_toan')
-          AND dp.NgayNhanPhong < @CheckOut
-          AND dp.NgayTraPhong > @CheckIn
-    )
+    HAVING
+        COUNT(p.Id)
+        >
+        ISNULL
+        (
+            (
+                SELECT SUM(ct.SoLuongPhong)
+                FROM DatPhong dp
+                INNER JOIN ChiTietDatPhong ct
+                    ON dp.Id = ct.DatPhongId
+                WHERE ct.LoaiPhongId = lp.Id
+                  AND dp.TrangThai IN ('DADAT','CHOTHANHTOAN')
+                  AND dp.NgayNhanPhong < @CheckOut
+                  AND dp.NgayTraPhong > @CheckIn
+            ),
+            0
+        )
 
-    ORDER BY gp.Gia ASC;
-
+    ORDER BY gp.Gia;
 END
+GO
 go
 
 CREATE PROC sp_GetHotelImages
@@ -657,7 +700,7 @@ BEGIN
             @NgayNhanPhong,
             @NgayTraPhong,
             @TongTien,
-            N'CHO_THANH_TOAN'
+            N'CHOTHANHTOAN'
         );
 
         INSERT INTO ChiTietDatPhong
@@ -686,7 +729,7 @@ BEGIN
             NEWID(),
             @DatPhongId,
             @TongTien,
-            N'CHO_THANH_TOAN'
+            N'CHOTHANHTOAN'
         );
 
         COMMIT;
@@ -712,8 +755,50 @@ begin
 end;
 go
 
-create proc sp_Get3BannerNew
+create proc sp_GetBannerIsACtive
 as
 begin
-	select top 3 * from Banner order by CreatedDate desc
+	select * from Banner where IsActive = 1 order by CreatedDate desc
 end;
+go
+
+alter proc sp_DetailKhachSan
+@Id uniqueidentifier
+as
+begin
+	select ks.Id, ks.TenKhachSan, ks.MoTa, DiaChi, SoSao,
+	 CONVERT(VARCHAR(5), ks.GioNhanPhong) AS GioNhanPhong,
+     CONVERT(VARCHAR(5), ks.GioTraPhong) AS GioTraPhong
+	 , p.full_name
+	from KhachSan ks
+	join provinces p on ks.ThanhPho = p.code
+	where ks.Id = @Id
+end
+go
+
+create proc sp_GetTienIchKhachSanByKhachSanId
+@KhachSanId uniqueidentifier
+as
+begin
+	select TienIch.* from KhachSan_TienIch 
+	join TienIch on TienIch.Id = KhachSan_TienIch.TienIchId
+	where KhachSan_TienIch.KhachSanId = @KhachSanId
+end;
+go
+
+alter proc sp_GetLoaiPhongByKhachSanId
+@KhachSanId uniqueidentifier
+as
+begin
+	select * from LoaiPhong
+	join GiaPhong on LoaiPhong.Id = GiaPhong.LoaiPhongId
+	where GiaPhong.IsActive = 1
+end;
+go
+
+ create proc sp_GetListImageByKhachSanId
+ @KhachSanId uniqueidentifier
+ as
+ begin
+	select * from KhachSanImages where KhachSanId = @KhachSanId
+ end;

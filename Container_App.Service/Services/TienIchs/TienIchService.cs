@@ -17,6 +17,26 @@ namespace Container_App.Service.Services.TienIchs
         {
             _executor = executor;
         }
+
+        public async Task<IEnumerable<TienIch>> GetTienIchKhachSanByKhachSanId(Guid khachSanId)
+        {
+            try
+            {
+                var arr = new[]
+                {
+                    new SqlParameter("@KhachSanId", khachSanId),
+                };
+                return await _executor.QueryAsync<TienIch>("sp_GetTienIchKhachSanByKhachSanId", arr);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message,
+                "Error when GetTienIchKhachSanByKhachSanId.");
+
+                return Enumerable.Empty<TienIch>();
+            }
+        }
+
         public async Task<int> ThemTienIch(TienIch tienIch)
         {
             try

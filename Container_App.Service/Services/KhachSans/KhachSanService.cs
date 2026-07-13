@@ -21,6 +21,24 @@ namespace Container_App.Service.Services.KhachSans
             _executor = executor;
         }
 
+        public async Task<KhachSan> DetailKhachSan(Guid id)
+        {
+            try
+            {
+                var arr = new SqlParameter[]
+                {
+                    new SqlParameter("@Id", id),                
+                };
+                return await _executor.QuerySingleAsync<KhachSan>("sp_DetailKhachSan", arr);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error when get DetailKhachSan: {ex.Message}");
+
+                return null;
+            }
+        }
+
         public async Task<IEnumerable<KhachSan>> FilterHotels(string? keyword,
             int? provinceCode,
             int? soKhach,

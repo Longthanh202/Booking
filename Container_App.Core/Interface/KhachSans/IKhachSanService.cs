@@ -15,14 +15,7 @@ namespace Container_App.Core.Interface.KhachSans
 
         Task<IEnumerable<KhachSan>> LayDanhSachKhachSanOwner(string keyword, string thanhPho,
             double viDo, double kinhDo, int soSao, string trangThai, Guid ownerId, int startRow, int endRow);
-        Task<IEnumerable<KhachSan>> FilterHotels(
-    string? keyword,
-    int? provinceCode,
-    int? soKhach,
-    DateTime? ngayNhanPhong,
-    DateTime? ngayTraPhong,
-    int startRow,
-    int endRow
-);
+        Task<IEnumerable<KhachSan>> FilterHotels(string? keyword,int? provinceCode,int? soKhach,DateTime? ngayNhanPhong,DateTime? ngayTraPhong,int startRow, int endRow);
+        Task<KhachSan> DetailKhachSan(Guid id);
     }
 }

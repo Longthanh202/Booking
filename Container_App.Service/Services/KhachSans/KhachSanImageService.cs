@@ -1,6 +1,7 @@
 ﻿using Container_App.Core.Interface.KhachSans;
 using Container_App.Core.Model.KhachSans;
 using Container_App.Data.Connection;
+using Org.BouncyCastle.Crypto;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -41,7 +42,26 @@ namespace Container_App.Service.Services.KhachSans
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message,
-                "Error when create KhachSan.");
+                "Error when GetHotelImages.");
+
+                return Enumerable.Empty<KhachSanImages>();
+            }
+        }
+
+        public async Task<IEnumerable<KhachSanImages>> GetListImageByKhachSanId(Guid khachSanId)
+        {
+            try
+            {               
+                var arr = new[]
+                {
+                    new SqlParameter("@KhachSanId", khachSanId)
+                };
+                return await _executor.QueryAsync<KhachSanImages>("sp_GetListImageByKhachSanId", arr);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message,
+                "Error when GetListImageByKhachSanId.");
 
                 return Enumerable.Empty<KhachSanImages>();
             }

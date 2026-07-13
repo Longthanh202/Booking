@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Container_App.Controllers
 {
     [ApiController]
-    [Route("api/admin")]
+    [Route("api")]
     public class BannerController : ControllerBase
     {
         private readonly IBannerService _bannerService;
@@ -20,7 +20,7 @@ namespace Container_App.Controllers
         }
 
         [HttpPost]
-        [Route("insert-banner")]
+        [Route("admin/insert-banner")]
         public async Task<IActionResult> InsertBanner([FromForm] InsertBannerDto file)
         {
             var url = await _cloudinaryService.UploadImageAsync(file.File);
@@ -43,10 +43,10 @@ namespace Container_App.Controllers
         }
 
         [HttpGet]
-        [Route("get-banners")]
-        public async Task<IActionResult> Get3Banners()
+        [Route("client/get-banners")]
+        public async Task<IActionResult> GetBannerIsActive()
         {
-            var result = await _bannerService.Get3BannerNew();
+            var result = await _bannerService.GetBannerIsActive();
             return Ok(result);
         }
     }
