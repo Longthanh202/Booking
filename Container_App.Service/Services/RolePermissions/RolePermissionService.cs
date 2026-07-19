@@ -1,7 +1,9 @@
 ﻿using Container_App.Common.Shared;
-using Container_App.Core.Interface.RolePermissions;
 using Container_App.Core.Model.RolePermissions;
+using Container_App.Data;
 using Container_App.Data.Connection;
+using Container_App.Data.Repository.RolePermissions;
+using Container_App.Service.Dtos.RolePermission;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -14,39 +16,34 @@ namespace Container_App.Service.Services.RolePermissions
 {
     public class RolePermissionService : IRolePermissionService
     {
-        private readonly IStoredProcedureExecutor _procedureExecutor;
-        public RolePermissionService(IStoredProcedureExecutor procedureExecutor)
+        private readonly IRolePermissionRepository _rolePermissionRepository;
+        private readonly IUnitOfWork _unitOfWork;
+        public RolePermissionService(IRolePermissionRepository rolePermissionRepository, IUnitOfWork unitOfWork)
         {
-            _procedureExecutor = procedureExecutor;
+            _rolePermissionRepository = rolePermissionRepository;
+            _unitOfWork = unitOfWork;
         }
 
-        public async Task<int> Insert(Guid roleId, List<RolePermission> lst)
+        public async Task Insert(RolePermissionRequset input)
         {
+            await _unitOfWork.BeginTransactionAsync();
             try
-            {
-                var tb = new DataTable();
-                tb.Columns.Add("ResourceId", typeof(Guid));
-                tb.Columns.Add("PermissionId", typeof (Guid));
-                foreach(var item in lst)
+            {               
+                List<RolePermission> rolePermissions = input.Permissions.Select(p => new RolePermission
                 {
-                    tb.Rows.Add(item.ResourceId, item.PermissionId);
-                }
-                var arr = new[]
-                {
-                    new SqlParameter("@RoleId", roleId),
-                    new SqlParameter("@ListResourcePermissions", SqlDbType.Structured)
-                    {
-                        TypeName = "resources_permissions",
-                        Value = tb
-                    }
-                };
-                return await _procedureExecutor.ExecuteAsync("sp_PermissionInRole", arr);
+                    Id = Guid.NewGuid(),
+                    RoleId = input.RoleId,
+                    ResourceId = p.ResourceId,
+                    PermissionId = p.PermissionId,
+                    
+                }).ToList();
+                await _rolePermissionRepository.Insert(input.RoleId, rolePermissions);
+                await _unitOfWork.CommitAsync();
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message,
-                "Error when insert role permission. RoleId={roleId}", roleId);
-
+                await _unitOfWork.RollbackAsync();
+                Console.WriteLine($"Error inserting role permissions: {ex.Message}");
                 throw;
             }
         }

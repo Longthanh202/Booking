@@ -1,6 +1,6 @@
-﻿using Container_App.Core.Interface.DatPhongs;
-using Container_App.Core.Model.DatPhongs;
+﻿using Container_App.Core.Model.DatPhongs;
 using Container_App.Data.Connection;
+using Container_App.Data.Repository.DatPhongs;
 using System;
 using System.Collections.Generic;
 using System.Data;

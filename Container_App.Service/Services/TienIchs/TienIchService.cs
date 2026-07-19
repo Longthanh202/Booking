@@ -1,6 +1,6 @@
-﻿using Container_App.Core.Interface.TienIchs;
-using Container_App.Core.Model.TienIchs;
+﻿using Container_App.Core.Model.TienIchs;
 using Container_App.Data.Connection;
+using Container_App.Data.Repository.TienIchs;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;

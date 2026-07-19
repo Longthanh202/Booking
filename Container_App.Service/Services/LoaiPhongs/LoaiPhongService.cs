@@ -1,7 +1,7 @@
-﻿using Container_App.Core.Interface.LoaiPhongs;
-using Container_App.Core.Model.KhachSans;
+﻿using Container_App.Core.Model.KhachSans;
 using Container_App.Core.Model.LoaiPhongs;
 using Container_App.Data.Connection;
+using Container_App.Data.Repository.LoaiPhongs;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;

@@ -1,4 +1,4 @@
-﻿using Container_App.Core.Interface.Redis;
+﻿using Container_App.Data.Repository.Redis;
 using StackExchange.Redis;
 using System;
 using System.Collections.Generic;

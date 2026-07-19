@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ namespace Container_App.Core.Model.DatPhongs
 {
     public class ThanhToan
     {
+        [Key]
         public Guid Id { get; set; }
 
         public Guid DatPhongId { get; set; }

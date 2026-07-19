@@ -1,6 +1,6 @@
-﻿using Container_App.Core.Interface.Phongs;
-using Container_App.Core.Model.Phongs;
+﻿using Container_App.Core.Model.Phongs;
 using Container_App.Data.Connection;
+using Container_App.Data.Repository.Phongs;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;

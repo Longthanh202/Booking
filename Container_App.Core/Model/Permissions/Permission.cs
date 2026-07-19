@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,8 +9,10 @@ namespace Container_App.Core.Model.Permissions
 {
     public class Permission
     {
-        public string ResourceName { get; set; }
+        [Key]
+        public Guid Id { get; set; }
         public string Action { get; set; }
-        public string Icon { get; set; }    
+        public DateTime? CreateAt { get; set; }
+        public Guid? CreateBy { get; set; }
     }
 }

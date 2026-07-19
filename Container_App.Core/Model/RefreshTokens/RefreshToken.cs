@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,10 +9,11 @@ namespace Container_App.Core.Model.RefreshTokens
 {
     public class RefreshToken
     {
+        [Key]
         public long Id { get; set; }
         public Guid UserId { get; set; }
         public string Token { get; set; }
-        public int ExpireDate { get; set; }
+        public int ExpiryDate { get; set; }
         public DateTime CreatedDate { get; set; }
         public int Status { get; set; }
         public string FullName { get; set; }

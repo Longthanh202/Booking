@@ -1,13 +1,24 @@
 ﻿using CloudinaryDotNet.Actions;
 using Container_App.Common.Shared;
-using Container_App.Core.Interface.KhachSans;
+using Container_App.Core.Model.KhachSanImage;
 using Container_App.Core.Model.KhachSans;
+using Container_App.Core.Model.LoaiPhongs;
+using Container_App.Core.Model.TienIchs;
+using Container_App.Data;
 using Container_App.Data.Connection;
+using Container_App.Data.Repository.KhachSanImage;
+using Container_App.Data.Repository.KhachSans;
+using Container_App.Data.Repository.LoaiPhongs;
+using Container_App.Data.Repository.TienIchs;
+using Container_App.Service.Dtos.KhachSan;
+using Container_App.Service.Dtos.KhachSanDto;
+using Container_App.Service.Services.Cloudinarys;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,148 +26,161 @@ namespace Container_App.Service.Services.KhachSans
 {
     public class KhachSanService : IKhachSanService
     {
-        private readonly IStoredProcedureExecutor _executor;
-        public KhachSanService(IStoredProcedureExecutor executor)
+        private readonly CloudinaryService _cloudinaryService;
+        private readonly IKhachSanRepository _khachSanRepository;
+        private readonly IKhachSanImageRepository _khachSanImageRepository;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly ILoaiPhongRepository _loaiPhongRepository;
+        private readonly ITienIchRepository _tienIchRepository;
+
+        public KhachSanService(CloudinaryService cloudinaryService, IKhachSanRepository khachSanRepository,
+            IKhachSanImageRepository khachSanImageRepository, IUnitOfWork unitOfWork, 
+            ILoaiPhongRepository loaiPhongRepository, ITienIchRepository tienIchRepository)
         {
-            _executor = executor;
+            _cloudinaryService = cloudinaryService;
+            _khachSanRepository = khachSanRepository;
+            _khachSanImageRepository = khachSanImageRepository;
+            _unitOfWork = unitOfWork;
+            _loaiPhongRepository = loaiPhongRepository;
+            _tienIchRepository = tienIchRepository;
         }
 
-        public async Task<KhachSan> DetailKhachSan(Guid id)
+        public async Task<KhachSanDetailReponse?> DetailKhachSan(Guid id)
         {
             try
             {
-                var arr = new SqlParameter[]
+                // 1. Lấy thực thể khách sạn (đã được Include sẵn các bảng con ở Repo)
+                var khachSan = await _khachSanRepository.DetailKhachSan(id);
+                if (khachSan == null)
                 {
-                    new SqlParameter("@Id", id),                
+                    return null;
+                }
+
+                // 2. Trả về cấu trúc response và "lọc sạch" dữ liệu rác tại đây
+                return new KhachSanDetailReponse
+                {
+                    Id = khachSan.Id,
+                    TenKhachSan = khachSan.TenKhachSan,
+                    Mota = khachSan.MoTa,
+                    DiaChi = khachSan.DiaChi,
+                    SoSao = khachSan.SoSao,
+                    GioNhanPhong = khachSan.GioNhanPhong,
+                    GioTraPhong = khachSan.GioTraPhong,
+                    full_name = khachSan.Province?.full_name ?? "",
+
+                    // Lọc dữ liệu sạch cho loaiPhongs (Triệt tiêu liên kết ngược gây rác JSON)
+                    loaiPhongs = khachSan.LoaiPhongs.Select(lp => new LoaiPhong
+                    {
+                        Id = lp.Id,
+                        TenLoaiPhong = lp.TenLoaiPhong,
+                        SoKhachToiDa = lp.SoKhachToiDa,
+                        KieuGiuong = lp.KieuGiuong,
+                        MoTa = lp.MoTa,
+                        NgayTao = lp.NgayTao,
+                        KhachSanId = id,
+                        KhachSan = null
+                    }).ToList(),
+
+                    // Lọc tiện ích: Đi qua bảng trung gian KhachSan_TienIches để bóc lấy đối tượng TienIch
+                    tienIchs = khachSan.KhachSan_TienIches
+                        .Where(kst => kst.TienIch != null) // Phòng trường hợp dữ liệu lỗi dưới DB
+                        .Select(kst => new TienIch
+                        {
+                            Id = kst.TienIch.Id,
+                            TenTienIch = kst.TienIch.TenTienIch,
+                            Icon = kst.TienIch.Icon
+                        }).ToList(),
+
+                    // Lọc hình ảnh trực tiếp từ tập hợp KhachSanImages của thực thể khachSan
+                    KhachSanImages = khachSan.KhachSanImages.Select(img => new KhachSanImages
+                    {
+                        Id = img.Id,
+                        Url = img.Url,
+                        KhachSanId = id,
+                        KhachSan = null
+                    }).ToList()
                 };
-                return await _executor.QuerySingleAsync<KhachSan>("sp_DetailKhachSan", arr);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error when get DetailKhachSan: {ex.Message}");
-
+                Console.WriteLine($"Error when get detail KhachSan: {ex.Message}");
                 return null;
             }
         }
 
-        public async Task<IEnumerable<KhachSan>> FilterHotels(string? keyword,
-            int? provinceCode,
-            int? soKhach,
-            DateTime? ngayNhanPhong,
-            DateTime? ngayTraPhong,
-            int startRow,
-            int endRow)
+        public Task<List<KhachSan>> FilterHotels(string? keyword, int? provinceCode, int? soKhach, DateTime? ngayNhanPhong, DateTime? ngayTraPhong, int startRow, int endRow)
         {
-            try
-            {
-                var arr = new SqlParameter[]
-                {
-                    new SqlParameter("@Keyword",   SqlDbType.NVarChar, 255) { Value = (object?)keyword   ?? DBNull.Value },
-                    new SqlParameter("@ProvinceCode",  SqlDbType.Int) { Value = (object?)provinceCode  ?? DBNull.Value },
-                    new SqlParameter("@SoKhach",      SqlDbType.Int)         { Value = (object?)soKhach      ?? DBNull.Value },
-                    new SqlParameter("@NgayNhanPhong",    SqlDbType.Date)         { Value = (object?)ngayNhanPhong    ?? DBNull.Value },
-                    new SqlParameter("@NgayTraPhong",    SqlDbType.Date)         { Value = (object?)ngayTraPhong    ?? DBNull.Value },
-                    new SqlParameter("@StartRow",  SqlDbType.Int)           { Value = startRow },
-                    new SqlParameter("@EndRow",    SqlDbType.Int)           { Value = endRow }
-                };
-                return await _executor.QueryAsync<KhachSan>("sp_FilterHotel", arr);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error when FilterHotels: {ex.Message}");
-
-                return Enumerable.Empty<KhachSan>();
-            }
+            throw new NotImplementedException();
         }
 
-        public async Task<IEnumerable<KhachSan>> LayDanhSachKhachSanAdmin(string keyword, string thanhPho, double viDo, double kinhDo, int soSao, string trangThai, int startRow, int endRow)
+        public Task<List<KhachSan>> LayDanhSachKhachSanAdmin(string keyword, string thanhPho, double viDo, double kinhDo, int soSao, string trangThai, int startRow, int endRow)
         {
-            try
-            {
-                var arr = new SqlParameter[]
-                {
-                    new SqlParameter("@Keyword",   SqlDbType.NVarChar, 255) { Value = (object?)keyword   ?? DBNull.Value },
-                    new SqlParameter("@ThanhPho",  SqlDbType.NVarChar, 255) { Value = (object?)thanhPho  ?? DBNull.Value },
-                    new SqlParameter("@ViDo",      SqlDbType.Float)         { Value = (object?)viDo      ?? DBNull.Value },
-                    new SqlParameter("@KinhDo",    SqlDbType.Float)         { Value = (object?)kinhDo    ?? DBNull.Value },
-                    new SqlParameter("@SoSao",     SqlDbType.Int)           { Value = soSao },
-                    new SqlParameter("@TrangThai", SqlDbType.NVarChar, 255) { Value = (object?)trangThai ?? DBNull.Value },
-                    new SqlParameter("@StartRow",  SqlDbType.Int)           { Value = startRow },
-                    new SqlParameter("@EndRow",    SqlDbType.Int)           { Value = endRow }
-                };
-                return await _executor.QueryAsync<KhachSan>("sp_LayDanhSachKhachSanAdmin", arr);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error when get list KhachSan: {ex.Message}");
-
-                return Enumerable.Empty<KhachSan>();
-            }
+            throw new NotImplementedException();
         }
 
-        public async Task<IEnumerable<KhachSan>> LayDanhSachKhachSanOwner(string keyword, string thanhPho, double viDo, double kinhDo, int soSao, string trangThai, Guid ownerId, int startRow, int endRow)
+        public Task<List<KhachSan>> LayDanhSachKhachSanOwner(string keyword, string thanhPho, double viDo, double kinhDo, int soSao, string trangThai, Guid ownerId, int startRow, int endRow)
         {
-            try
-            {
-                var arr = new SqlParameter[]
-                {
-                    new SqlParameter("@Keyword",   SqlDbType.NVarChar, 255) { Value = (object?)keyword   ?? DBNull.Value },
-                    new SqlParameter("@ThanhPho",  SqlDbType.NVarChar, 255) { Value = (object?)thanhPho  ?? DBNull.Value },
-                    new SqlParameter("@ViDo",      SqlDbType.Float)         { Value = (object?)viDo      ?? DBNull.Value },
-                    new SqlParameter("@KinhDo",    SqlDbType.Float)         { Value = (object?)kinhDo    ?? DBNull.Value },
-                    new SqlParameter("@SoSao",     SqlDbType.Int)           { Value = soSao },
-                    new SqlParameter("@TrangThai", SqlDbType.NVarChar, 255) { Value = (object?)trangThai ?? DBNull.Value },
-                    new SqlParameter("@UserId",   SqlDbType.UniqueIdentifier) { Value = (object?)ownerId ?? DBNull.Value },
-                    new SqlParameter("@StartRow",  SqlDbType.Int)           { Value = startRow },
-                    new SqlParameter("@EndRow",    SqlDbType.Int)           { Value = endRow }
-                };
-                return await _executor.QueryAsync<KhachSan>("sp_LayDanhSachKhachSanOwner", arr);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error when get list KhachSan: {ex.Message}");
-
-                return Enumerable.Empty<KhachSan>();
-            }
+            throw new NotImplementedException();
         }
 
-        public async Task<int> TaoKhachSan(KhachSan ks)
+        public async Task<KhachSanCreateReponse> TaoKhachSan(KhachSanCreateRequest ks, Guid nguoiTao)
         {
+            await _unitOfWork.BeginTransactionAsync();
             try
             {
-                var tb = new DataTable();
-                tb.Columns.Add("Url", typeof(string));
-                foreach (var item in ks.Urls)
+                if (!TimeSpan.TryParse(ks.GioNhanPhong, out var gioNhan) ||
+                    !TimeSpan.TryParse(ks.GioTraPhong, out var gioTra))
                 {
-                    tb.Rows.Add(item);
-                }
-                var arr = new[]
-                {
-                    new SqlParameter("@NguoiTao", ks.NguoiTao),
-                    new SqlParameter("@TenKhachSan", ks.TenKhachSan),
-                    new SqlParameter("@MoTa", ks.MoTa),
-                    new SqlParameter("@DiaChi", ks.DiaChi),
-                    new SqlParameter("@ThanhPho", ks.ThanhPho),
-                    new SqlParameter("@ViDo", ks.ViDo),
-                    new SqlParameter("@KinhDo", ks.KinhDo),
-                    new SqlParameter("@SoSao", ks.SoSao),
-                    new SqlParameter("@GioNhanPhong", ks.GioNhanPhong),
-                    new SqlParameter("@GioTraPhong", ks.GioTraPhong),
-                    new SqlParameter("@TrangThai", ks.TrangThai),
-                    new SqlParameter("@ListImage", SqlDbType.Structured)
+                    return new KhachSanCreateReponse
                     {
-                        TypeName = "hotel_images",
-                        Value = tb
-                    }
+                        status = false,
+                        message = "Giờ nhận phòng hoặc giờ trả phòng không hợp lệ",
+                        Data = null
+                    };
+                }    
+
+                var images = new List<string>();
+                foreach (var file in ks.Files)
+                {
+                    var url = await _cloudinaryService.UploadImageAsync(file);
+                    images.Add(url);
+                }
+                Guid khachSanId = Guid.NewGuid();
+                var KhachSan = new KhachSan
+                {
+                    Id = khachSanId,
+                    TenKhachSan = ks.TenKhachSan,
+                    MoTa = ks.MoTa,
+                    DiaChi = ks.DiaChi,
+                    ThanhPho = ks.ThanhPho,
+                    ViDo = ks.ViDo,
+                    KinhDo = ks.KinhDo,
+                    SoSao = ks.SoSao,
+                    GioNhanPhong = Convert.ToDateTime(ks.GioNhanPhong).TimeOfDay,
+                    GioTraPhong = Convert.ToDateTime(ks.GioTraPhong).TimeOfDay,
+                    TrangThai = ks.TrangThai,
+                    NguoiTao = nguoiTao,
                 };
-                return await _executor.ExecuteAsync("sp_TaoKhachSan", arr);
+                await _khachSanRepository.TaoKhachSan(KhachSan);
+                await _khachSanImageRepository.InsertKhachSanImage(khachSanId, images);
+                await _unitOfWork.CommitAsync();
+                return new KhachSanCreateReponse
+                {
+                    status = true,
+                    message = "Tạo khách sạn thành công",
+                    Data = KhachSan
+                };
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message,
-                "Error when create KhachSan.");
-
-                return -1;
+                await _unitOfWork.RollbackAsync();
+                Console.WriteLine($"Error when create KhachSan: {ex.Message}");
+                return new KhachSanCreateReponse
+                {
+                    status = false,
+                    message = "Tạo khách sạn thất bại",
+                    Data = null
+                };
             }
         }
     }

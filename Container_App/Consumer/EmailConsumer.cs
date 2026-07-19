@@ -1,5 +1,5 @@
-﻿using Container_App.Core.Interface.Emails;
-using Container_App.Core.Model.Email;
+﻿using Container_App.Core.Model.Email;
+using Container_App.Data.Repository.Emails;
 using Container_App.Model.Emails;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;

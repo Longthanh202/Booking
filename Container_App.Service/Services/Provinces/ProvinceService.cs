@@ -1,8 +1,8 @@
 ﻿using CloudinaryDotNet.Actions;
-using Container_App.Core.Interface.Provinces;
 using Container_App.Core.Model.KhachSans;
 using Container_App.Core.Model.Provinces;
 using Container_App.Data.Connection;
+using Container_App.Data.Repository.Provinces;
 using System;
 using System.Collections.Generic;
 using System.Data;

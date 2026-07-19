@@ -1,22 +1,24 @@
 ﻿using Container_App.Common.Config;
 using Container_App.Consumer;
-using Container_App.Core.Interface.Banners;
-using Container_App.Core.Interface.DatPhongs;
-using Container_App.Core.Interface.Emails;
-using Container_App.Core.Interface.KhachSans;
-using Container_App.Core.Interface.LoaiPhongs;
-using Container_App.Core.Interface.Permissions;
-using Container_App.Core.Interface.Phongs;
-using Container_App.Core.Interface.Provinces;
-using Container_App.Core.Interface.RabbitMQ;
-using Container_App.Core.Interface.Redis;
-using Container_App.Core.Interface.RefreshTokens;
-using Container_App.Core.Interface.RolePermissions;
-using Container_App.Core.Interface.TienIchs;
-using Container_App.Core.Interface.Users;
 using Container_App.Core.Model.Email;
+using Container_App.Data;
 using Container_App.Data.Connection;
+using Container_App.Data.Repository.Banners;
+using Container_App.Data.Repository.DatPhongs;
+using Container_App.Data.Repository.Emails;
+using Container_App.Data.Repository.KhachSans;
+using Container_App.Data.Repository.LoaiPhongs;
+using Container_App.Data.Repository.Permissions;
+using Container_App.Data.Repository.Phongs;
+using Container_App.Data.Repository.Provinces;
+using Container_App.Data.Repository.RabbitMQ;
+using Container_App.Data.Repository.Redis;
+using Container_App.Data.Repository.RefreshTokens;
+using Container_App.Data.Repository.RolePermissions;
+using Container_App.Data.Repository.TienIchs;
+using Container_App.Data.Repository.Users;
 using Container_App.Middleware;
+using Container_App.Service;
 using Container_App.Service.Services.Banners;
 using Container_App.Service.Services.Cloudinarys;
 using Container_App.Service.Services.DatPhongs;
@@ -55,10 +57,11 @@ builder.Services.Configure<CloudinarySettings>(
 builder.Services.Configure<MailSettings>(
     builder.Configuration.GetSection("MailSettings"));
 
-#region Connection String
-#endregion
+builder.Services.AddDIData(builder.Configuration);//DI Data
+builder.Services.AddDIService(builder.Configuration);//DI Service
+builder.Services.AddHttpContextAccessor();//DI HttpContextAccessor
 
-builder.Services.AddScoped<IStoredProcedureExecutor, StoredProcedureExecutor>();
+
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
     var connectionString = builder.Configuration.GetConnectionString("Redis");
@@ -66,26 +69,7 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
     return ConnectionMultiplexer.Connect(connectionString);
 });
 
-#region Add Service
-builder.Services.AddScoped<IUserServices, UserServices>();
-builder.Services.AddScoped<IPermissionService, PermissionService>();
-builder.Services.AddScoped<IRolePermissionService, RolePermissionService>();
-builder.Services.AddScoped<IKhachSanService, KhachSanService>();
-builder.Services.AddScoped<ITienIchService, TienIchService>();
-builder.Services.AddScoped<ILoaiPhongService, LoaiPhongService>();
-builder.Services.AddScoped<IPhongService, PhongService>();
-builder.Services.AddScoped<IRoleService, RoleService>();
-builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
-builder.Services.AddScoped<CloudinaryService>();
-builder.Services.AddScoped<IBannerService, BannerService>();
-builder.Services.AddScoped<IKhachSanImageService, KhachSanImageService>();
-builder.Services.AddScoped<IDatPhongService, DatPhongService>();
-builder.Services.AddScoped<IProvinceService, ProvinceService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
-builder.Services.AddScoped<IRabbitMQPublisher, RabbitMQPublisher>();
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<IRedisService, RedisService>();
-#endregion
+
 
 //Add consumer
 builder.Services.AddHostedService<EmailConsumer>();
@@ -189,7 +173,6 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-//app.UseHttpsRedirection(); // Đặt trước UseRouting // bỏ chạy http thâu
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseRouting();
 

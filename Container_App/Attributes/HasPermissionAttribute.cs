@@ -1,4 +1,4 @@
-﻿using Container_App.Core.Interface.Permissions;
+﻿using Container_App.Data.Repository.Permissions;
 using Container_App.Service.Services.Permissions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;

@@ -1,4 +1,4 @@
-﻿using Container_App.Core.Interface.RabbitMQ;
+﻿using Container_App.Data.Repository.RabbitMQ;
 using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
 using System;

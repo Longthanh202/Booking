@@ -1,10 +1,11 @@
 ﻿using Container_App.Common.Shared;
-using Container_App.Core.Interface.KhachSans;
-using Container_App.Core.Interface.LoaiPhongs;
-using Container_App.Core.Interface.Redis;
-using Container_App.Core.Interface.TienIchs;
 using Container_App.Core.Model.KhachSans;
+using Container_App.Data.Repository.KhachSans;
+using Container_App.Data.Repository.LoaiPhongs;
+using Container_App.Data.Repository.Redis;
+using Container_App.Data.Repository.TienIchs;
 using Container_App.Model.KhachSans;
+using Container_App.Service.Services.KhachSanImage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using RabbitMQ.Client;
@@ -96,18 +97,18 @@ namespace Container_App.Controllers
 
                 foreach (var hotel in khachSans)
                 {
-                    hotel.Urls = imageLookup.ContainsKey(hotel.Id)
-                        ? imageLookup[hotel.Id].Select(x => x.Url).ToList()
-                        : new List<string>();
+                    //hotel.Urls = imageLookup.ContainsKey(hotel.Id)
+                    //    ? imageLookup[hotel.Id].Select(x => x.Url).ToList()
+                    //    : new List<string>();
                 }
 
-                int totalRow = khachSans.FirstOrDefault()?.TotalRow ?? 0;
-                int totalPage = Paginations.GetTotalPages(totalRow, PAGE_SIZE);
+                //int totalRow = khachSans.FirstOrDefault()?.TotalRow ?? 0;
+                //int totalPage = Paginations.GetTotalPages(totalRow, PAGE_SIZE);
 
                 var result = new FilterHotelResponse
                 {
                     Data = khachSans.ToList(),
-                    TotalPage = totalPage
+                    //TotalPage = totalPage
                 };
                 await _redisService.SetObject(cacheKey, result, TimeSpan.FromSeconds(30));
 
@@ -134,26 +135,12 @@ namespace Container_App.Controllers
 
             try
             {
-                if (id.IsNullOrEmpty())
+                if (string.IsNullOrEmpty(id))
                 {
                     return BadRequest();
-                }
-                Guid IdFormat = Guid.Parse(id);
-                var khachSan = await _khachSanService.DetailKhachSan(IdFormat);
-                if (khachSan == null)
-                {
-                    return StatusCode(500, "Server Error");
-                }
-                var loaiPhongs = await _loaiPhongService.GetLoaiPhongByKhachSanId(IdFormat);
-                var tienIchs = await _tienIchService.GetTienIchKhachSanByKhachSanId(IdFormat);
-                var images = await _khachSanImageService.GetListImageByKhachSanId(IdFormat);
-                return Ok(new DetailHotel
-                {
-                    KhachSan = khachSan,
-                    tienIchs = tienIchs.ToList(),
-                    loaiPhongs = loaiPhongs.ToList(),
-                    KhachSanImages = images.ToList(),
-                });
+                }                
+                var khachSan = await _khachSanService.DetailKhachSan(Guid.Parse(id));
+                return Ok(khachSan);
 
             }
             catch (SqlException ex)

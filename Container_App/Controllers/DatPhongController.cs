@@ -1,6 +1,6 @@
-﻿using Container_App.Core.Interface.DatPhongs;
-using Container_App.Core.Interface.Users;
-using Container_App.Core.Model.DatPhongs;
+﻿using Container_App.Core.Model.DatPhongs;
+using Container_App.Data.Repository.DatPhongs;
+using Container_App.Data.Repository.Users;
 using Container_App.Model.DatPhongs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;

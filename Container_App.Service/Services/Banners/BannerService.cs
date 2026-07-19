@@ -1,82 +1,42 @@
-﻿using CloudinaryDotNet.Actions;
-using Container_App.Core.Interface.Banners;
+﻿
 using Container_App.Core.Model.Banners;
-using Container_App.Core.Model.KhachSans;
-using Container_App.Data.Connection;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Container_App.Data.Repository.Banners;
+using Container_App.Service.Dtos.Banner;
+using Container_App.Service.Services.Cloudinarys;
+
 
 namespace Container_App.Service.Services.Banners
 {
     public class BannerService : IBannerService
     {
-        private readonly IStoredProcedureExecutor _executor;
-        public BannerService(IStoredProcedureExecutor executor)
+        private readonly IBannerRepository _bannerRepository;
+        private readonly CloudinaryService _cloudinaryService;
+        public BannerService(IBannerRepository bannerRepository, CloudinaryService cloudinaryService)
         {
-            _executor = executor;
+            _bannerRepository = bannerRepository;
+            _cloudinaryService = cloudinaryService;
+        }
+        public async Task<List<Banner>> GetAllBanner(string keyword, int isActive, int startRow, int endRow)
+        {
+            return await _bannerRepository.GetAllBanner(keyword, isActive, startRow, endRow);
         }
 
-        public async Task<IEnumerable<Banner>> GetBannerIsActive()
+        public async Task<List<Banner>> GetBannerIsActive()
         {
-            try
-            {              
-                return await _executor.QueryAsync<Banner>("sp_GetBannerIsACtive");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error when get list GetBannerIsActive: {ex.Message}");
-
-                return Enumerable.Empty<Banner>();
-            }
+            return await _bannerRepository.GetBannerIsActive();
         }
 
-        public async Task<IEnumerable<Banner>> GetAllBanner(string keyword, int isActive, int startRow, int endRow)
+        public async Task<Banner> InsertBanner(InsertBannerDto banner)
         {
-            try
+            var url = await _cloudinaryService.UploadImageAsync(banner.File);
+            var input = new Banner
             {
-                var arr = new SqlParameter[]
-                {
-                    new SqlParameter("@Keyword",   SqlDbType.NVarChar, 255) { Value = (object?)keyword   ?? DBNull.Value },
-                    new SqlParameter("@IsActive",  SqlDbType.NVarChar, 255) { Value = isActive },                    
-                    new SqlParameter("@StartRow",  SqlDbType.Int)           { Value = startRow },
-                    new SqlParameter("@EndRow",    SqlDbType.Int)           { Value = endRow }
-                };
-                return await _executor.QueryAsync<Banner>("sp_GetAllBanner", arr);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error when get list GetAllBanner: {ex.Message}");
-
-                return Enumerable.Empty<Banner>();
-            }
-        }
-
-        public async Task<int> InsertBanner(Banner banner)
-        {
-            try
-            {               
-                var arr = new[]
-                {
-                    new SqlParameter("@Title", banner.Title),
-                    new SqlParameter("@Subtitle", banner.Subtitle),
-                    new SqlParameter("@Url", banner.Url),
-                    new SqlParameter("@IsActive", banner.IsActive),
-
-                };
-                return await _executor.ExecuteAsync("sp_InsertBanner", arr);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message,
-                "Error when create Banner.");
-
-                return -1;
-            }
+                Title = banner.Title,
+                Subtitle = banner.Subtitle,
+                IsActive = banner.IsActive,
+                Url = url
+            };
+            return await _bannerRepository.InsertBanner(input);
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using Container_App.Core.Interface.Provinces;
+﻿using Container_App.Data.Repository.Provinces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Container_App.Controllers

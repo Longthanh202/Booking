@@ -1,15 +1,16 @@
 ﻿using Container_App.Attributes;
 using Container_App.Common.Shared;
-using Container_App.Core.Interface.KhachSans;
-using Container_App.Core.Interface.LoaiPhongs;
-using Container_App.Core.Interface.Phongs;
-using Container_App.Core.Interface.TienIchs;
-using Container_App.Core.Interface.Users;
 using Container_App.Core.Model.KhachSans;
 using Container_App.Core.Model.LoaiPhongs;
 using Container_App.Core.Model.Phongs;
 using Container_App.Core.Model.TienIchs;
+using Container_App.Data.Repository.KhachSans;
+using Container_App.Data.Repository.LoaiPhongs;
+using Container_App.Data.Repository.Phongs;
+using Container_App.Data.Repository.TienIchs;
+using Container_App.Data.Repository.Users;
 using Container_App.Model.KhachSans;
+using Container_App.Service.Dtos.KhachSan;
 using Container_App.Service.Services.Cloudinarys;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -43,13 +44,8 @@ namespace Container_App.Controllers
         [HasPermission("khachsan", "insert")]
         [HttpPost]
         [Route("khachsan/tao")]
-        public async Task<IActionResult> TaoKhachSan([FromForm] KhachSanCreateDto dto)
+        public async Task<IActionResult> TaoKhachSan([FromForm] KhachSanCreateRequest dto)
         {
-            if (!TimeSpan.TryParse(dto.GioNhanPhong, out var gioNhan))
-                return BadRequest("Giờ nhận phòng không hợp lệ");
-
-            if (!TimeSpan.TryParse(dto.GioTraPhong, out var gioTra))
-                return BadRequest("Giờ trả phòng không hợp lệ");
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (userId == null)
@@ -57,34 +53,13 @@ namespace Container_App.Controllers
                 return Unauthorized();
             }
 
-            var images = new List<string>();
-            foreach (var file in dto.Files)
+            
+            var result = await _khachSanService.TaoKhachSan(dto, Guid.Parse(userId));
+            if (!result.status)
             {
-                var url = await _cloudinaryService.UploadImageAsync(file);
-                images.Add(url);
+                return BadRequest();
             }
-
-            var KhachSan = new KhachSan
-            {
-                TenKhachSan = dto.TenKhachSan,
-                MoTa = dto.MoTa,
-                DiaChi = dto.DiaChi,
-                ThanhPho = dto.ThanhPho,
-                ViDo = dto.ViDo,
-                KinhDo = dto.KinhDo,
-                SoSao = dto.SoSao,
-                GioNhanPhong = dto.GioNhanPhong,
-                GioTraPhong = dto.GioTraPhong,
-                TrangThai = dto.TrangThai,
-                NguoiTao = Guid.Parse(userId),
-                Urls = images
-            };           
-            int insert = await _khachSanService.TaoKhachSan(KhachSan);
-            if (insert != -1)
-            {
-                return Ok(new { Message = "Tạo khách sạn thành công" });
-            }
-            return BadRequest(new { Message = "Tạo khách sạn thất bại" });
+            return Ok(result);
         }
 
         [HttpPost]
@@ -161,9 +136,11 @@ namespace Container_App.Controllers
                dto.SoSao, dto.TrangThai, Guid.Parse(userId), startRow, endRow);
             }
 
-            int totalRow = khachSans.FirstOrDefault()?.TotalRow ?? 0;
-            int totalPage = Paginations.GetTotalPages(totalRow, PAGE_SIZE);
-            return Ok(new { Data = khachSans, TotalPage = totalPage });
+            //int totalRow = khachSans.FirstOrDefault()?.TotalRow ?? 0;
+            //int totalPage = Paginations.GetTotalPages(totalRow, PAGE_SIZE);
+            return Ok(new { Data = khachSans, 
+                //TotalPage = totalPage 
+            });
         }
 
 

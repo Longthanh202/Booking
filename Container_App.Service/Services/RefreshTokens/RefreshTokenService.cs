@@ -1,8 +1,12 @@
-﻿using Container_App.Core.Interface.RefreshTokens;
-using Container_App.Core.Model.RefreshTokens;
+﻿using Container_App.Core.Model.RefreshTokens;
 using Container_App.Core.Model.TienIchs;
 using Container_App.Core.Model.Users;
 using Container_App.Data.Connection;
+using Container_App.Data.Repository.RefreshTokens;
+using Container_App.Service.Dtos.UserProfile;
+using Container_App.Service.Services.Tokens;
+using Microsoft.AspNetCore.Http;
+using Org.BouncyCastle.Asn1.Ocsp;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -14,52 +18,67 @@ namespace Container_App.Service.Services.RefreshTokens
 {
     public class RefreshTokenService: IRefreshTokenService
     {
-        private readonly IStoredProcedureExecutor _executor;
-        public RefreshTokenService(IStoredProcedureExecutor executor)
+        private readonly IRefreshTokenRepository _refreshTokenRepository;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly ITokenService _tokenService;
+        public RefreshTokenService(IRefreshTokenRepository refreshTokenRepository, 
+            IHttpContextAccessor httpContextAccessor, ITokenService tokenService)
         {
-            _executor = executor;
+            _refreshTokenRepository = refreshTokenRepository;
+            _httpContextAccessor = httpContextAccessor;
+            _tokenService = tokenService;
         }
 
         public async Task<RefreshToken> CheckStatusefreshToken(string token)
         {
             try
             {
-                var arr = new[]
-                {
-                    new SqlParameter("@Token", token)
-                };
-                return await _executor.QuerySingleAsync<RefreshToken>("sp_CheckStatusRefreshToken", arr);
+                return await _refreshTokenRepository.CheckStatusefreshToken(token);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message, "Error when CheckStatusefreshToken");
-
-                throw;
+                Console.WriteLine("Error when CheckStatusefreshToken: " + ex.Message);
+                return null;
+           
             }
         }
 
-        public async Task<int> InsertRefreshToken(RefreshToken refreshToken)
+        public async Task<RefreshToken> InsertRefreshToken(RefreshToken refreshToken)
         {
             try
             {
-                var arr = new[]
-                {
-                    new SqlParameter("@UserId", refreshToken.UserId),
-                    new SqlParameter("@Token", refreshToken.Token),
-                    new SqlParameter("@ExpiryDate", refreshToken.ExpireDate),
-                    new SqlParameter("@FullName", refreshToken.FullName),
-                    new SqlParameter("@RoleId", refreshToken.RoleId),
-                    new SqlParameter("@RoleName", refreshToken.RoleName)
-                };
-                return await _executor.ExecuteAsync("sp_InsertRefreshToken", arr);
+                return await _refreshTokenRepository.InsertRefreshToken(refreshToken);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message,
-                "Error when inserting refresh token.");
-
-                return -1;
+                Console.WriteLine("Error when InsertRefreshToken: " + ex.Message);
+                return null;
             }
+        }
+
+        public async Task<string?> RefreshToken()
+        {
+            var refreshToken = _httpContextAccessor.HttpContext?
+                .Request
+                .Cookies["refreshToken"];
+
+            if (string.IsNullOrWhiteSpace(refreshToken))
+                return null;
+
+            var existingToken = await _refreshTokenRepository.CheckStatusefreshToken(refreshToken);
+
+            if (existingToken == null)
+                return null;
+
+            var accessToken = _tokenService.GenerateAccessToken(new UserProfile
+            {
+                Id = existingToken.UserId,
+                FullName = existingToken.FullName,
+                RoleId = existingToken.RoleId,
+                RoleName = existingToken.RoleName
+            });
+
+            return accessToken;
         }
     }
 }

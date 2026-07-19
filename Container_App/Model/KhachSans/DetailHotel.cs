@@ -1,4 +1,5 @@
-﻿using Container_App.Core.Model.KhachSans;
+﻿using Container_App.Core.Model.KhachSanImage;
+using Container_App.Core.Model.KhachSans;
 using Container_App.Core.Model.LoaiPhongs;
 using Container_App.Core.Model.TienIchs;
 

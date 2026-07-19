@@ -7,7 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Model\Roles\" />
+    <Compile Remove="Model\Roles\**" />
+    <EmbeddedResource Remove="Model\Roles\**" />
+    <None Remove="Model\Roles\**" />
   </ItemGroup>
 
   <ItemGroup>

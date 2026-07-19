@@ -1,9 +1,9 @@
-﻿using Container_App.Core.Interface.Emails;
-using Container_App.Core.Model.Email;
+﻿using Container_App.Core.Model.Email;
 using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using MailKit.Net.Smtp;
+using Container_App.Data.Repository.Emails;
 
 namespace Container_App.Service.Services.Emails
 {
