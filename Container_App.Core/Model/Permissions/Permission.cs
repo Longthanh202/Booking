@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Container_App.Core.Model.RolePermissions;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -11,8 +12,9 @@ namespace Container_App.Core.Model.Permissions
     {
         [Key]
         public Guid Id { get; set; }
-        public string Action { get; set; }
+        public string? Action { get; set; }
         public DateTime? CreateAt { get; set; }
         public Guid? CreateBy { get; set; }
+        public virtual ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
     }
 }

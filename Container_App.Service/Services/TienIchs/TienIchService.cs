@@ -12,48 +12,40 @@ namespace Container_App.Service.Services.TienIchs
 {
     public class TienIchService : ITienIchService
     {
-        private readonly IStoredProcedureExecutor _executor;
-        public TienIchService(IStoredProcedureExecutor executor)
+        private readonly ITienIchRepository _tienIchRepository;
+        public TienIchService(ITienIchRepository tienIchRepository)
         {
-            _executor = executor;
+            _tienIchRepository = tienIchRepository;
         }
 
-        public async Task<IEnumerable<TienIch>> GetTienIchKhachSanByKhachSanId(Guid khachSanId)
+        public async Task<List<TienIch>> GetTienIchKhachSanByKhachSanId(Guid khachSanId)
         {
             try
             {
-                var arr = new[]
-                {
-                    new SqlParameter("@KhachSanId", khachSanId),
-                };
-                return await _executor.QueryAsync<TienIch>("sp_GetTienIchKhachSanByKhachSanId", arr);
+                return await _tienIchRepository.GetTienIchKhachSanByKhachSanId(khachSanId);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message,
                 "Error when GetTienIchKhachSanByKhachSanId.");
 
-                return Enumerable.Empty<TienIch>();
+                return new List<TienIch>();
             }
         }
 
-        public async Task<int> ThemTienIch(TienIch tienIch)
+        public async Task<TienIch> ThemTienIch(TienIch tienIch)
         {
             try
             {
-                var arr = new[]
-                {
-                    new SqlParameter("@TenTienIch", tienIch.TenTienIch),
-                    new SqlParameter("@Icon", tienIch.Icon)                    
-                };
-                return await _executor.ExecuteAsync("sp_ThemTienIch", arr);
+                tienIch.Id = Guid.NewGuid();
+                return await _tienIchRepository.ThemTienIch(tienIch);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message,
                 "Error when Them Tien Ich.");
 
-                return -1;
+                return null;
             }
         }
     }

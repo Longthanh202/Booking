@@ -14,6 +14,7 @@ using Container_App.Data.Repository.RefreshTokens;
 using Container_App.Data.Repository.RolePermissions;
 using Container_App.Data.Repository.TienIchs;
 using Container_App.Data.Repository.Users;
+using Container_App.Service.Consumers.SendEmailRegister;
 using Container_App.Service.Services.Banners;
 using Container_App.Service.Services.Cloudinarys;
 using Container_App.Service.Services.DatPhongs;
@@ -66,6 +67,10 @@ namespace Container_App.Service
             services.AddScoped<IRabbitMQPublisher, RabbitMQPublisher>();
             services.AddScoped<IRedisService, RedisService>();
             services.AddScoped<ITokenService, TokenService>();
+
+
+            //Consumer
+            services.AddHostedService<EmailConsumer>();
             return services;
         }
     }

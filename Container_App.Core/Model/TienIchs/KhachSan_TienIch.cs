@@ -10,8 +10,9 @@ namespace Container_App.Core.Model.TienIchs
     public class KhachSan_TienIch
     {
         public Guid KhachSanId { get; set; }
+        public virtual KhachSan? KhachSan { get; set; }
+
         public Guid TienIchId { get; set; }
-        public KhachSan KhachSan { get; set; } = new KhachSan();
-        public TienIch TienIch { get; set; } = new TienIch();
+        public virtual TienIch? TienIch { get; set; }
     }
 }

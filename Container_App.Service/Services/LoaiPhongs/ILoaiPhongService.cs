@@ -10,7 +10,7 @@ namespace Container_App.Data.Repository.LoaiPhongs
 {
     public interface ILoaiPhongService
     {
-        Task<int> TaoLoaiPhong(LoaiPhong lp);
-        Task<IEnumerable<LoaiPhong>> GetLoaiPhongByKhachSanId(Guid khachSanId);
+        Task<LoaiPhong> TaoLoaiPhong(LoaiPhong lp);
+        Task<List<LoaiPhong>> GetLoaiPhongByKhachSanId(Guid khachSanId);
     }
 }

@@ -1,5 +1,4 @@
 ﻿using Container_App.Common.Config;
-using Container_App.Consumer;
 using Container_App.Core.Model.Email;
 using Container_App.Data;
 using Container_App.Data.Connection;
@@ -70,40 +69,58 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 });
 
 
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Tự động bỏ qua các trường có giá trị NULL khi Serialize ra JSON
+        options.JsonSerializerOptions.DefaultIgnoreCondition =
+            System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull;
+    });
 
-//Add consumer
-builder.Services.AddHostedService<EmailConsumer>();
-
+// Đọc 1 lần, "đóng băng" giá trị ngay tại startup — không bị ảnh hưởng bởi reload sau này
 var jwtSection = builder.Configuration.GetSection("Jwt");
+var jwtIssuer = jwtSection["Issuer"];
+var jwtAudience = jwtSection["Audience"];
 var jwtKey = jwtSection["Key"];
 
-if (string.IsNullOrWhiteSpace(jwtKey))
+if (string.IsNullOrWhiteSpace(jwtIssuer) || string.IsNullOrWhiteSpace(jwtKey))
 {
-    throw new InvalidOperationException("JWT Key is missing.");
+    throw new Exception("LỖI: Thiếu Jwt:Issuer hoặc Jwt:Key trong appsettings.json lúc khởi động.");
 }
-
-var keyBytes = Convert.FromBase64String(jwtKey);
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
-        options.RequireHttpsMetadata = false; // true khi production
+        options.RequireHttpsMetadata = false;
         options.SaveToken = true;
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
-
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
             ValidateIssuer = true,
-            ValidIssuer = jwtSection["Issuer"],
-
+            ValidIssuer = jwtIssuer,           // Giá trị cố định, không đổi theo reload
             ValidateAudience = true,
-            ValidAudience = jwtSection["Audience"],
-
+            ValidAudience = jwtAudience,
             ValidateLifetime = true,
             ClockSkew = TimeSpan.Zero
         };
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = context =>
+            {
+                Console.WriteLine($"[JWT Fail]: {context.Exception.Message}");
+                return Task.CompletedTask;
+            },
+            OnMessageReceived = context =>
+            {
+                var authHeader = context.Request.Headers["Authorization"].ToString();
+                Console.WriteLine($"[Debug] Authorization header nhận được: '{authHeader}'");
+                return Task.CompletedTask;
+            }
+        };
     });
+
+
 
 // Program.cs
 builder.Services.AddStackExchangeRedisCache(options =>
@@ -122,8 +139,6 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Cấu hình ứng dụng lắng nghe HTTP
-//builder.WebHost.UseUrls("http://0.0.0.0:5925");
 
 builder.Services.AddSwaggerGen(c =>
 {

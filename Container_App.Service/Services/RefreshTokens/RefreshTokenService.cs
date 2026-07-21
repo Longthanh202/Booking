@@ -72,9 +72,9 @@ namespace Container_App.Service.Services.RefreshTokens
 
             var accessToken = _tokenService.GenerateAccessToken(new UserProfile
             {
-                Id = existingToken.UserId,
+                Id = existingToken.UserId.Value,
                 FullName = existingToken.FullName,
-                RoleId = existingToken.RoleId,
+                RoleId = existingToken.RoleId.Value,
                 RoleName = existingToken.RoleName
             });
 

@@ -7,12 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Model\Roles\**" />
-    <EmbeddedResource Remove="Model\Roles\**" />
-    <None Remove="Model\Roles\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="MailKit" Version="4.17.0" />
   </ItemGroup>
 

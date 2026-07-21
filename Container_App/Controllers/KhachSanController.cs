@@ -11,39 +11,31 @@ using Container_App.Data.Repository.TienIchs;
 using Container_App.Data.Repository.Users;
 using Container_App.Model.KhachSans;
 using Container_App.Service.Dtos.KhachSan;
+using Container_App.Service.Dtos.KhachSanDto;
 using Container_App.Service.Services.Cloudinarys;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Security.Claims;
 
 namespace Container_App.Controllers
 {
+    [Route("api/[controller]")]
     [ApiController]
-    [Route("api/admin")]
     public class KhachSanController : Controller
     {
         private readonly IKhachSanService _khachSanService;
-        private readonly ITienIchService _tienIchService;
-        private readonly ILoaiPhongService _loaiPhongService;
-        private readonly IPhongService _phongService;
-        private readonly CloudinaryService _cloudinaryService;
-        private readonly IUserServices _userService;
-
-        const int PAGE_SIZE = 10;
-        public KhachSanController(IKhachSanService khachSanService, ITienIchService tienIchService,
-            ILoaiPhongService loaiPhongService, IPhongService phongService, CloudinaryService cloudinaryService, 
-            IUserServices userService)
+       
+        public KhachSanController(IKhachSanService khachSanService)
         {
             _khachSanService = khachSanService;
-            _tienIchService = tienIchService;
-            _loaiPhongService = loaiPhongService;
-            _phongService = phongService;
-            _cloudinaryService = cloudinaryService;
-            _userService = userService;
+          
         }
 
         [HasPermission("khachsan", "insert")]
         [HttpPost]
-        [Route("khachsan/tao")]
+        [Route("tao")]
         public async Task<IActionResult> TaoKhachSan([FromForm] KhachSanCreateRequest dto)
         {
 
@@ -62,87 +54,113 @@ namespace Container_App.Controllers
             return Ok(result);
         }
 
-        [HttpPost]
-        [Route("tienich/tao")]
-        public async Task<IActionResult> ThemTienIch([FromBody] TienIch dto)
-        {
-
-            int insert = await _tienIchService.ThemTienIch(dto);
-            if (insert != -1)
-            {
-                return Ok(new { Message = "Thêm tiện ích thành công" });
-            }
-            return BadRequest(new { Message = "Thêm tiện ích thất bại" });
-        }
-
-        [HttpPost]
-        [Route("loaiphong/tao")]
-        public async Task<IActionResult> ThemLoaiPhong([FromBody] LoaiPhong dto)
-        {
-            if (!_userService.IsAuthenticated())
-            {
-                return Unauthorized(new
-                {
-                    message = "Vui lòng đăng nhập"
-                });
-            }
-            int insert = await _loaiPhongService.TaoLoaiPhong(dto);
-            if (insert != -1)
-            {
-                return Ok(new { Message = "Thêm loại phòng thành công" });
-            }
-            return BadRequest(new { Message = "Thêm loại phòng thất bại" });
-        }
-
-        [HttpPost]
-        [Route("phong/tao")]
-        public async Task<IActionResult> ThemPhong([FromBody] Phong dto)
-        {
-            int insert = await _phongService.TaoPhong(dto);
-            if (insert != -1)
-            {
-                return Ok(new { Message = "Thêm phòng thành công" });
-            }
-            return BadRequest(new { Message = "Thêm phòng thất bại" });
-        }
-
         [HasPermission("khachsan", "view")]
         [HttpPost]
-        [Route("khachsans/get")]
-        public async Task<IActionResult> GetKhachSans([FromBody] KhachSanFilterDto dto)
+        [Route("get")]
+        public async Task<IActionResult> GetKhachSans([FromBody] AdminFilterHotelRequestDto dto)
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (userId == null)
+            // 1. Lấy thông tin UserId từ Claim
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
             {
-                return Unauthorized();
+                return Unauthorized(new { message = "Không tìm thấy thông tin tài khoản hoặc phiên đăng nhập không hợp lệ." });
             }
 
-            int startRow = Paginations.GetStartRow(dto.Page, PAGE_SIZE);
-            int endRow = Paginations.GetEndRow(dto.Page, PAGE_SIZE);
+            // 2. Chuẩn hóa giá trị phân trang mặc định
+            int page = dto.Page <= 0 ? 1 : dto.Page;
+            int pageSize = dto.PageSize <= 0 ? 10 : dto.PageSize; // Hoặc sử dụng hằng số PAGE_SIZE của bạn
 
-            var khachSans = Enumerable.Empty<KhachSan>();
+            FilterHotelResponseDto result;
 
+            // 3. Phân quyền Admin / Owner để gọi phương thức Service tương ứng
             var role = User.FindFirst(ClaimTypes.Role)?.Value;
-            if (User.FindFirst(ClaimTypes.Role)?.Value == "Admin")
+
+            if (role == "Admin")
             {
-                khachSans = await _khachSanService.LayDanhSachKhachSanAdmin(
-                dto.Keyword, dto.ThanhPho, dto.ViDo ?? 0, dto.KinhDo ?? 0,
-                dto.SoSao, dto.TrangThai, startRow, endRow);
+                var adminRequest = new AdminFilterHotelRequestDto
+                {
+                    Keyword = dto.Keyword,
+                    ThanhPho = dto.ThanhPho,
+                    ViDo = dto.ViDo ?? 0,
+                    KinhDo = dto.KinhDo ?? 0,
+                    SoSao = dto.SoSao,
+                    TrangThai = dto.TrangThai,
+                    Page = page,
+                    PageSize = pageSize
+                };
+
+                result = await _khachSanService.LayDanhSachKhachSanAdminAsync(adminRequest);
             }
             else
             {
-               khachSans = await _khachSanService.LayDanhSachKhachSanOwner(
-               dto.Keyword, dto.ThanhPho, dto.ViDo ?? 0, dto.KinhDo ?? 0,
-               dto.SoSao, dto.TrangThai, Guid.Parse(userId), startRow, endRow);
+                var ownerRequest = new OwnerFilterHotelRequestDto
+                {
+                    Keyword = dto.Keyword,
+                    ThanhPho = dto.ThanhPho,
+                    ViDo = dto.ViDo ?? 0,
+                    KinhDo = dto.KinhDo ?? 0,
+                    SoSao = dto.SoSao,
+                    TrangThai = dto.TrangThai,
+                    Page = page,
+                    PageSize = pageSize
+                };
+
+                result = await _khachSanService.LayDanhSachKhachSanOwnerAsync(ownerRequest, userId);
             }
 
-            //int totalRow = khachSans.FirstOrDefault()?.TotalRow ?? 0;
-            //int totalPage = Paginations.GetTotalPages(totalRow, PAGE_SIZE);
-            return Ok(new { Data = khachSans, 
-                //TotalPage = totalPage 
-            });
+            // 4. Trả về kết quả đồng bộ cho Frontend
+            return Ok(result);
         }
+        [HttpPost]
+        [Route("chitiet")]
+        public async Task<IActionResult> DetailHotel([FromBody] string id)
+        {
 
+            try
+            {
+                if (string.IsNullOrEmpty(id))
+                {
+                    return BadRequest();
+                }
+                var khachSan = await _khachSanService.DetailKhachSan(Guid.Parse(id));
+                return Ok(khachSan);
 
+            }
+            catch (SqlException ex)
+            {
+                // Log the exception (you can use a logging framework like Serilog, NLog, etc.)
+                Console.Error.WriteLine($"SQL Exception: {ex.Message}");
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                Console.Error.WriteLine($"General Exception: {ex.Message}");
+                return StatusCode(500, "An unexpected error occurred.");
+            }
+        }
+        [HttpPost]
+        [Route("filter")]
+        public async Task<IActionResult> FilterHotels([FromBody] FilterHotelRequestDto dto)
+        {
+            if (dto.Page <= 0 || dto.PageSize <= 0)
+            {
+                return BadRequest(new { message = "Số trang (Page) và Kích thước trang (PageSize) phải lớn hơn 0." });
+            }
+            try
+            {
+                // 2. Gọi Service xử lý logic
+                var result = await _khachSanService.FilterHotelsAsync(dto);
+
+                // 3. Trả về kết quả HTTP 200 OK
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message.ToString());
+
+                return StatusCode(500, new { message = "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau." });
+            }
+        }
     }
 }

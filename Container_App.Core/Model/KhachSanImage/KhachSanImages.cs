@@ -13,7 +13,7 @@ namespace Container_App.Core.Model.KhachSanImage
         [Key]
         public long Id { get; set; }
         public Guid KhachSanId { get; set; }
-        public string Url { get; set; }
-        public KhachSan KhachSan { get; set; }
+        public string? Url { get; set; }
+        public virtual KhachSan? KhachSan { get; set; }
     }
 }

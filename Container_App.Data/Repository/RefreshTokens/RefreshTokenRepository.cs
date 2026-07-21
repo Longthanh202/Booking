@@ -23,7 +23,9 @@ namespace Container_App.Data.Repository.RefreshTokens
                 .FirstOrDefaultAsync(x =>
                 x.Status == 1 &&
                 x.Token == token &&
-                x.CreatedDate.AddDays(x.ExpiryDate) > DateTime.Now);
+                x.CreatedDate.HasValue &&
+                x.ExpiryDate.HasValue &&
+                x.CreatedDate.Value > DateTime.Now.AddDays(-x.ExpiryDate.Value));
         }
 
         public async Task<RefreshToken> InsertRefreshToken(RefreshToken refreshToken)

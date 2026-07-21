@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Container_App.Core.Model.LoaiPhongs;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -11,15 +12,14 @@ namespace Container_App.Core.Model.DatPhongs
     {
         [Key]
         public Guid Id { get; set; }
+        public Guid? DatPhongId { get; set; }
+        public Guid? LoaiPhongId { get; set; }
+        public int? SoLuongPhong { get; set; }
+        public decimal? GiaMoiDem { get; set; }
 
-        public Guid DatPhongId { get; set; }
-
-        public Guid LoaiPhongId { get; set; }
-
-        public int SoLuongPhong { get; set; }
-
-        public decimal GiaMoiDem { get; set; }
-
-        public DatPhong? DatPhong { get; set; } = null!;
+        // Navigations
+        public virtual DatPhong? DatPhong { get; set; }
+        public virtual LoaiPhong? LoaiPhong { get; set; }
+        public virtual ICollection<PhongDat> PhongDats { get; set; } = new List<PhongDat>();
     }
 }

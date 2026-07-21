@@ -9,7 +9,7 @@ namespace Container_App.Data.Repository.TienIchs
 {
     public interface ITienIchService
     {
-        Task<int> ThemTienIch(TienIch tienIch);
-        Task<IEnumerable<TienIch>> GetTienIchKhachSanByKhachSanId(Guid khachSanId);
+        Task<TienIch> ThemTienIch(TienIch tienIch);
+        Task<List<TienIch>> GetTienIchKhachSanByKhachSanId(Guid khachSanId);
     }
 }

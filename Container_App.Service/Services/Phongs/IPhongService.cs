@@ -10,6 +10,6 @@ namespace Container_App.Data.Repository.Phongs
 {
     public interface IPhongService
     {
-        Task<int> TaoPhong(Phong p);
+        Task<Phong> TaoPhong(Phong p);
     }
 }

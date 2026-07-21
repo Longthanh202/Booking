@@ -7,7 +7,7 @@ using Container_App.Core.Model.KhachSans;
 
 namespace Container_App.Service.Dtos.KhachSanDto
 {
-    public class KhachSanCreateReponse
+    public class KhachSanCreateResponse
     {
         public bool status { get; set; }
         public string message { get; set; }

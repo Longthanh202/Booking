@@ -1,5 +1,7 @@
 ﻿using Container_App.Data.Repository.Permissions;
 using Container_App.Service.Services.Permissions;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Caching.Memory;
@@ -20,8 +22,10 @@ namespace Container_App.Attributes
         }
         public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
         {
+
             var user = context.HttpContext.User;
 
+           
             if (!user.Identity?.IsAuthenticated ?? true)
             {
                 context.Result = new UnauthorizedResult();

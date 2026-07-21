@@ -13,52 +13,39 @@ namespace Container_App.Service.Services.LoaiPhongs
 {
     public class LoaiPhongService : ILoaiPhongService
     {
-        private readonly IStoredProcedureExecutor _executor;
-        public LoaiPhongService(IStoredProcedureExecutor executor)
+        private readonly ILoaiPhongRepository _loaiPhongRepository;
+        public LoaiPhongService(ILoaiPhongRepository loaiPhongRepository)
         {
-            _executor = executor;
+            _loaiPhongRepository = loaiPhongRepository;
         }
 
-        public async Task<IEnumerable<LoaiPhong>> GetLoaiPhongByKhachSanId(Guid khachSanId)
+        public async Task<List<LoaiPhong>> GetLoaiPhongByKhachSanId(Guid khachSanId)
         {
             try
             {
-                var arr = new[]
-                {
-                    new SqlParameter("@KhachSanId", khachSanId),
-                 
-                };
-                return await _executor.QueryAsync<LoaiPhong>("sp_GetLoaiPhongByKhachSanId", arr);
+               return await _loaiPhongRepository.GetLoaiPhongByKhachSanId(khachSanId);
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message,
-                "Error when GetLoaiPhongByKhachSanId.");
+                Console.WriteLine(ex.Message);  
 
-                return Enumerable.Empty<LoaiPhong>();
+                return new List<LoaiPhong>();
             }
         }
 
-        public async Task<int> TaoLoaiPhong(LoaiPhong lp)
+        public async Task<LoaiPhong> TaoLoaiPhong(LoaiPhong lp)
         {
             try
             {
-                var arr = new[]
-                {
-                    new SqlParameter("@KhachSanId", lp.KhachSanId),
-                    new SqlParameter("@TenLoaiPhong", lp.TenLoaiPhong),
-                    new SqlParameter("@SoKhachToiDa", lp.SoKhachToiDa),
-                    new SqlParameter("@KieuGiuong", lp.KieuGiuong),
-                    new SqlParameter("@MoTa", lp.MoTa),                   
-                };
-                return await _executor.ExecuteAsync("sp_ThemLoaiPhong", arr);
+                lp.Id = Guid.NewGuid();
+                return await _loaiPhongRepository.TaoLoaiPhong(lp);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message,
                 "Error when create LoaiPhong.");
 
-                return -1;
+                return null;
             }
         }
     }

@@ -5,6 +5,7 @@ using Container_App.Data.DBContext;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Drawing.Printing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,6 +24,7 @@ namespace Container_App.Data.Repository.KhachSans
         {
             return await _context.KhachSans
                 .AsNoTracking() // Tăng tốc độ đọc, không track để lưu cache thừa
+                .AsSplitQuery() // Tách các truy vấn con ra để tránh lỗi Cartesian explosion
                 .Include(ks => ks.Province)
                 .Include(ks => ks.LoaiPhongs)
                 .Include(ks => ks.KhachSanImages)
@@ -31,10 +33,10 @@ namespace Container_App.Data.Repository.KhachSans
                 .FirstOrDefaultAsync(ks => ks.Id == id);
         }
 
-        public async Task<List<KhachSan>> FilterHotels(string? keyword, string provinceCode, int? soKhach, DateTime? ngayNhanPhong, DateTime? ngayTraPhong, int startRow, int endRow)
+        public async Task<(List<KhachSan> Items, int TotalCount)> FilterHotels(string? keyword, string provinceCode, int? soKhach, DateTime? ngayNhanPhong, DateTime? ngayTraPhong, int pageIndex, int pageSize)
         {
             IQueryable<KhachSan> query = _context.KhachSans
-        .Include(x => x.LoaiPhongs);
+                .Include(x => x.LoaiPhongs);
 
             if (!string.IsNullOrWhiteSpace(keyword))
             {
@@ -61,75 +63,17 @@ namespace Container_App.Data.Repository.KhachSans
                             ct.DatPhong.NgayTraPhong > ngayNhanPhong &&
                             ct.DatPhong.TrangThai != "HUY")));
             }
+            int totalCount = await query.CountAsync();
+            int skip = (pageIndex - 1) * pageSize;
 
-            return await query
-                .Skip(startRow)
-                .Take(endRow - startRow)
+            var items = await query
+                .OrderByDescending(x => x.NgayTao) // Bắt buộc phải có OrderBy khi dùng Skip/Take
+                .Skip(skip < 0 ? 0 : skip)
+                .Take(pageSize)
                 .ToListAsync();
+            return (items, totalCount);
         }
-
-        public async Task<List<KhachSan>> LayDanhSachKhachSanAdmin(string keyword, string thanhPho, double viDo, double kinhDo, int soSao, string trangThai, int startRow, int endRow)
-        {
-            IQueryable<KhachSan> query = _context.KhachSans;
-
-            if (!string.IsNullOrWhiteSpace(keyword))
-            {
-                query = query.Where(x => x.TenKhachSan.Contains(keyword));
-            }
-
-            if (!string.IsNullOrEmpty(thanhPho))
-            {
-                query = query.Where(x => x.ThanhPho == thanhPho);
-            }
-
-            if (soSao > 0)
-            {
-                query = query.Where(x => x.SoSao == soSao);
-            }
-
-            if (!string.IsNullOrWhiteSpace(trangThai))
-            {
-                query = query.Where(x => x.TrangThai == trangThai);
-            }
-
-            return await query
-                .OrderByDescending(x => x.NgayTao)
-                .Skip(startRow)
-                .Take(endRow - startRow)
-                .ToListAsync();
-        }
-
-        public async Task<List<KhachSan>> LayDanhSachKhachSanOwner(string keyword, string thanhPho, double viDo, double kinhDo, int soSao, string trangThai, Guid ownerId, int startRow, int endRow)
-        {
-            IQueryable<KhachSan> query = _context.KhachSans.Where(x => x.NguoiTao == ownerId);
-
-            if (!string.IsNullOrWhiteSpace(keyword))
-            {
-                query = query.Where(x => x.TenKhachSan.Contains(keyword));
-            }
-
-            if (!string.IsNullOrEmpty(thanhPho))
-            {
-                query = query.Where(x => x.ThanhPho == thanhPho);
-            }
-
-            if (soSao > 0)
-            {
-                query = query.Where(x => x.SoSao == soSao);
-            }
-
-            if (!string.IsNullOrWhiteSpace(trangThai))
-            {
-                query = query.Where(x => x.TrangThai == trangThai);
-            }
-
-            return await query
-                .OrderByDescending(x => x.NgayTao)
-                .Skip(startRow)
-                .Take(endRow - startRow)
-                .ToListAsync();
-        }
-
+    
         public async Task<KhachSan> TaoKhachSan(KhachSan ks)
         {
             ks.Id = Guid.NewGuid();
@@ -137,6 +81,95 @@ namespace Container_App.Data.Repository.KhachSans
             await _context.KhachSans.AddAsync(ks);
 
             return ks;
+        }
+
+        public async Task<(List<KhachSan> Items, int TotalCount)> LayDanhSachKhachSanAdmin(
+            string? keyword,
+            string? thanhPho,
+            double viDo,
+            double kinhDo,
+            int soSao,
+            string? trangThai,
+            int pageIndex,
+            int pageSize)
+        {
+            return await LayDanhSachKhachSanInternal(keyword, thanhPho, viDo, kinhDo, soSao, trangThai, null, pageIndex, pageSize);
+        }
+
+        public async Task<(List<KhachSan> Items, int TotalCount)> LayDanhSachKhachSanOwner(
+            string? keyword,
+            string? thanhPho,
+            double viDo,
+            double kinhDo,
+            int soSao,
+            string? trangThai,
+            Guid ownerId,
+            int pageIndex,
+            int pageSize)
+        {
+            return await LayDanhSachKhachSanInternal(keyword, thanhPho, viDo, kinhDo, soSao, trangThai, ownerId, pageIndex, pageSize);
+        }
+
+        // Private helper dùng chung cho cả Admin và Owner
+        private async Task<(List<KhachSan> Items, int TotalCount)> LayDanhSachKhachSanInternal(
+            string? keyword,
+            string? thanhPho,
+            double viDo,
+            double kinhDo,
+            int soSao,
+            string? trangThai,
+            Guid? ownerId,
+            int pageIndex,
+            int pageSize)
+        {
+            // 1. Khai báo Query với AsNoTracking để đọc nhanh hơn
+            IQueryable<KhachSan> query = _context.KhachSans.AsNoTracking();
+
+            // 2. Nếu có ownerId (role Owner) thì lọc theo Chủ sở hữu
+            if (ownerId.HasValue && ownerId.Value != Guid.Empty)
+            {
+                query = query.Where(x => x.NguoiTao == ownerId.Value);
+            }
+
+            // 3. Lọc theo từ khóa
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                query = query.Where(x => x.TenKhachSan.Contains(keyword));
+            }
+
+            // 4. Lọc theo Thành phố
+            if (!string.IsNullOrEmpty(thanhPho))
+            {
+                query = query.Where(x => x.ThanhPho == thanhPho);
+            }
+
+            // 5. Lọc theo Số sao
+            if (soSao > 0)
+            {
+                query = query.Where(x => x.SoSao == soSao);
+            }
+
+            // 6. Lọc theo Trạng thái
+            if (!string.IsNullOrWhiteSpace(trangThai))
+            {
+                query = query.Where(x => x.TrangThai == trangThai);
+            }
+
+            // Note: Nếu cần dùng viDo, kinhDo để lọc theo bán kính (VD: 10km) thì thêm query tại đây.
+
+            // 7. Đếm tổng số lượng bản ghi thỏa điều kiện
+            int totalCount = await query.CountAsync();
+
+            // 8. Phân trang Skip/Take
+            int skip = (pageIndex - 1) * pageSize;
+
+            var items = await query
+                .OrderByDescending(x => x.NgayTao)
+                .Skip(skip < 0 ? 0 : skip)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
         }
     }
 }

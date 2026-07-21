@@ -1,4 +1,5 @@
-﻿using Container_App.Core.Model.Users;
+﻿using Container_App.Core.Model.Roles;
+using Container_App.Core.Model.Users;
 using Container_App.Data.DBContext;
 using Microsoft.EntityFrameworkCore;
 using System;

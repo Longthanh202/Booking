@@ -1,6 +1,8 @@
 ﻿using Container_App.Common.Shared;
+using Container_App.Core.Model.Roles;
 using Container_App.Core.Model.Users;
 using Container_App.Data.Connection;
+using Container_App.Data.Repository.Roles;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -12,20 +14,16 @@ namespace Container_App.Service.Services.Roles
 {
     public class RoleService : IRoleService
     {
-        private readonly IStoredProcedureExecutor _executor;
-       public RoleService(IStoredProcedureExecutor executor)
+        private readonly IRoleRepository _roleRepository;
+       public RoleService(IRoleRepository roleRepository)
         {
-            _executor = executor;
+            _roleRepository = roleRepository;
         }
         public async Task<Role> CheckRoleAdmin(Guid userId)
         {
             try
             {              
-                var arr = new[]
-                {
-                    new SqlParameter("@UserId", userId),                  
-                };
-                return await _executor.QuerySingleAsync<Role>("sp_CheckRoleAdmin", arr);
+                return await _roleRepository.CheckRoleAdmin(userId);
             }
             catch (Exception ex)
             {

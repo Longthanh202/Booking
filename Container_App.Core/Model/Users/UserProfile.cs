@@ -1,4 +1,5 @@
 ﻿using Container_App.Core.Model.RolePermissions;
+using Container_App.Core.Model.UserRoles;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -14,28 +15,20 @@ namespace Container_App.Core.Model.Users
     {
         [Key]
         public Guid Id { get; set; }
-        public string FullName { get; set; }
-        public string Phone { get; set; }
-        public string Email { get; set; }
-        public string Address { get; set; }
-        public int IsDel { get; set; }
+        public string? FullName { get; set; }
+        public string? Phone { get; set; }
+        public string? Email { get; set; }
+        public string? Address { get; set; }
+        public int? IsDel { get; set; }
         public DateTime? CreateAt { get; set; }
         public Guid? CreateBy { get; set; }
-        public Guid UserLoginId { get; set; }
-        public virtual UserLogin UserLogin { get; set; }
-        public virtual UserRole UserRole { get; set; }
+        public Guid? UserLoginId { get; set; }
         [NotMapped]
         public Guid RoleId { get; set; }
         [NotMapped]
-        public string RoleName { get; set; }
-    }
+        public string? RoleName { get; set; }
 
-    public class Role
-    {
-        public Guid Id { get; set; }
-        public string RoleName { get; set; }
-        public Guid UserId { get; set; }
-        public ICollection<RolePermission> RolePermissions { get; set; }
-        public ICollection<UserRole> UserRoles { get; set; }
+        public virtual UserLogin? UserLogin { get; set; }
+        public virtual UserRole? UserRole { get; set; }
     }
 }

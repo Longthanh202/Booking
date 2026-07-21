@@ -9,11 +9,11 @@ namespace Container_App.Core.Model.TienIchs
 {
     public class TienIch
     {
-        [Key]
         public Guid Id { get; set; }
-        public string TenTienIch { get; set; }
-        public string Icon { get; set; }
-        public ICollection<KhachSan_TienIch> KhachSan_TienIchs { get; set; }
-       = new List<KhachSan_TienIch>();
+        public string? TenTienIch { get; set; }
+        public string? Icon { get; set; }
+
+        // Navigation Nhiều - Nhiều
+        public virtual ICollection<KhachSan_TienIch> KhachSan_TienIches { get; set; } = new List<KhachSan_TienIch>();
     }
 }

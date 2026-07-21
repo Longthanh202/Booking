@@ -22,7 +22,7 @@ namespace Container_App.Service.Services.Tokens
         }
 
         public string GenerateAccessToken(UserProfile user)
-        {
+        {           
             var jwt = _configuration.GetSection("Jwt");
 
             var claims = new List<Claim>

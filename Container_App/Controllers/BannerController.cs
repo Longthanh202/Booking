@@ -7,8 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Container_App.Controllers
 {
+    [Route("api/[controller]")]
     [ApiController]
-    [Route("api")]
     public class BannerController : ControllerBase
     {
         private readonly IBannerService _bannerService;
@@ -18,7 +18,7 @@ namespace Container_App.Controllers
         }
 
         [HttpPost]
-        [Route("admin/insert-banner")]
+        [Route("tao")]
         public async Task<IActionResult> InsertBanner([FromForm] InsertBannerDto file)
         {
             var banner = await _bannerService.InsertBanner(file);
@@ -26,7 +26,7 @@ namespace Container_App.Controllers
         }
 
         [HttpGet]
-        [Route("client/get-banners")]
+        [Route("get")]
         public async Task<IActionResult> GetBannerIsActive()
         {
             var result = await _bannerService.GetBannerIsActive();

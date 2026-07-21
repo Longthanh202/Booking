@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Container_App.Controllers
 {
-    public class ProvinceController : Controller
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ProvinceController : ControllerBase
     {
         private readonly IProvinceService _provinceService;
         public ProvinceController(IProvinceService provinceService)
@@ -11,7 +13,7 @@ namespace Container_App.Controllers
             _provinceService = provinceService;
         }
         [HttpGet]
-        [Route("api/provinces")]
+        [Route("get")]
         public async Task<IActionResult> GetProvinces()
         {
             var result = await _provinceService.GetProvinces();

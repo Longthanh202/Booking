@@ -8,7 +8,7 @@ namespace Container_App.Core.Model.Permissions
 {
     public class PermissionInfo
     {
-        public string ResourceName { get; set; }
-        public string Action { get; set; }
+        public string? ResourceName { get; set; }
+        public string? Action { get; set; }
     }
 }

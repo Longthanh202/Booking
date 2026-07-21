@@ -1,15 +1,21 @@
 ﻿using Container_App.Core.Model.Email;
 using Container_App.Data.Repository.Emails;
-using Container_App.Model.Emails;
+using Container_App.Service.Dtos.Email;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 
-namespace Container_App.Consumer
+namespace Container_App.Service.Consumers.SendEmailRegister
 {
-    public class EmailConsumer
-    : BackgroundService
+    public class EmailConsumer: BackgroundService
     {
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly IConfiguration _configuration;
@@ -99,7 +105,8 @@ namespace Container_App.Consumer
                 await Task.Delay(
                     Timeout.Infinite,
                     stoppingToken);
-            }catch(Exception ex)
+            }
+            catch (Exception ex)
             {
                 Console.WriteLine(ex.ToString());
             }

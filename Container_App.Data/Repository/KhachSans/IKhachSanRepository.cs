@@ -10,12 +10,12 @@ namespace Container_App.Data.Repository.KhachSans
     public interface IKhachSanRepository
     {
         Task<KhachSan> TaoKhachSan(KhachSan ks);
-        Task<List<KhachSan>> LayDanhSachKhachSanAdmin(string keyword, string thanhPho,
-            double viDo, double kinhDo, int soSao, string trangThai, int startRow, int endRow);
+        Task<(List<KhachSan> Items, int TotalCount)> LayDanhSachKhachSanAdmin(string keyword, string thanhPho,
+            double viDo, double kinhDo, int soSao, string trangThai, int pageIndex, int pageSize);
 
-        Task<List<KhachSan>> LayDanhSachKhachSanOwner(string keyword, string thanhPho,
-            double viDo, double kinhDo, int soSao, string trangThai, Guid ownerId, int startRow, int endRow);
-        Task<List<KhachSan>> FilterHotels(string? keyword, string provinceCode, int? soKhach, DateTime? ngayNhanPhong, DateTime? ngayTraPhong, int startRow, int endRow);
+        Task<(List<KhachSan> Items, int TotalCount)> LayDanhSachKhachSanOwner(string keyword, string thanhPho,
+            double viDo, double kinhDo, int soSao, string trangThai, Guid ownerId, int pageIndex, int pageSize);
+        Task<(List<KhachSan> Items, int TotalCount)> FilterHotels(string? keyword, string provinceCode, int? soKhach, DateTime? ngayNhanPhong, DateTime? ngayTraPhong, int pageIndex, int pageSize);
         Task<KhachSan> DetailKhachSan(Guid id);
     }
 }

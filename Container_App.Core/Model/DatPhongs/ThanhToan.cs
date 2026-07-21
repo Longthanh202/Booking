@@ -9,30 +9,14 @@ namespace Container_App.Core.Model.DatPhongs
 {
     public class ThanhToan
     {
-        [Key]
         public Guid Id { get; set; }
-
-        public Guid DatPhongId { get; set; }
-
-        /// <summary>
-        /// VNPAY
-        /// MOMO
-        /// THE
-        /// </summary>
-        public string PhuongThuc { get; set; } = string.Empty;
-
-        public decimal SoTien { get; set; }
-
-        /// <summary>
-        /// CHO_THANH_TOAN
-        /// THANH_CONG
-        /// THAT_BAI
-        /// HOAN_TIEN
-        /// </summary>
-        public string TrangThai { get; set; } = string.Empty;
-
+        public Guid? DatPhongId { get; set; }
+        public string? PhuongThuc { get; set; }
+        public decimal? SoTien { get; set; }
+        public string? TrangThai { get; set; }
         public DateTime? ThoiGianThanhToan { get; set; }
 
-        public DatPhong DatPhong { get; set; } = null!;
+        // Navigation
+        public virtual DatPhong? DatPhong { get; set; }
     }
 }

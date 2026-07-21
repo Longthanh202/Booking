@@ -9,9 +9,6 @@ using Container_App.Data.Repository.RabbitMQ;
 using Container_App.Data.Repository.RefreshTokens;
 using Container_App.Data.Repository.RolePermissions;
 using Container_App.Data.Repository.Users;
-using Container_App.Model.Emails;
-using Container_App.Model.RolePermissions;
-using Container_App.Model.Users;
 using Container_App.Service.Dtos.Login;
 using Container_App.Service.Dtos.RolePermission;
 using Container_App.Service.Dtos.UserProfile;
@@ -30,8 +27,9 @@ using System.Text.Json;
 
 namespace Container_App.Controllers
 {
+    [Route("api/[controller]")]
     [ApiController]
-    public class UserController : Controller
+    public class UserController : ControllerBase
     {
         private readonly IUserServices _userServices;
         private readonly IRolePermissionService _rolePermissionService;
@@ -47,7 +45,7 @@ namespace Container_App.Controllers
         }
 
         [HttpPost]
-        [Route("api/login")]
+        [Route("login")]
         public async Task<IActionResult> Login([FromBody] LoginResquest dto)
         {
             var result = await _userServices.Login(dto);
@@ -59,7 +57,7 @@ namespace Container_App.Controllers
         }
 
         [HttpGet]
-        [Route("api/me")]
+        [Route("me")]
         public async Task<IActionResult> GetProfile()
         {
 
@@ -76,7 +74,7 @@ namespace Container_App.Controllers
             return Ok(result);
         }
 
-        [HttpPost("api/refresh-token")]
+        [HttpPost("refresh-token")]
         public async Task<IActionResult> RefreshToken()
         {
             string accessToken = await _refreshTokenService.RefreshToken();
@@ -88,7 +86,7 @@ namespace Container_App.Controllers
         }
 
         [HttpPost]
-        [Route("api/insert-role-permission")]
+        [Route("insert-role-permission")]
         public async Task<IActionResult> InsertRolePermission([FromBody] RolePermissionRequset dto)
         {
             await _rolePermissionService.Insert(dto);
@@ -96,7 +94,7 @@ namespace Container_App.Controllers
         }       
 
         [HttpPost]
-        [Route("api/register")]
+        [Route("register")]
         public async Task<IActionResult> Register([FromBody] UserRequset u)
         {
             await _userServices.Register(u);

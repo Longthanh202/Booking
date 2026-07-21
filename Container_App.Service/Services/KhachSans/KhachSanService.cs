@@ -9,14 +9,20 @@ using Container_App.Data.Connection;
 using Container_App.Data.Repository.KhachSanImage;
 using Container_App.Data.Repository.KhachSans;
 using Container_App.Data.Repository.LoaiPhongs;
+using Container_App.Data.Repository.Redis;
 using Container_App.Data.Repository.TienIchs;
 using Container_App.Service.Dtos.KhachSan;
 using Container_App.Service.Dtos.KhachSanDto;
+using Container_App.Service.Dtos.KhachSanImages;
+using Container_App.Service.Dtos.LoaiPhongs;
+using Container_App.Service.Dtos.TienIchs;
 using Container_App.Service.Services.Cloudinarys;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
+using System.Drawing.Printing;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
@@ -32,10 +38,12 @@ namespace Container_App.Service.Services.KhachSans
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILoaiPhongRepository _loaiPhongRepository;
         private readonly ITienIchRepository _tienIchRepository;
+        private readonly IRedisService _redisService;
 
         public KhachSanService(CloudinaryService cloudinaryService, IKhachSanRepository khachSanRepository,
             IKhachSanImageRepository khachSanImageRepository, IUnitOfWork unitOfWork, 
-            ILoaiPhongRepository loaiPhongRepository, ITienIchRepository tienIchRepository)
+            ILoaiPhongRepository loaiPhongRepository, ITienIchRepository tienIchRepository,
+            IRedisService redisService)
         {
             _cloudinaryService = cloudinaryService;
             _khachSanRepository = khachSanRepository;
@@ -43,21 +51,22 @@ namespace Container_App.Service.Services.KhachSans
             _unitOfWork = unitOfWork;
             _loaiPhongRepository = loaiPhongRepository;
             _tienIchRepository = tienIchRepository;
+            _redisService = redisService;
         }
 
-        public async Task<KhachSanDetailReponse?> DetailKhachSan(Guid id)
+        public async Task<KhachSanDetailResponse?> DetailKhachSan(Guid id)
         {
             try
             {
-                // 1. Lấy thực thể khách sạn (đã được Include sẵn các bảng con ở Repo)
+                // 1. Lấy Entity từ Repository
                 var khachSan = await _khachSanRepository.DetailKhachSan(id);
                 if (khachSan == null)
                 {
                     return null;
                 }
 
-                // 2. Trả về cấu trúc response và "lọc sạch" dữ liệu rác tại đây
-                return new KhachSanDetailReponse
+                // 2. Map sang DTO tinh gọn tại Service
+                return new KhachSanDetailResponse
                 {
                     Id = khachSan.Id,
                     TenKhachSan = khachSan.TenKhachSan,
@@ -66,38 +75,34 @@ namespace Container_App.Service.Services.KhachSans
                     SoSao = khachSan.SoSao,
                     GioNhanPhong = khachSan.GioNhanPhong,
                     GioTraPhong = khachSan.GioTraPhong,
-                    full_name = khachSan.Province?.full_name ?? "",
+                    TenThanhPho = khachSan.Province?.full_name ?? string.Empty,
 
-                    // Lọc dữ liệu sạch cho loaiPhongs (Triệt tiêu liên kết ngược gây rác JSON)
-                    loaiPhongs = khachSan.LoaiPhongs.Select(lp => new LoaiPhong
+                    // LoaiPhongs chỉ chứa data cần thiết, không có KhachSanId hay KhachSan=null
+                    LoaiPhongs = khachSan.LoaiPhongs.Select(lp => new LoaiPhongDto
                     {
                         Id = lp.Id,
                         TenLoaiPhong = lp.TenLoaiPhong,
                         SoKhachToiDa = lp.SoKhachToiDa,
                         KieuGiuong = lp.KieuGiuong,
                         MoTa = lp.MoTa,
-                        NgayTao = lp.NgayTao,
-                        KhachSanId = id,
-                        KhachSan = null
+                        NgayTao = lp.NgayTao
                     }).ToList(),
 
-                    // Lọc tiện ích: Đi qua bảng trung gian KhachSan_TienIches để bóc lấy đối tượng TienIch
-                    tienIchs = khachSan.KhachSan_TienIches
-                        .Where(kst => kst.TienIch != null) // Phòng trường hợp dữ liệu lỗi dưới DB
-                        .Select(kst => new TienIch
+                    // TienIchs bóc tách qua bảng trung gian
+                    TienIchs = khachSan.KhachSan_TienIches
+                        .Where(kst => kst.TienIch != null)
+                        .Select(kst => new TienIchDto
                         {
-                            Id = kst.TienIch.Id,
+                            Id = kst.TienIch!.Id,
                             TenTienIch = kst.TienIch.TenTienIch,
                             Icon = kst.TienIch.Icon
                         }).ToList(),
 
-                    // Lọc hình ảnh trực tiếp từ tập hợp KhachSanImages của thực thể khachSan
-                    KhachSanImages = khachSan.KhachSanImages.Select(img => new KhachSanImages
+                    // KhachSanImages chỉ gồm Id và Url
+                    KhachSanImages = khachSan.KhachSanImages.Select(img => new KhachSanImageDto
                     {
                         Id = img.Id,
-                        Url = img.Url,
-                        KhachSanId = id,
-                        KhachSan = null
+                        Url = img.Url
                     }).ToList()
                 };
             }
@@ -108,22 +113,176 @@ namespace Container_App.Service.Services.KhachSans
             }
         }
 
-        public Task<List<KhachSan>> FilterHotels(string? keyword, int? provinceCode, int? soKhach, DateTime? ngayNhanPhong, DateTime? ngayTraPhong, int startRow, int endRow)
+        public async Task<FilterHotelResponseDto> FilterHotelsAsync(FilterHotelRequestDto dto)
         {
-            throw new NotImplementedException();
+            var stopwatch = Stopwatch.StartNew();
+
+            // 1. Tạo Cache Key chuẩn từ DTO
+            string cacheKey = $"hotel-filter:" +
+                              $"{dto.Keyword ?? ""}:" +
+                              $"{dto.ProvinceCode ?? ""}:" +
+                              $"{dto.SoKhach?.ToString() ?? ""}:" +
+                              $"{dto.NgayNhanPhong?.ToString("yyyyMMdd") ?? ""}:" +
+                              $"{dto.NgayTraPhong?.ToString("yyyyMMdd") ?? ""}:" +
+                              $"{dto.Page}:" +
+                              $"{dto.PageSize}";
+
+            // 2. Kiểm tra Cache trong Redis
+            var cachedData = await _redisService.GetObject<FilterHotelResponseDto>(cacheKey);
+            if (cachedData != null)
+            {
+                stopwatch.Stop();
+                Console.WriteLine($"[Service] Load từ Redis: {stopwatch.ElapsedMilliseconds} ms");
+                return cachedData;
+            }
+
+            // 3. Gọi Repository lấy danh sách Khách sạn và Tổng số lượng dòng (TotalRow)
+            var (khachSans, totalRow) = await _khachSanRepository.FilterHotels(
+                dto.Keyword,
+                dto.ProvinceCode,
+                dto.SoKhach,
+                dto.NgayNhanPhong,
+                dto.NgayTraPhong,
+                dto.Page,
+                dto.PageSize);
+
+            // Nếu không tìm thấy khách sạn nào, trả về đối tượng rỗng
+            if (khachSans == null || !khachSans.Any())
+            {
+                return new FilterHotelResponseDto
+                {
+                    Data = new List<FilterHotelItemDto>(),
+                    TotalRow = 0,
+                    TotalPage = 0
+                };
+            }
+
+            // 4. Lấy danh sách Ảnh theo HotelIds (Tránh lỗi N+1 Query)
+            var hotelIds = khachSans.Select(x => x.Id).Distinct().ToList();
+            var hotelImages = await _khachSanImageRepository.GetHotelImages(hotelIds);
+
+            // Gom nhóm ảnh theo KhachSanId để Lookup nhanh với O(1)
+            var imageLookup = hotelImages
+                .GroupBy(x => x.KhachSanId)
+                .ToDictionary(g => g.Key, g => g.Select(img => img.Url).ToList());
+
+            // 5. Map dữ liệu từ Entity -> FilterHotelItemDto
+            var hotelDtos = khachSans.Select(hotel => new FilterHotelItemDto
+            {
+                Id = hotel.Id,
+                TenKhachSan = hotel.TenKhachSan,
+                MoTa = hotel.MoTa,
+                DiaChi = hotel.DiaChi,
+                SoSao = hotel.SoSao,
+                Urls = imageLookup.TryGetValue(hotel.Id, out var urls) ? urls : new List<string>()
+            }).ToList();
+
+            // 6. Tính tổng số trang bằng totalRow vừa nhận từ Repository
+            int totalPage = Paginations.GetTotalPages(totalRow, dto.PageSize);
+
+            var response = new FilterHotelResponseDto
+            {
+                Data = hotelDtos,
+                TotalRow = totalRow,
+                TotalPage = totalPage
+            };
+
+            // 7. Lưu vào Redis (Cache trong 30 giây)
+            await _redisService.SetObject(cacheKey, response, TimeSpan.FromSeconds(30));
+
+            stopwatch.Stop();
+            Console.WriteLine($"[Service] FilterHotels DB Execution: {stopwatch.ElapsedMilliseconds} ms");
+
+            return response;
         }
 
-        public Task<List<KhachSan>> LayDanhSachKhachSanAdmin(string keyword, string thanhPho, double viDo, double kinhDo, int soSao, string trangThai, int startRow, int endRow)
+
+
+        // 1. Dành cho Admin: Lấy tất cả khách sạn theo bộ lọc
+        public async Task<FilterHotelResponseDto> LayDanhSachKhachSanAdminAsync(AdminFilterHotelRequestDto dto)
         {
-            throw new NotImplementedException();
+            var (khachSans, totalRow) = await _khachSanRepository.LayDanhSachKhachSanAdmin(
+                dto.Keyword,
+                dto.ThanhPho,
+                dto.ViDo ?? 0,
+                dto.KinhDo ?? 0,
+                dto.SoSao,
+                dto.TrangThai,
+                dto.Page,
+                dto.PageSize
+            );
+
+            return await MapToFilterHotelResponseDtoAsync(khachSans, totalRow, dto.PageSize);
         }
 
-        public Task<List<KhachSan>> LayDanhSachKhachSanOwner(string keyword, string thanhPho, double viDo, double kinhDo, int soSao, string trangThai, Guid ownerId, int startRow, int endRow)
+        // 2. Dành cho Owner: Lấy danh sách khách sạn do Owner đó sở hữu
+        public async Task<FilterHotelResponseDto> LayDanhSachKhachSanOwnerAsync(OwnerFilterHotelRequestDto dto, Guid ownerId)
         {
-            throw new NotImplementedException();
+            var (khachSans, totalRow) = await _khachSanRepository.LayDanhSachKhachSanOwner(
+                dto.Keyword,
+                dto.ThanhPho,
+                dto.ViDo ?? 0,
+                dto.KinhDo ?? 0,
+                dto.SoSao,
+                dto.TrangThai,
+                ownerId,
+                dto.Page,
+                dto.PageSize
+            );
+
+            return await MapToFilterHotelResponseDtoAsync(khachSans, totalRow, dto.PageSize);
         }
 
-        public async Task<KhachSanCreateReponse> TaoKhachSan(KhachSanCreateRequest ks, Guid nguoiTao)
+        // Private Helper: Xử lý gom nhóm Ảnh, Mapping DTO và Phân trang để dùng chung
+        private async Task<FilterHotelResponseDto> MapToFilterHotelResponseDtoAsync(
+            List<KhachSan> khachSans,
+            int totalRow,
+            int pageSize)
+        {
+            // Nếu danh sách rỗng, trả về response trống lập tức
+            if (khachSans == null || !khachSans.Any())
+            {
+                return new FilterHotelResponseDto
+                {
+                    Data = new List<FilterHotelItemDto>(),
+                    TotalRow = 0,
+                    TotalPage = 0
+                };
+            }
+
+            // Lấy ảnh danh sách khách sạn theo HotelIds (Tối ưu performance)
+            var hotelIds = khachSans.Select(x => x.Id).Distinct().ToList();
+            var hotelImages = await _khachSanImageRepository.GetHotelImages(hotelIds);
+
+            var imageLookup = hotelImages
+                .GroupBy(x => x.KhachSanId)
+                .ToDictionary(g => g.Key, g => g.Select(img => img.Url).ToList());
+
+            // Map dữ liệu từ Entity sang DTO
+            var hotelDtos = khachSans.Select(hotel => new FilterHotelItemDto
+            {
+                Id = hotel.Id,
+                TenKhachSan = hotel.TenKhachSan,
+                MoTa = hotel.MoTa,
+                DiaChi = hotel.DiaChi,
+                SoSao = hotel.SoSao,
+                TrangThai = hotel.TrangThai,
+                NgayTao = hotel.NgayTao,
+                Urls = imageLookup.TryGetValue(hotel.Id, out var urls) ? urls : new List<string>()
+            }).ToList();
+
+            // Tính tổng số trang
+            int totalPage = Paginations.GetTotalPages(totalRow, pageSize);
+
+            return new FilterHotelResponseDto
+            {
+                Data = hotelDtos,
+                TotalRow = totalRow,
+                TotalPage = totalPage
+            };
+        }
+
+        public async Task<KhachSanCreateResponse> TaoKhachSan(KhachSanCreateRequest ks, Guid nguoiTao)
         {
             await _unitOfWork.BeginTransactionAsync();
             try
@@ -131,7 +290,7 @@ namespace Container_App.Service.Services.KhachSans
                 if (!TimeSpan.TryParse(ks.GioNhanPhong, out var gioNhan) ||
                     !TimeSpan.TryParse(ks.GioTraPhong, out var gioTra))
                 {
-                    return new KhachSanCreateReponse
+                    return new KhachSanCreateResponse
                     {
                         status = false,
                         message = "Giờ nhận phòng hoặc giờ trả phòng không hợp lệ",
@@ -164,7 +323,7 @@ namespace Container_App.Service.Services.KhachSans
                 await _khachSanRepository.TaoKhachSan(KhachSan);
                 await _khachSanImageRepository.InsertKhachSanImage(khachSanId, images);
                 await _unitOfWork.CommitAsync();
-                return new KhachSanCreateReponse
+                return new KhachSanCreateResponse
                 {
                     status = true,
                     message = "Tạo khách sạn thành công",
@@ -175,7 +334,7 @@ namespace Container_App.Service.Services.KhachSans
             {
                 await _unitOfWork.RollbackAsync();
                 Console.WriteLine($"Error when create KhachSan: {ex.Message}");
-                return new KhachSanCreateReponse
+                return new KhachSanCreateResponse
                 {
                     status = false,
                     message = "Tạo khách sạn thất bại",

@@ -12,30 +12,24 @@ namespace Container_App.Service.Services.Phongs
 {
     public class PhongService : IPhongService
     {
-        private readonly IStoredProcedureExecutor _executor;
-        public PhongService(IStoredProcedureExecutor executor)
+        private readonly IPhongRepository _phongRepository;
+        public PhongService(IPhongRepository phongRepository)
         {
-            _executor = executor;
+           _phongRepository = phongRepository;
         }
-        public async Task<int> TaoPhong(Phong p)
+        public async Task<Phong> TaoPhong(Phong p)
         {
             try
             {
-                var arr = new[]
-                {
-                    new SqlParameter("@LoaiPhongId", p.LoaiPhongId),
-                    new SqlParameter("@SoPhong", p.SoPhong),
-                    new SqlParameter("@Tang", p.Tang),
-                    new SqlParameter("@TrangThai", p.TrangThai),                   
-                };
-                return await _executor.ExecuteAsync("sp_ThemPhong", arr);
+                p.Id = Guid.NewGuid();
+                return await _phongRepository.TaoPhong(p);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message,
                 "Error when create Phong.");
 
-                return -1;
+                return null;
             }
         }
     }
