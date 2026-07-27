@@ -21,6 +21,7 @@ namespace Container_App.Service.Dtos.KhachSanDto
         public int? SoSao { get; set; }
         public string? TrangThai { get; set; }
         public DateTime? NgayTao { get; set; }
+        public decimal? Gia { get; set; }
         public List<string> Urls { get; set; } = new();
     }
 }

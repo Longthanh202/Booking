@@ -1,5 +1,6 @@
 ﻿using Container_App.Core.Model.Phongs;
 using Container_App.Data.Repository.Phongs;
+using Container_App.Service.Dtos.Phongs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,7 +18,7 @@ namespace Container_App.Controllers
         }
 
         [HttpPost("tao")]
-        public async Task<IActionResult> ThemPhong([FromBody] Phong dto)
+        public async Task<IActionResult> ThemPhong([FromBody] PhongRequest dto)
         {
             var result = await _phongService.TaoPhong(dto);
 

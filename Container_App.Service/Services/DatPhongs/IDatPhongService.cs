@@ -1,4 +1,5 @@
 ﻿using Container_App.Core.Model.DatPhongs;
+using Container_App.Service.Dtos.DatPhongs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,7 @@ namespace Container_App.Data.Repository.DatPhongs
 {
     public interface IDatPhongService
     {
-        Task<DatPhong> DatPhong(DatPhong dp, List<ChiTietDatPhong> ctdp);
+        Task<DatPhong> DatPhong(DatPhongRequest dp, Guid userId);
+        Task<DatPhong> CapNhatTrangThai(Guid id);
     }
 }

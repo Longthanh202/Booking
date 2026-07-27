@@ -31,8 +31,7 @@ namespace Container_App.Data.Repository.TienIchs
 
         public async Task<TienIch> ThemTienIch(TienIch tienIch)
         {
-            await _context.TienIches.AddAsync(tienIch);
-            await _context.SaveChangesAsync();
+            await _context.TienIches.AddAsync(tienIch);       
             return tienIch;
         }
     }

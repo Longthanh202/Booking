@@ -1,0 +1,25 @@
+﻿using Container_App.Core.Model.LichSuVis;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Container_App.Data.Repository.LichSuVis
+{
+    public interface ILichSuViRepository
+    {
+        Task<LichSuVi?> LayTheoId(long id);
+
+        Task<IEnumerable<LichSuVi>> LayTheoVi(long viKhachSanId);
+
+        Task<IEnumerable<LichSuVi>> LayTheoDatPhong(Guid datPhongId);
+
+        Task<IEnumerable<LichSuVi>> LayTheoKhoangThoiGian(
+            long viKhachSanId,
+            DateTime tuNgay,
+            DateTime denNgay);
+
+        Task Tao(LichSuVi lichSuVi);
+    }
+}

@@ -24,6 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Container_App.Common\Container_App.Common.csproj" />
     <ProjectReference Include="..\Container_App.Core\Container_App.Core.csproj" />
   </ItemGroup>
 

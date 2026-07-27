@@ -13,7 +13,7 @@ namespace Container_App.Core.Model.GiaPhongs
         public Guid LoaiPhongId { get; set; }
         public decimal Gia { get; set; } // decimal(18,2) -> decimal
         public DateTime NgayBatDau { get; set; }
-        public DateTime NgayKetThuc { get; set; }
+        public DateTime? NgayKetThuc { get; set; }
         public bool IsActive { get; set; } // bit -> bool
         public DateTime? NgayTao { get; set; }
 

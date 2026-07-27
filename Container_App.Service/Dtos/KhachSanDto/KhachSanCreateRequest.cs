@@ -19,7 +19,6 @@ namespace Container_App.Service.Dtos.KhachSan
         public int SoSao { get; set; }
         public string GioNhanPhong { get; set; }
         public string GioTraPhong { get; set; }
-        public string TrangThai { get; set; }
         public List<IFormFile> Files { get; set; }
     }
 }

@@ -4,7 +4,6 @@ using Container_App.Data.Repository.KhachSans;
 using Container_App.Data.Repository.LoaiPhongs;
 using Container_App.Data.Repository.Redis;
 using Container_App.Data.Repository.TienIchs;
-using Container_App.Model.KhachSans;
 using Container_App.Service.Services.KhachSanImage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;

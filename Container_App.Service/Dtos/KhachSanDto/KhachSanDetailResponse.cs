@@ -21,9 +21,7 @@ namespace Container_App.Service.Dtos.KhachSanDto
         public int? SoSao { get; set; }
         public TimeSpan? GioNhanPhong { get; set; }
         public TimeSpan? GioTraPhong { get; set; }
-        public string? TenThanhPho { get; set; } = string.Empty; // Đổi tên rõ nghĩa hơn full_name
-
-        public List<LoaiPhongDto> LoaiPhongs { get; set; } = new();
+        public string? TenThanhPho { get; set; } = string.Empty; // Đổi tên rõ nghĩa hơn full_name     
         public List<TienIchDto> TienIchs { get; set; } = new();
         public List<KhachSanImageDto> KhachSanImages { get; set; } = new();
     }

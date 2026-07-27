@@ -1,4 +1,5 @@
-﻿using Container_App.Core.Model.KhachSans;
+﻿using Container_App.Common.Shared.Enum.Booking;
+using Container_App.Core.Model.KhachSans;
 using Container_App.Core.Model.LoaiPhongs;
 using Container_App.Core.Model.TienIchs;
 using Container_App.Data.DBContext;
@@ -61,7 +62,7 @@ namespace Container_App.Data.Repository.KhachSans
                         !lp.ChiTietDatPhongs.Any(ct =>
                             ct.DatPhong.NgayNhanPhong < ngayTraPhong &&
                             ct.DatPhong.NgayTraPhong > ngayNhanPhong &&
-                            ct.DatPhong.TrangThai != "HUY")));
+                            ct.DatPhong.TrangThai != TrangThaiDatPhong.DA_HUY.ToString())));
             }
             int totalCount = await query.CountAsync();
             int skip = (pageIndex - 1) * pageSize;

@@ -88,12 +88,7 @@ namespace Container_App.Service.Services.Users
                 FullName = user.FullName,
                 Permissions = permissionKeys!
             };
-        }
-
-        public async Task<UserProfile> Insert(UserProfile user)
-        {
-            return await _userRepository.Insert(user);
-        }
+        }   
 
         public bool IsAuthenticated()
         {
@@ -198,7 +193,7 @@ namespace Container_App.Service.Services.Users
                 await _userRepository.Insert(profile);
                 await _unitOfWork.CommitAsync();
                 await _rabbitMQPublisher.PublishAsync(
-                "email_queue",
+                "register_email_queue",
                 new SendEmailEvent
                 {
                     ToEmail = user.Email,

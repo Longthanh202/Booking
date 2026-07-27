@@ -1,11 +1,13 @@
 ﻿using CloudinaryDotNet.Actions;
 using Container_App.Common.Shared;
+using Container_App.Common.Shared.Enum.Hotel;
 using Container_App.Core.Model.KhachSanImage;
 using Container_App.Core.Model.KhachSans;
 using Container_App.Core.Model.LoaiPhongs;
 using Container_App.Core.Model.TienIchs;
 using Container_App.Data;
 using Container_App.Data.Connection;
+using Container_App.Data.Repository.GiaPhongs;
 using Container_App.Data.Repository.KhachSanImage;
 using Container_App.Data.Repository.KhachSans;
 using Container_App.Data.Repository.LoaiPhongs;
@@ -17,6 +19,7 @@ using Container_App.Service.Dtos.KhachSanImages;
 using Container_App.Service.Dtos.LoaiPhongs;
 using Container_App.Service.Dtos.TienIchs;
 using Container_App.Service.Services.Cloudinarys;
+using Org.BouncyCastle.Math;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -36,21 +39,19 @@ namespace Container_App.Service.Services.KhachSans
         private readonly IKhachSanRepository _khachSanRepository;
         private readonly IKhachSanImageRepository _khachSanImageRepository;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly ILoaiPhongRepository _loaiPhongRepository;
-        private readonly ITienIchRepository _tienIchRepository;
+        private readonly IGiaPhongRepository _giaPhongRepository;
         private readonly IRedisService _redisService;
 
         public KhachSanService(CloudinaryService cloudinaryService, IKhachSanRepository khachSanRepository,
             IKhachSanImageRepository khachSanImageRepository, IUnitOfWork unitOfWork, 
-            ILoaiPhongRepository loaiPhongRepository, ITienIchRepository tienIchRepository,
+            IGiaPhongRepository giaPhongRepository,
             IRedisService redisService)
         {
             _cloudinaryService = cloudinaryService;
             _khachSanRepository = khachSanRepository;
             _khachSanImageRepository = khachSanImageRepository;
             _unitOfWork = unitOfWork;
-            _loaiPhongRepository = loaiPhongRepository;
-            _tienIchRepository = tienIchRepository;
+            _giaPhongRepository = giaPhongRepository;
             _redisService = redisService;
         }
 
@@ -75,18 +76,7 @@ namespace Container_App.Service.Services.KhachSans
                     SoSao = khachSan.SoSao,
                     GioNhanPhong = khachSan.GioNhanPhong,
                     GioTraPhong = khachSan.GioTraPhong,
-                    TenThanhPho = khachSan.Province?.full_name ?? string.Empty,
-
-                    // LoaiPhongs chỉ chứa data cần thiết, không có KhachSanId hay KhachSan=null
-                    LoaiPhongs = khachSan.LoaiPhongs.Select(lp => new LoaiPhongDto
-                    {
-                        Id = lp.Id,
-                        TenLoaiPhong = lp.TenLoaiPhong,
-                        SoKhachToiDa = lp.SoKhachToiDa,
-                        KieuGiuong = lp.KieuGiuong,
-                        MoTa = lp.MoTa,
-                        NgayTao = lp.NgayTao
-                    }).ToList(),
+                    TenThanhPho = khachSan.Province?.full_name ?? string.Empty,                  
 
                     // TienIchs bóc tách qua bảng trung gian
                     TienIchs = khachSan.KhachSan_TienIches
@@ -166,6 +156,12 @@ namespace Container_App.Service.Services.KhachSans
                 .GroupBy(x => x.KhachSanId)
                 .ToDictionary(g => g.Key, g => g.Select(img => img.Url).ToList());
 
+
+            var prices = await _giaPhongRepository.LayGiaPhongTheoDSKhachSanId(hotelIds);
+
+            var priceLookup = prices.ToDictionary(
+                x => x.LoaiPhong.KhachSanId!.Value,
+                x => x.Gia);
             // 5. Map dữ liệu từ Entity -> FilterHotelItemDto
             var hotelDtos = khachSans.Select(hotel => new FilterHotelItemDto
             {
@@ -174,6 +170,7 @@ namespace Container_App.Service.Services.KhachSans
                 MoTa = hotel.MoTa,
                 DiaChi = hotel.DiaChi,
                 SoSao = hotel.SoSao,
+                Gia = priceLookup.TryGetValue(hotel.Id, out var gia) ? gia: 0,
                 Urls = imageLookup.TryGetValue(hotel.Id, out var urls) ? urls : new List<string>()
             }).ToList();
 
@@ -317,7 +314,7 @@ namespace Container_App.Service.Services.KhachSans
                     SoSao = ks.SoSao,
                     GioNhanPhong = Convert.ToDateTime(ks.GioNhanPhong).TimeOfDay,
                     GioTraPhong = Convert.ToDateTime(ks.GioTraPhong).TimeOfDay,
-                    TrangThai = ks.TrangThai,
+                    TrangThai = TrangThaiKhachSan.CHO_DUYET.ToString(),
                     NguoiTao = nguoiTao,
                 };
                 await _khachSanRepository.TaoKhachSan(KhachSan);

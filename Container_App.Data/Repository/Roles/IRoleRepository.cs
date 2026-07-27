@@ -11,5 +11,6 @@ namespace Container_App.Data.Repository.Roles
     public interface IRoleRepository
     {
         Task<Role> CheckRoleAdmin(Guid userId);
+        Task<Role?> GetById(Guid id);
     }
 }

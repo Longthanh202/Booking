@@ -1,18 +1,28 @@
 ﻿using Container_App.Core.Model.Banners;
+using Container_App.Core.Model.ChiTietChiTraKhachSans;
+using Container_App.Core.Model.ChiTietHoaDonHoaHongs;
+using Container_App.Core.Model.ChiTraKhachSans;
 using Container_App.Core.Model.DatPhongs;
+using Container_App.Core.Model.GiaPhongs;
+using Container_App.Core.Model.HoaDonHoaHongs;
+using Container_App.Core.Model.HoaHongs;
 using Container_App.Core.Model.KhachSanImage;
 using Container_App.Core.Model.KhachSans;
+using Container_App.Core.Model.LichSuVis;
 using Container_App.Core.Model.LoaiPhongs;
 using Container_App.Core.Model.Permissions;
+using Container_App.Core.Model.PhongDats;
 using Container_App.Core.Model.Phongs;
 using Container_App.Core.Model.Provinces;
 using Container_App.Core.Model.RefreshTokens;
 using Container_App.Core.Model.Resources;
 using Container_App.Core.Model.RolePermissions;
 using Container_App.Core.Model.Roles;
+using Container_App.Core.Model.TaiKhoanNganHangs;
 using Container_App.Core.Model.TienIchs;
 using Container_App.Core.Model.UserRoles;
 using Container_App.Core.Model.Users;
+using Container_App.Core.Model.ViKhachSans;
 using Microsoft.EntityFrameworkCore;
 
 namespace Container_App.Data.DBContext
@@ -47,6 +57,17 @@ namespace Container_App.Data.DBContext
             modelBuilder.Entity<UserRole>().ToTable("UserRoles");
             modelBuilder.Entity<KhachSanImages>().ToTable("KhachSanImages");
             modelBuilder.Entity<KhachSan_TienIch>().ToTable("KhachSan_TienIch");
+            modelBuilder.Entity<TaiKhoanNganHang>().ToTable("TaiKhoanNganHang");
+            modelBuilder.Entity<GiaPhong>().ToTable("GiaPhong");
+            modelBuilder.Entity<PhongDat>().ToTable("PhongDat");
+            modelBuilder.Entity<ExternalLogin>().ToTable("ExternalLogins");
+            modelBuilder.Entity<HoaHong>().ToTable("HoaHong");
+            modelBuilder.Entity<ViKhachSan>().ToTable("ViKhachSan");
+            modelBuilder.Entity<LichSuVi>().ToTable("LichSuVi");
+            modelBuilder.Entity<ChiTraKhachSan>().ToTable("ChiTraKhachSan");
+            modelBuilder.Entity<ChiTietChiTraKhachSan>().ToTable("ChiTietChiTraKhachSan");
+            modelBuilder.Entity<HoaDonHoaHong>().ToTable("HoaDonHoaHong");
+            modelBuilder.Entity<ChiTietHoaDonHoaHong>().ToTable("ChiTietHoaDonHoaHong");
 
             // Nếu muốn dùng bảng tỉnh thành, hãy đồng nhất 1 dòng ToTable duy nhất:
             modelBuilder.Entity<Province>().ToTable("provinces");
@@ -107,6 +128,111 @@ namespace Container_App.Data.DBContext
                 .WithMany()
                 .HasForeignKey(x => x.ThanhPho)
                 .HasPrincipalKey(x => x.code);
+
+            // HoaHong
+            modelBuilder.Entity<HoaHong>(entity =>
+            {            
+
+                entity.HasKey(x => x.MaHoaHong);
+
+                entity.HasOne(x => x.DatPhong)
+                    .WithMany()
+                    .HasForeignKey(x => x.MaDatPhong)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(x => x.KhachSan)
+                    .WithMany(x => x.HoaHongs)
+                    .HasForeignKey(x => x.MaKhachSan)
+                    .OnDelete(DeleteBehavior.Restrict);
+                
+            });
+
+            // ViKhachSan
+            modelBuilder.Entity<ViKhachSan>(entity =>
+            {              
+                entity.HasKey(x => x.MaVi);
+
+                entity.HasOne(x => x.KhachSan)
+                    .WithOne(x => x.ViKhachSan)
+                    .HasForeignKey<ViKhachSan>(x => x.MaKhachSan)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // LichSuVi
+            modelBuilder.Entity<LichSuVi>(entity =>
+            {
+                entity.HasKey(x => x.MaLichSu);
+
+                entity.HasOne(x => x.ViKhachSan)
+                    .WithMany(x => x.LichSuVis)
+                    .HasForeignKey(x => x.MaVi)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(x => x.DatPhong)
+                    .WithMany()
+                    .HasForeignKey(x => x.MaDatPhong)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // ChiTraKhachSan
+            modelBuilder.Entity<ChiTraKhachSan>(entity =>
+            {               
+                entity.HasKey(x => x.MaChiTra);
+
+                entity.HasOne(x => x.KhachSan)
+                    .WithMany(x => x.ChiTraKhachSans)
+                    .HasForeignKey(x => x.KhachSanId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(x => x.TaiKhoanNganHang)
+                    .WithMany()
+                    .HasForeignKey(x => x.TaiKhoanNganHangId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // ChiTietChiTraKhachSan
+            modelBuilder.Entity<ChiTietChiTraKhachSan>(entity =>
+            {             
+                entity.HasKey(x => x.Id);
+
+                entity.HasOne(x => x.ChiTraKhachSan)
+                    .WithMany(x => x.ChiTietChiTraKhachSans)
+                    .HasForeignKey(x => x.ChiTraKhachSanId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(x => x.DatPhong)
+                    .WithMany()
+                    .HasForeignKey(x => x.DatPhongId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // HoaDonHoaHong
+            modelBuilder.Entity<HoaDonHoaHong>(entity =>
+            {           
+                entity.HasKey(x => x.Id);
+
+                entity.HasOne(x => x.KhachSan)
+                    .WithMany(x => x.HoaDonHoaHongs)
+                    .HasForeignKey(x => x.KhachSanId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
+            // ChiTietHoaDonHoaHong
+            modelBuilder.Entity<ChiTietHoaDonHoaHong>(entity =>
+            {
+                entity.HasKey(x => x.Id);
+
+                entity.HasOne(x => x.HoaDonHoaHong)
+                    .WithMany(x => x.ChiTietHoaDonHoaHongs)
+                    .HasForeignKey(x => x.HoaDonHoaHongId)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasOne(x => x.HoaHong)
+                    .WithMany(x => x.ChiTietHoaDonHoaHongs)
+                    .HasForeignKey(x => x.HoaHongId)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
+
         }
 
         // --- 4. ĐĂNG KÝ CÁC DBSET ---
@@ -129,5 +255,22 @@ namespace Container_App.Data.DBContext
         public DbSet<KhachSan_TienIch> KhachSan_TienIches { get; set; } = null!;
         public DbSet<Resources> Resources { get; set; } = null!;
         public DbSet<Role> Roles { get; set; } = null!;
+        public DbSet<TaiKhoanNganHang> TaiKhoanNganHangs { get; set; } = null!;
+        public DbSet<GiaPhong> GiaPhongs { get; set; } = null!;
+        public DbSet<PhongDat> phongDats { get; set; } = null!;
+        public DbSet<ExternalLogin> ExternalLogins { get; set; } = null!;
+        public DbSet<HoaHong> HoaHongs { get; set; }
+
+        public DbSet<ViKhachSan> ViKhachSans { get; set; }
+
+        public DbSet<LichSuVi> LichSuVis { get; set; }
+
+        public DbSet<ChiTraKhachSan> ChiTraKhachSans { get; set; }
+
+        public DbSet<ChiTietChiTraKhachSan> ChiTietChiTraKhachSans { get; set; }
+
+        public DbSet<HoaDonHoaHong> HoaDonHoaHongs { get; set; }
+
+        public DbSet<ChiTietHoaDonHoaHong> ChiTietHoaDonHoaHongs { get; set; }
     }
 }

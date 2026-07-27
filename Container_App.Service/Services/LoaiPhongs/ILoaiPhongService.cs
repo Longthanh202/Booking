@@ -1,5 +1,6 @@
 ﻿using Container_App.Core.Model.KhachSans;
 using Container_App.Core.Model.LoaiPhongs;
+using Container_App.Service.Dtos.LoaiPhongs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ namespace Container_App.Data.Repository.LoaiPhongs
 {
     public interface ILoaiPhongService
     {
-        Task<LoaiPhong> TaoLoaiPhong(LoaiPhong lp);
-        Task<List<LoaiPhong>> GetLoaiPhongByKhachSanId(Guid khachSanId);
+        Task<LoaiPhong> TaoLoaiPhong(LoaiPhongRequest lp);
+        Task<List<LoaiPhongHienThi>> GetLoaiPhongByKhachSanId(GetLoaiPhongDto input);
     }
 }

@@ -1,7 +1,9 @@
 ﻿using Container_App.Core.Model.LoaiPhongs;
 using Container_App.Data.Repository.LoaiPhongs;
+using Container_App.Service.Dtos.LoaiPhongs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Container_App.Controllers
 {
@@ -17,7 +19,7 @@ namespace Container_App.Controllers
         }
 
         [HttpPost("tao")]
-        public async Task<IActionResult> ThemLoaiPhong([FromBody] LoaiPhong dto)
+        public async Task<IActionResult> ThemLoaiPhong([FromBody] LoaiPhongRequest dto)
         {
             var result = await _loaiPhongService.TaoLoaiPhong(dto);
 
@@ -33,6 +35,16 @@ namespace Container_App.Controllers
             {
                 message = "Thêm loại phòng thất bại"
             });
+        }
+        [HttpPost("get/hotelId")]
+        public async Task<IActionResult> GetLoaiPhongByKSID([FromBody] GetLoaiPhongDto dto)
+        {
+            var result = await _loaiPhongService.GetLoaiPhongByKhachSanId(dto);
+            if (result.IsNullOrEmpty())
+            {
+                return BadRequest();
+            }
+            return Ok(result);
         }
     }
 }

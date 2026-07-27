@@ -1,6 +1,4 @@
-﻿using Container_App.Data.Connection;
-using Container_App.Data.DBContext;
-using Container_App.Data.Repository.Banners;
+﻿using Container_App.Data.Repository.Banners;
 using Container_App.Data.Repository.DatPhongs;
 using Container_App.Data.Repository.Emails;
 using Container_App.Data.Repository.KhachSans;
@@ -14,11 +12,14 @@ using Container_App.Data.Repository.RefreshTokens;
 using Container_App.Data.Repository.RolePermissions;
 using Container_App.Data.Repository.TienIchs;
 using Container_App.Data.Repository.Users;
+using Container_App.Service.Consumers.BookingCheckout;
 using Container_App.Service.Consumers.SendEmailRegister;
+using Container_App.Service.Services.Auths;
 using Container_App.Service.Services.Banners;
 using Container_App.Service.Services.Cloudinarys;
 using Container_App.Service.Services.DatPhongs;
 using Container_App.Service.Services.Emails;
+using Container_App.Service.Services.HoaHongs;
 using Container_App.Service.Services.KhachSanImage;
 using Container_App.Service.Services.KhachSans;
 using Container_App.Service.Services.LoaiPhongs;
@@ -35,11 +36,7 @@ using Container_App.Service.Services.Tokens;
 using Container_App.Service.Services.Users;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using StackExchange.Redis;
 
 namespace Container_App.Service
 {
@@ -67,10 +64,20 @@ namespace Container_App.Service
             services.AddScoped<IRabbitMQPublisher, RabbitMQPublisher>();
             services.AddScoped<IRedisService, RedisService>();
             services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IAuthService, AuthService>();
+            services.AddScoped<IHoaHongService, HoaHongService>();
 
+            services.AddSingleton<IConnectionMultiplexer>(sp =>
+            {
+                var connectionString = configuration.GetConnectionString("Redis");
+
+                return ConnectionMultiplexer.Connect(connectionString);
+            });
 
             //Consumer
             services.AddHostedService<EmailConsumer>();
+            services.AddHostedService<SendEmailBookingConsumer>();
+            services.AddHostedService<BookingCheckoutConsumner>();
             return services;
         }
     }

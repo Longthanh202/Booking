@@ -1,10 +1,14 @@
-﻿using Container_App.Core.Model.DanhGias;
+﻿using Container_App.Core.Model.ChiTraKhachSans;
+using Container_App.Core.Model.DanhGias;
 using Container_App.Core.Model.DatPhongs;
+using Container_App.Core.Model.HoaDonHoaHongs;
+using Container_App.Core.Model.HoaHongs;
 using Container_App.Core.Model.KhachSanImage;
 using Container_App.Core.Model.LoaiPhongs;
 using Container_App.Core.Model.Provinces;
 using Container_App.Core.Model.QuangCaos;
 using Container_App.Core.Model.TienIchs;
+using Container_App.Core.Model.ViKhachSans;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -39,5 +43,13 @@ namespace Container_App.Core.Model.KhachSans
 
         // Mối quan hệ Nhiều - Nhiều qua bảng trung gian
         public virtual ICollection<KhachSan_TienIch> KhachSan_TienIches { get; set; } = new List<KhachSan_TienIch>();
+
+        public virtual ViKhachSan? ViKhachSan { get; set; }
+
+        public virtual ICollection<HoaHong> HoaHongs { get; set; } = new List<HoaHong>();
+
+        public virtual ICollection<ChiTraKhachSan> ChiTraKhachSans { get; set; } = new List<ChiTraKhachSan>();
+
+        public virtual ICollection<HoaDonHoaHong> HoaDonHoaHongs { get; set; } = new List<HoaDonHoaHong>();
     }
 }

@@ -10,6 +10,7 @@ namespace Container_App.Data.Repository.LoaiPhongs
     public interface ILoaiPhongRepository
     {
         Task<LoaiPhong> TaoLoaiPhong(LoaiPhong lp);
-        Task<List<LoaiPhong>> GetLoaiPhongByKhachSanId(Guid khachSanId);
+        Task<List<LoaiPhongHienThi>> GetLoaiPhongByKhachSanId(Guid khachSanId, 
+            int soKhach, DateTime? ngayNhan, DateTime? ngayTra);
     }
 }

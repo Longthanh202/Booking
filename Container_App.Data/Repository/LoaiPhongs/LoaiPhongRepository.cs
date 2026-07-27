@@ -1,4 +1,6 @@
-﻿using Container_App.Core.Model.LoaiPhongs;
+﻿using Container_App.Common.Shared.Enum.Booking;
+using Container_App.Common.Shared.Enum.Hotel;
+using Container_App.Core.Model.LoaiPhongs;
 using Container_App.Data.DBContext;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -29,6 +31,84 @@ namespace Container_App.Data.Repository.LoaiPhongs
                     MoTa = x.MoTa,
                 })
                 .ToListAsync();
+        }
+
+        public async Task<List<LoaiPhongHienThi>> GetLoaiPhongByKhachSanId(
+            Guid khachSanId,
+            int soKhach,
+            DateTime? ngayNhan,
+            DateTime? ngayTra)
+        {
+            int soDem = 1;
+
+            if (ngayNhan.HasValue && ngayTra.HasValue)
+            {
+                soDem = (ngayTra.Value.Date - ngayNhan.Value.Date).Days;
+
+                if (soDem <= 0)
+                    throw new Exception("Ngày trả phòng phải lớn hơn ngày nhận phòng.");
+            }
+
+            var loaiPhongs = await _context.LoaiPhongs
+                .Where(x => x.KhachSanId == khachSanId)
+                .ToListAsync();
+
+            var result = new List<LoaiPhongHienThi>();
+
+            foreach (var loaiPhong in loaiPhongs)
+            {
+                int tongPhong = await _context.Phongs
+                    .CountAsync(x => x.LoaiPhongId == loaiPhong.Id &&
+                    x.TrangThai == TrangThaiPhong.DANG_SU_DUNG.ToString());
+
+                int phongDangDat = 0;
+
+                if (ngayNhan.HasValue && ngayTra.HasValue)
+                {
+                    phongDangDat = await _context.phongDats
+                        .Where(pd =>
+                            pd.ChiTietDatPhong.LoaiPhongId == loaiPhong.Id &&
+                            pd.ChiTietDatPhong.DatPhong.TrangThai != TrangThaiDatPhong.DA_HUY.ToString() &&
+                            pd.ChiTietDatPhong.DatPhong.NgayNhanPhong < ngayTra &&
+                            pd.ChiTietDatPhong.DatPhong.NgayTraPhong > ngayNhan)
+                        .Select(pd => pd.PhongId)
+                        .Distinct()
+                        .CountAsync();
+                }
+
+                int soPhongTrong = tongPhong - phongDangDat;
+
+                decimal giaMoiDem = 0;
+
+                var gia = await _context.GiaPhongs
+                    .Where(x =>
+                        x.LoaiPhongId == loaiPhong.Id &&
+                        x.IsActive == true)
+                    .FirstOrDefaultAsync();
+
+                if (gia != null)
+                {
+                    giaMoiDem = gia.Gia;
+                }
+
+                result.Add(new LoaiPhongHienThi
+                {
+                    Id = loaiPhong.Id,
+                    TenLoaiPhong = loaiPhong.TenLoaiPhong,
+                    SoKhachToiDa = loaiPhong.SoKhachToiDa.Value,
+                    KieuGiuong = loaiPhong.KieuGiuong,
+                    MoTa = loaiPhong.MoTa,
+
+                    GiaMoiDem = giaMoiDem,
+                    TongTien = giaMoiDem * soDem,
+
+                    SoPhongTrong = soPhongTrong,
+
+                    DuChoSoKhach = soPhongTrong * loaiPhong.SoKhachToiDa >= soKhach
+                });
+            }
+
+            return result;
         }
 
         public async Task<LoaiPhong> TaoLoaiPhong(LoaiPhong lp)

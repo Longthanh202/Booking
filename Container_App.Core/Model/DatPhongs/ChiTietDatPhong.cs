@@ -1,4 +1,5 @@
 ﻿using Container_App.Core.Model.LoaiPhongs;
+using Container_App.Core.Model.PhongDats;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;

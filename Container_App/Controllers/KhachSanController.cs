@@ -9,7 +9,6 @@ using Container_App.Data.Repository.LoaiPhongs;
 using Container_App.Data.Repository.Phongs;
 using Container_App.Data.Repository.TienIchs;
 using Container_App.Data.Repository.Users;
-using Container_App.Model.KhachSans;
 using Container_App.Service.Dtos.KhachSan;
 using Container_App.Service.Dtos.KhachSanDto;
 using Container_App.Service.Services.Cloudinarys;

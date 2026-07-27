@@ -61,13 +61,6 @@ builder.Services.AddDIService(builder.Configuration);//DI Service
 builder.Services.AddHttpContextAccessor();//DI HttpContextAccessor
 
 
-builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
-{
-    var connectionString = builder.Configuration.GetConnectionString("Redis");
-
-    return ConnectionMultiplexer.Connect(connectionString);
-});
-
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -114,7 +107,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             OnMessageReceived = context =>
             {
                 var authHeader = context.Request.Headers["Authorization"].ToString();
-                Console.WriteLine($"[Debug] Authorization header nhận được: '{authHeader}'");
+                Console.WriteLine($"[Debug] Authorization: '{authHeader}'");
                 return Task.CompletedTask;
             }
         };

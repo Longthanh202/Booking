@@ -21,16 +21,18 @@ namespace Container_App.Data.Repository.Users
         }
         public async Task<UserProfile?> GetById(Guid id)
         {
-            return await _context.UserProfiles
-                .Select(x => new UserProfile
+            var user = await _context.UserProfiles
+                .Where(u => u.UserLoginId == id)
+                .Select(u => new UserProfile
                 {
-                    Id = x.Id,
-                    FullName = x.FullName,
-                    Phone = x.Phone,
-                    Email = x.Email,
-                    Address = x.Address,
+                    Id = u.Id,
+                    FullName = u.FullName,
+                    Phone = u.Phone,
+                    Email = u.Email,
+                    Address = u.Address
                 })
-                .FirstOrDefaultAsync(x => x.UserLoginId == id);
+                .FirstOrDefaultAsync();
+            return user;
         }
 
         public async Task<UserProfile> Insert(UserProfile user)

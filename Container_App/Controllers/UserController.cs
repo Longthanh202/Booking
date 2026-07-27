@@ -97,8 +97,12 @@ namespace Container_App.Controllers
         [Route("register")]
         public async Task<IActionResult> Register([FromBody] UserRequset u)
         {
-            await _userServices.Register(u);
-            return Ok(u);
+            var result =  await _userServices.Register(u);
+            if(result != null)
+            {
+                return Ok(u);
+            }
+            return BadRequest();
         }
     }
 }

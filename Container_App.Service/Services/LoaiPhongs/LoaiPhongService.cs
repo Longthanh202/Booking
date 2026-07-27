@@ -2,6 +2,7 @@
 using Container_App.Core.Model.LoaiPhongs;
 using Container_App.Data.Connection;
 using Container_App.Data.Repository.LoaiPhongs;
+using Container_App.Service.Dtos.LoaiPhongs;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -19,26 +20,36 @@ namespace Container_App.Service.Services.LoaiPhongs
             _loaiPhongRepository = loaiPhongRepository;
         }
 
-        public async Task<List<LoaiPhong>> GetLoaiPhongByKhachSanId(Guid khachSanId)
+        public async Task<List<LoaiPhongHienThi>> GetLoaiPhongByKhachSanId(GetLoaiPhongDto input)
         {
             try
             {
-               return await _loaiPhongRepository.GetLoaiPhongByKhachSanId(khachSanId);
+               return await _loaiPhongRepository.GetLoaiPhongByKhachSanId(input.khachSanId,
+                   input.soKhach, input.ngayNhan, input.ngayTra);
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);  
 
-                return new List<LoaiPhong>();
+                return new List<LoaiPhongHienThi>();
             }
         }
 
-        public async Task<LoaiPhong> TaoLoaiPhong(LoaiPhong lp)
+        public async Task<LoaiPhong> TaoLoaiPhong(LoaiPhongRequest lp)
         {
             try
             {
-                lp.Id = Guid.NewGuid();
-                return await _loaiPhongRepository.TaoLoaiPhong(lp);
+                LoaiPhong input = new LoaiPhong
+                {
+                    Id = Guid.NewGuid(),
+                    KhachSanId = lp.KhachSanId,
+                    TenLoaiPhong = lp.TenLoaiPhong,
+                    SoKhachToiDa = lp.SoKhachToiDa,
+                    KieuGiuong = lp.KieuGiuong,
+                    MoTa = lp.MoTa,
+                    NgayTao = DateTime.Now,
+                };
+                return await _loaiPhongRepository.TaoLoaiPhong(input);
             }
             catch (Exception ex)
             {

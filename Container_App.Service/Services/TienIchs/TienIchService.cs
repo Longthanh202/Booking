@@ -1,6 +1,9 @@
 ﻿using Container_App.Core.Model.TienIchs;
+using Container_App.Data;
 using Container_App.Data.Connection;
+using Container_App.Data.Repository.KhachSanTienIch;
 using Container_App.Data.Repository.TienIchs;
+using Container_App.Service.Dtos.TienIchs;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -13,9 +16,15 @@ namespace Container_App.Service.Services.TienIchs
     public class TienIchService : ITienIchService
     {
         private readonly ITienIchRepository _tienIchRepository;
-        public TienIchService(ITienIchRepository tienIchRepository)
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IKhachSanTienIchRepository _khachSanTienIchRepository;
+        public TienIchService(ITienIchRepository tienIchRepository,
+            IUnitOfWork unitOfWork, 
+            IKhachSanTienIchRepository khachSanTienIchRepository)
         {
             _tienIchRepository = tienIchRepository;
+            _unitOfWork = unitOfWork;
+            _khachSanTienIchRepository = khachSanTienIchRepository ;
         }
 
         public async Task<List<TienIch>> GetTienIchKhachSanByKhachSanId(Guid khachSanId)
@@ -33,17 +42,40 @@ namespace Container_App.Service.Services.TienIchs
             }
         }
 
-        public async Task<TienIch> ThemTienIch(TienIch tienIch)
+        public async Task<TienIch> ThemTienIch(TienIchRequest tienIch)
         {
             try
             {
-                tienIch.Id = Guid.NewGuid();
-                return await _tienIchRepository.ThemTienIch(tienIch);
+                await _unitOfWork.BeginTransactionAsync();
+
+                Guid tienIchId = Guid.NewGuid();
+
+                TienIch input = new TienIch
+                {
+                    Id = tienIchId,
+                    TenTienIch = tienIch.TenTienIch,
+                    Icon = tienIch.Icon
+                };
+
+                var result = await _tienIchRepository.ThemTienIch(input);
+
+                KhachSan_TienIch ksti = new KhachSan_TienIch
+                {
+                    KhachSanId = tienIch.KhachSanId,
+                    TienIchId = tienIchId
+                };
+
+                await _khachSanTienIchRepository.Tao(ksti);
+
+                await _unitOfWork.CommitAsync();
+
+                return result;
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message,
-                "Error when Them Tien Ich.");
+                await _unitOfWork.RollbackAsync();
+
+                Console.WriteLine(ex);
 
                 return null;
             }

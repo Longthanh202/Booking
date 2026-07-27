@@ -51,7 +51,7 @@ namespace Container_App.Service.Consumers.SendEmailRegister
                     await connection.CreateChannelAsync();
 
                 await channel.QueueDeclareAsync(
-                    "email_queue",
+                    "register_email_queue",
                     true,
                     false,
                     false);

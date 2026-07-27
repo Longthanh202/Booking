@@ -9,6 +9,6 @@ namespace Container_App.Data.Repository.Provinces
 {
     public interface IProvinceService
     {
-        Task<IEnumerable<Province>> GetProvinces();
+        Task<List<Province>> GetProvinces();
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Container_App.Core.Model.TienIchs;
 using Container_App.Data.Repository.TienIchs;
+using Container_App.Service.Dtos.TienIchs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,7 +18,7 @@ namespace Container_App.Controllers
         }
 
         [HttpPost("tao")]
-        public async Task<IActionResult> ThemTienIch([FromBody] TienIch dto)
+        public async Task<IActionResult> ThemTienIch([FromBody] TienIchRequest dto)
         {
             var result = await _tienIchService.ThemTienIch(dto);
 

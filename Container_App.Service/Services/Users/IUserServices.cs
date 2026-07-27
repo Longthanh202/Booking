@@ -10,8 +10,7 @@ using System.Threading.Tasks;
 namespace Container_App.Data.Repository.Users
 {
     public interface IUserServices
-    {
-        Task<UserProfile> Insert(UserProfile user);
+    {     
         Task<LoginReponse> Login(LoginResquest input);
         Task<UserProfileResponse> GetById(Guid id, Guid roleId);
         bool IsAuthenticated();

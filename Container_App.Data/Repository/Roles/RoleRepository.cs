@@ -27,5 +27,10 @@ namespace Container_App.Data.Repository.Roles
                 select r
             ).FirstOrDefaultAsync();
         }
+
+        public async Task<Role?> GetById(Guid id)
+        {
+            return await _context.Roles.FirstOrDefaultAsync(x => x.Id == id);
+        }
     }
 }

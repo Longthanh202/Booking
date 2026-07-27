@@ -15,22 +15,22 @@ namespace Container_App.Service.Services.Provinces
 {
     public class ProvinceService : IProvinceService
     {
-        private readonly IStoredProcedureExecutor _executor;
-        public ProvinceService(IStoredProcedureExecutor executor)
+        private readonly IProvinceRepository _provinceRepository;
+        public ProvinceService(IProvinceRepository provinceRepository)
         {
-            _executor = executor;
+           _provinceRepository = provinceRepository;
         }
-        public async Task<IEnumerable<Province>> GetProvinces()
+        public async Task<List<Province>> GetProvinces()
         {
             try
             {
-                return await _executor.QueryAsync<Province>("sp_GetProvince");
+                return await _provinceRepository.GetProvinces();
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error when get list province: {ex.Message}");
 
-                return Enumerable.Empty<Province>();
+                return new List<Province>();
             }
         }
     }
