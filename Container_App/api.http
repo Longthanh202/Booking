@@ -1,0 +1,104 @@
+﻿@baseUrl = http://localhost:5295
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6ImNkYzM5NGJjLWNjOGQtNGZhMS1iODkwLWE3YTUwOWFlN2UzZSIsIkZ1bGxOYW1lIjoiTMOqIFRow6BuaCBMb25nIiwiUm9sZUlkIjoiOTBiNTU5NWUtOTZhMC00MzJkLWEwNTAtODVmOTY0ZDk5ZDIzIiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQWRtaW4iLCJleHAiOjE3ODQ2MTgwMzMsImlzcyI6ImNvbnRhaW5lci1hcHAiLCJhdWQiOiJjb250YWluZXItY2xpZW50In0.buQIUoQPx5TDUEjeB-9mRqG_dUx97D9UjQw1r8v0KSE
+### Login
+POST {{baseUrl}}/api/login
+Content-Type: application/json
+{
+  "username": "longlt",
+  "password": "123"
+}
+
+### Get Profile
+GET {{baseUrl}}/api/me
+Authorization: Bearer {{token}}
+
+### Insert-User
+POST {{baseUrl}}/api/insert-user
+Content-Type: application/json
+Authorization: Bearer {{token}}
+{
+  "Username": "mynk",
+  "Password": "123",
+  "Fullname": "Nguyễn Kha My",
+  "Phone": "0236988547",
+  "Email": "mynguyen@gomicorp.vn",
+  "Address": "Quy Nhơn, Bình Định",
+  "CreateBy": null,
+  "RoleId": "60FDFF12-400E-4BA5-9891-D7DB4716E2DB"
+}
+
+### Insert-KhachSan
+POST {{baseUrl}}/api/khachsan/tao
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "TenKhachSan": "Quê Hương Hotel",
+  "MoTa": "Homstay ở Bình Định, ở trung tâm thành Phố Quy Nhơn, cách eo gió 10p đi xe",
+  "DiaChi": "10A Trần Cao Vân, Quy Nhơn, Bình Định",
+  "ThanhPho": "Quy Nhơn",
+  "ViDo": 11.1835617,
+  "KinhDo": 106.2612741,
+  "SoSao": 3,
+  "GioNhanPhong": "14:00",
+  "GioTraPhong": "12:00",
+  "TrangThai": "cho_duyet"
+}
+
+### Thêm Tiện Ích
+POST {{baseUrl}}/api/tienich/tao
+Content-Type: application/json
+{
+  "TenTienIch": "WIFI 24/7",
+  "Icon": "<i class=\"fa-solid fa-wifi\"></i>"
+}
+
+### Thêm Loại Phòng
+POST {{baseUrl}}/api/loaiphong/tao
+Content-Type: application/json
+Authorization: Bearer {{token}}
+{
+  "KhachSanId": "9C18E5C1-F42F-48E9-8874-143CAA75A563",
+  "TenLoaiPhong": "Phòng Đơn",
+  "SoKhachToiDa": 2,
+  "KieuGiuong": "Giường đơn",
+  "MoTa": "Phòng đôi rộng rãi phù hợp cặp đôi, đầy đủ tiện nghi."
+}
+
+### Thêm Phòng
+POST {{baseUrl}}/api/phong/tao
+Content-Type: application/json
+{
+  "LoaiPhongId": "ED79E281-6A60-455D-92B9-F5B99478A3B5",
+  "SoPhong": "01",
+  "Tang": 1,
+  "TrangThai": "san_sang"
+}
+
+
+### Lấy danh sách khách sạn
+POST {{baseUrl}}/api/khachsans/get
+Content-Type: application/json
+Authorization: Bearer {{token}}
+{
+  "Keyword": null,
+  "ThanhPho": null,
+  "ViDo": null,
+  "KinhDo": null,
+  "SoSao": 0,
+  "TrangThai": null,
+  "Page": 1
+}
+
+### Filter hotels
+POST {{baseUrl}}/api/khachsans/filter
+Content-Type: application/json
+
+{
+  "Keyword": null,
+  "ProvinceCode": null,
+  "SoKhach": 2,
+  "NgayNhanPhong": "2026-05-20",
+  "NgayTraPhong": "2026-05-21",
+  "Page": 1
+}
