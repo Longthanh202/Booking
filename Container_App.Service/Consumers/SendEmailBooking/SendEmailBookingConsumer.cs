@@ -31,71 +31,109 @@ public class SendEmailBookingConsumer : BackgroundService
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+{
+    var factory = new ConnectionFactory
     {
-        var factory = new ConnectionFactory
+        HostName = _configuration["RabbitMQ:Host"] ?? "rabbitmq_broker",
+        UserName = _configuration["RabbitMQ:Username"] ?? "guest",
+        Password = _configuration["RabbitMQ:Password"] ?? "guest"
+    };
+
+    // 1. TỰ ĐỘNG RETRY KẾT NỐI (Chờ RabbitMQ sẵn sàng)
+    while (!stoppingToken.IsCancellationRequested)
+    {
+        try
         {
-            HostName = _configuration["RabbitMQ:Host"],
-            UserName = _configuration["RabbitMQ:Username"],
-            Password = _configuration["RabbitMQ:Password"]
-        };
-
-        _connection = await factory.CreateConnectionAsync(stoppingToken);
-        _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
-
-        await _channel.QueueDeclareAsync(
-            queue: "booking_email_queue",
-            durable: true,
-            exclusive: false,
-            autoDelete: false,
-            cancellationToken: stoppingToken);
-
-        var consumer = new AsyncEventingBasicConsumer(_channel);
-
-        consumer.ReceivedAsync += async (sender, ea) =>
+            _logger.LogInformation("Đang thử kết nối tới RabbitMQ...");
+            _connection = await factory.CreateConnectionAsync(stoppingToken);
+            _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
+            _logger.LogInformation("Kết nối thành công tới RabbitMQ!");
+            break; // Kết nối thành công -> Bật khỏi vòng lặp Retry
+        }
+        catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
         {
-            try
+            _logger.LogWarning("Chưa thể kết nối tới RabbitMQ ({Message}). Thử lại sau 5 giây...", ex.Message);
+            await Task.Delay(5000, stoppingToken); // Đợi 5s rồi thử lại
+        }
+    }
+
+    // Nếu ứng dụng đang tắt giữa chừng thì không làm tiếp
+    if (stoppingToken.IsCancellationRequested || _channel == null) return;
+
+    // 2. KHOAN BẢO KHAI BÁO QUEUE
+    await _channel.QueueDeclareAsync(
+        queue: "booking_email_queue",
+        durable: true,
+        exclusive: false,
+        autoDelete: false,
+        cancellationToken: stoppingToken);
+
+    // Cấu hình PrefetchCount = 1 để tránh 1 consumer gom quá nhiều message cùng lúc
+    await _channel.BasicQosAsync(prefetchSize: 0, prefetchCount: 1, global: false, cancellationToken: stoppingToken);
+
+    var consumer = new AsyncEventingBasicConsumer(_channel);
+
+    consumer.ReceivedAsync += async (sender, ea) =>
+    {
+        try
+        {
+            var json = Encoding.UTF8.GetString(ea.Body.ToArray());
+            var message = JsonSerializer.Deserialize<DatPhongEvent>(json);
+
+            if (message == null)
             {
-                var json = Encoding.UTF8.GetString(ea.Body.ToArray());
-
-                var message = JsonSerializer.Deserialize<DatPhongEvent>(json);
-
-                if (message == null)
-                {
-                    await _channel.BasicAckAsync(ea.DeliveryTag, false);
-                    return;
-                }
-
-                await SendEmail(message);
-
+                // Message hỏng -> Ack bỏ qua luôn, không requeue
                 await _channel.BasicAckAsync(ea.DeliveryTag, false);
-
-                _logger.LogInformation(
-                    "Đã gửi email booking {BookingId}",
-                    message.BookingId);
+                return;
             }
-            catch (Exception ex)
+
+            await SendEmail(message);
+
+            await _channel.BasicAckAsync(ea.DeliveryTag, false);
+
+            _logger.LogInformation("Đã gửi email booking {BookingId}", message.BookingId);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Lỗi gửi email booking.");
+
+            if (_channel != null && _channel.IsOpen)
             {
-                _logger.LogError(ex, "Lỗi gửi email booking.");
+                // Nếu tin nhắn bị redelivered (đã thử lại trước đó mà vẫn lỗi) -> Không requeue nữa để tránh lặp vô tận
+                bool shouldRequeue = !ea.Redelivered;
 
-                if (_channel != null)
-                {
-                    await _channel.BasicNackAsync(
-                        ea.DeliveryTag,
-                        multiple: false,
-                        requeue: true);
-                }
+                await _channel.BasicNackAsync(
+                    deliveryTag: ea.DeliveryTag,
+                    multiple: false,
+                    requeue: shouldRequeue);
             }
-        };
+        }
+    };
 
-        await _channel.BasicConsumeAsync(
-            queue: "booking_email_queue",
-            autoAck: false,
-            consumer: consumer,
-            cancellationToken: stoppingToken);
+    await _channel.BasicConsumeAsync(
+        queue: "booking_email_queue",
+        autoAck: false,
+        consumer: consumer,
+        cancellationToken: stoppingToken);
 
-        // Giữ BackgroundService chạy
+    // 3. GIỮ BACKGROUND SERVICE CHẠY AN TOÀN (Graceful Shutdown)
+    try
+    {
         await Task.Delay(Timeout.Infinite, stoppingToken);
     }
+    catch (OperationCanceledException)
+    {
+        _logger.LogInformation("Đang dừng dịch vụ SendEmailBookingConsumer...");
+    }
+}
+
+// Giải phóng tài nguyên khi ngắt Service
+public override async Task StopAsync(CancellationToken cancellationToken)
+{
+    if (_channel != null) await _channel.CloseAsync(cancellationToken);
+    if (_connection != null) await _connection.CloseAsync(cancellationToken);
+    await base.StopAsync(cancellationToken);
+}
 
     private async Task SendEmail(DatPhongEvent message)
     {

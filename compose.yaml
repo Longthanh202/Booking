@@ -1,0 +1,43 @@
+﻿services:
+  dotnet_webapi:
+    build:
+      context: .
+      dockerfile: Container_App/Dockerfile
+
+    container_name: dotnet_webapi
+
+    ports:
+      - "5295:80"
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=host.docker.internal;Database=workpro;User Id=sa;Password=longle@123;TrustServerCertificate=True;
+      - ConnectionStrings__Redis=redis_cache:6379
+      - RabbitMQ__Host=rabbitmq_broker
+
+    depends_on:
+      rabbitmq_broker:
+        condition: service_healthy
+      redis_cache:
+        condition: service_started
+
+  redis_cache:
+    image: redis:alpine
+    container_name: redis_cache
+    ports:
+      - "6379:6379"
+
+  rabbitmq_broker:
+    image: rabbitmq:3-management
+    container_name: rabbitmq_broker
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5

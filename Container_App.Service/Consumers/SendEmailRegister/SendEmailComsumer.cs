@@ -98,7 +98,7 @@ namespace Container_App.Service.Consumers.SendEmailRegister
                 };
 
                 await channel.BasicConsumeAsync(
-                    "email_queue",
+                    "register_email_queue",
                     false,
                     consumer);
 
