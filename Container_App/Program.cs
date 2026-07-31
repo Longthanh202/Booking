@@ -60,7 +60,10 @@ builder.Services.AddDIData(builder.Configuration);//DI Data
 builder.Services.AddDIService(builder.Configuration);//DI Service
 builder.Services.AddHttpContextAccessor();//DI HttpContextAccessor
 
-
+builder.Services.Configure<HostOptions>(options =>
+{
+    options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+});
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

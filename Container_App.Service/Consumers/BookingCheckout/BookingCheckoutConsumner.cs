@@ -44,8 +44,21 @@ namespace Container_App.Service.Consumers.BookingCheckout
                 Password = _configuration["RabbitMQ:Password"]
             };
 
-            _connection = await factory.CreateConnectionAsync(stoppingToken);
-            _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
+            while (!stoppingToken.IsCancellationRequested)
+            {
+                try
+                {
+                    _connection = await factory.CreateConnectionAsync(stoppingToken);
+                    _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
+
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "RabbitMQ chưa sẵn sàng, thử lại sau 5 giây...");
+                    await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+                }
+            }
 
             await _channel.QueueDeclareAsync(
                 queue: "booking_checked_out",
@@ -76,18 +89,15 @@ namespace Container_App.Service.Consumers.BookingCheckout
                     }
 
                     await _channel.BasicAckAsync(ea.DeliveryTag, false);
-
                 }
                 catch (Exception ex)
                 {
-                    //FileLogger.Log(ex);
-                    if (_channel != null)
-                    {
-                        await _channel.BasicNackAsync(
-                            ea.DeliveryTag,
-                            multiple: false,
-                            requeue: true);
-                    }
+                    _logger.LogError(ex, "Lỗi xử lý message");
+
+                    await _channel.BasicNackAsync(
+                        ea.DeliveryTag,
+                        multiple: false,
+                        requeue: true);
                 }
             };
 
@@ -97,7 +107,6 @@ namespace Container_App.Service.Consumers.BookingCheckout
                 consumer: consumer,
                 cancellationToken: stoppingToken);
 
-            // Giữ BackgroundService chạy
             await Task.Delay(Timeout.Infinite, stoppingToken);
         }
     }

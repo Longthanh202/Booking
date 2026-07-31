@@ -34,3 +34,6 @@ namespace Container_App.Controllers
 }
 
 //chưa tạo class Dto cho các chức năng tạo loại phòng, tiện ích, phòng
+
+
+//Aa123456@
