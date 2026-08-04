@@ -23,6 +23,7 @@ using Container_App.Service.Services.HoaHongs;
 using Container_App.Service.Services.KhachSanImage;
 using Container_App.Service.Services.KhachSans;
 using Container_App.Service.Services.LoaiPhongs;
+using Container_App.Service.Services.Notifications;
 using Container_App.Service.Services.Permissions;
 using Container_App.Service.Services.Phongs;
 using Container_App.Service.Services.Provinces;
@@ -66,6 +67,7 @@ namespace Container_App.Service
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IHoaHongService, HoaHongService>();
+            services.AddScoped<INotificationService, NotificationService>();
 
             services.AddSingleton<IConnectionMultiplexer>(sp =>
             {
