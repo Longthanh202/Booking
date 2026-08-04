@@ -43,6 +43,7 @@ using StackExchange.Redis;
 using System;
 using System.ComponentModel.Design;
 using System.Text;
+using Container_App.Service.Services.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -171,6 +172,7 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 builder.Services.AddMemoryCache();
+builder.Services.AddSignalR();
 
 
 var app = builder.Build();
@@ -196,7 +198,7 @@ app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers(); // Không cần gọi MapControllers ở đây
 });
-
+app.MapHub<BookingHub>("/bookingHub");
 
 //Thêm đoạn code này nếu muốn chạy code first
 //using (var scope = app.Services.CreateScope())

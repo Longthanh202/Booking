@@ -22,40 +22,38 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Container_App.Service.Services.Notifications;
 
 namespace Container_App.Service.Services.DatPhongs
 {
     public class DatPhongService : IDatPhongService
     {
         private readonly IDatPhongRepository _datPhongRepository;
-        private readonly IPhongDatRepository _phongDatRepository;
         private readonly IThanhToanRepository _thanhToanRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IGiaPhongRepository _giaPhongRepository;
         private readonly IPhongRepository _phongRepository;
         private readonly IRabbitMQPublisher _rabbitMQPublisher;
         private readonly IUserRepository _userRepository;
-        private readonly IKhachSanRepository _khachSanRepository;
+        private readonly INotificationService _notificationService;
 
         public DatPhongService(IDatPhongRepository datPhongRepository,
-            IPhongDatRepository phongDatRepository,
             IThanhToanRepository thanhToanRepository,
             IUnitOfWork unitOfWork,
             IGiaPhongRepository giaPhongRepository,
             IPhongRepository phongRepository, 
             IRabbitMQPublisher rabbitMQPublisher,
             IUserRepository userRepository,
-            IKhachSanRepository khachSanRepository)
+            INotificationService notificationService)
         {
             _datPhongRepository = datPhongRepository;
-            _phongDatRepository = phongDatRepository;
             _thanhToanRepository = thanhToanRepository;
             _unitOfWork = unitOfWork;
             _giaPhongRepository = giaPhongRepository;
             _phongRepository = phongRepository;
             _rabbitMQPublisher = rabbitMQPublisher;
             _userRepository = userRepository;
-            _khachSanRepository = khachSanRepository;
+            _notificationService = notificationService;
         }
 
         public async Task<DatPhong> CapNhatTrangThai(Guid id)
@@ -185,7 +183,7 @@ namespace Container_App.Service.Services.DatPhongs
                 });
 
                 await _unitOfWork.CommitAsync();
-
+                await _notificationService.BookingSuccess(userId, datPhong);
 
                 var user = await _userRepository.GetById(userId);
 
