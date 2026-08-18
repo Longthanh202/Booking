@@ -11,6 +11,8 @@ namespace Container_App.Common.Shared.Enum.Payment
         TIEN_MAT,
 
         CHUYEN_KHOAN,
+        
+        CARD,
 
         VNPAY,
 

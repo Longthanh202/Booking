@@ -9,8 +9,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Container_App.Data.Repository.LichSuVis
 {
-   
-
     public class LichSuViRepository : ILichSuViRepository
     {
         private readonly AppDbContext _context;
@@ -40,6 +38,16 @@ namespace Container_App.Data.Repository.LichSuVis
         {
             return await _context.LichSuVis
                 .Where(x => x.MaDatPhong == datPhongId)
+                .OrderByDescending(x => x.NgayTao)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<LichSuVi>> LayTheoOwnerId(Guid ownerId)
+        {
+            return await _context.LichSuVis
+                .Include(x => x.DatPhong)
+                .ThenInclude(x => x.KhachSan)
+                .Where(x => x.DatPhong.KhachSan.NguoiTao == ownerId)
                 .OrderByDescending(x => x.NgayTao)
                 .ToListAsync();
         }

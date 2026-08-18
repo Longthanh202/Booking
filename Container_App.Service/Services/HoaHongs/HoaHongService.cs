@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Container_App.Service.Dtos.HoaHong;
 
 namespace Container_App.Service.Services.HoaHongs
 {
@@ -146,6 +147,24 @@ namespace Container_App.Service.Services.HoaHongs
                 await _unitOfWork.RollbackAsync();
                 throw;
             }
+        }
+
+        public async Task<List<HoaHongDto>> LayTheoOwnerId(Guid ownerId)
+        {
+            var result = await _hoaHongRepository.LayTheoOwnerId(ownerId);
+
+            return result.Select(x => new HoaHongDto
+            {
+                MaHoaHong = x.MaHoaHong,
+                MaDatPhong = x.MaDatPhong,
+                MaKhachSan = x.MaKhachSan,
+                TenKhachSan = x.KhachSan?.TenKhachSan ?? "",
+                TyLeHoaHong = x.TyLeHoaHong,
+                SoTienHoaHong = x.SoTienHoaHong,
+                TrangThai = x.TrangThai,
+                NgayTao = x.NgayTao,
+                NgayThu = x.NgayThu
+            }).ToList();
         }
     }
 }

@@ -62,7 +62,7 @@ namespace Container_App.Controllers
         {
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var roleId = User.FindFirst(ClaimTypes.Role)?.Value;
+            var roleId = User.FindFirst("RoleId")?.Value;
 
             if (userId == null || roleId == null)
             {
@@ -103,6 +103,25 @@ namespace Container_App.Controllers
                 return Ok(u);
             }
             return BadRequest();
+        }
+        
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword(string username)
+        {
+            if (string.IsNullOrWhiteSpace(username))
+            {
+                return BadRequest(new
+                {
+                    message = "Vui lòng nhập username."
+                });
+            }
+
+            await _userServices.QuenMatKhau(username);
+
+            return Ok(new
+            {
+                message = "Nếu tài khoản tồn tại, mã xác nhận đã được gửi đến email."
+            });
         }
     }
 }

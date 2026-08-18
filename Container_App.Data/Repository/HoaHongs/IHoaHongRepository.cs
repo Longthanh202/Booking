@@ -14,6 +14,8 @@ namespace Container_App.Data.Repository.HoaHongs
         Task<HoaHong?> LayTheoDatPhong(Guid datPhongId);
 
         Task<IEnumerable<HoaHong>> LayTheoKhachSan(Guid khachSanId);
+        
+        Task<IEnumerable<HoaHong>> LayTheoOwnerId(Guid ownerId);
 
         Task<IEnumerable<HoaHong>> LayChuaThu();
 

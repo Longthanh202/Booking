@@ -15,7 +15,5 @@ namespace Container_App.Service.Dtos.UserProfile
         public string Address { get; set; }
         public string Email { get; set; }
         public Guid? CreateBy { get; set; }
-        public Guid RoleId { get; set; }
-
     }
 }

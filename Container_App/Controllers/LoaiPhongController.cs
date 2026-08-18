@@ -36,6 +36,7 @@ namespace Container_App.Controllers
                 message = "Thêm loại phòng thất bại"
             });
         }
+        
         [HttpPost("get/hotelId")]
         public async Task<IActionResult> GetLoaiPhongByKSID([FromBody] GetLoaiPhongDto dto)
         {
@@ -44,6 +45,13 @@ namespace Container_App.Controllers
             {
                 return BadRequest();
             }
+            return Ok(result);
+        }
+
+        [HttpPost("owner/loai-phong")]
+        public async Task<IActionResult> GetLoaiPhongOwner([FromBody] Guid khachSanId)
+        {
+            var result = await _loaiPhongService.GetLoaiPhongOwner(khachSanId);
             return Ok(result);
         }
     }

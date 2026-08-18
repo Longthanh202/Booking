@@ -32,7 +32,7 @@ namespace Container_App.Controllers
           
         }
 
-        [HasPermission("khachsan", "insert")]
+        [Authorize(Roles = "Owner")]
         [HttpPost]
         [Route("tao")]
         public async Task<IActionResult> TaoKhachSan([FromForm] KhachSanCreateRequest dto)
@@ -52,64 +52,75 @@ namespace Container_App.Controllers
             }
             return Ok(result);
         }
-
-        [HasPermission("khachsan", "view")]
-        [HttpPost]
-        [Route("get")]
-        public async Task<IActionResult> GetKhachSans([FromBody] AdminFilterHotelRequestDto dto)
+        
+        [Authorize(Roles = "Admin")]
+        [HttpPost("admin-get")]
+        public async Task<IActionResult> AdminGetKhachSans(
+            [FromBody] AdminFilterHotelRequestDto dto)
         {
-            // 1. Lấy thông tin UserId từ Claim
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+
+            if (string.IsNullOrEmpty(userIdClaim) ||
+                !Guid.TryParse(userIdClaim, out var userId))
             {
-                return Unauthorized(new { message = "Không tìm thấy thông tin tài khoản hoặc phiên đăng nhập không hợp lệ." });
-            }
-
-            // 2. Chuẩn hóa giá trị phân trang mặc định
-            int page = dto.Page <= 0 ? 1 : dto.Page;
-            int pageSize = dto.PageSize <= 0 ? 10 : dto.PageSize; // Hoặc sử dụng hằng số PAGE_SIZE của bạn
-
-            FilterHotelResponseDto result;
-
-            // 3. Phân quyền Admin / Owner để gọi phương thức Service tương ứng
-            var role = User.FindFirst(ClaimTypes.Role)?.Value;
-
-            if (role == "Admin")
-            {
-                var adminRequest = new AdminFilterHotelRequestDto
+                return Unauthorized(new
                 {
-                    Keyword = dto.Keyword,
-                    ThanhPho = dto.ThanhPho,
-                    ViDo = dto.ViDo ?? 0,
-                    KinhDo = dto.KinhDo ?? 0,
-                    SoSao = dto.SoSao,
-                    TrangThai = dto.TrangThai,
-                    Page = page,
-                    PageSize = pageSize
-                };
-
-                result = await _khachSanService.LayDanhSachKhachSanAdminAsync(adminRequest);
+                    message = "Không tìm thấy thông tin tài khoản hoặc phiên đăng nhập không hợp lệ."
+                });
             }
-            else
+
+            var page = dto.Page <= 0 ? 1 : dto.Page;
+            var pageSize = dto.PageSize <= 0 ? 10 : dto.PageSize;
+
+            var request = new AdminFilterHotelRequestDto
             {
-                var ownerRequest = new OwnerFilterHotelRequestDto
-                {
-                    Keyword = dto.Keyword,
-                    ThanhPho = dto.ThanhPho,
-                    ViDo = dto.ViDo ?? 0,
-                    KinhDo = dto.KinhDo ?? 0,
-                    SoSao = dto.SoSao,
-                    TrangThai = dto.TrangThai,
-                    Page = page,
-                    PageSize = pageSize
-                };
+                Keyword = dto.Keyword,
+                ThanhPho = dto.ThanhPho,
+                ViDo = dto.ViDo ?? 0,
+                KinhDo = dto.KinhDo ?? 0,
+                SoSao = dto.SoSao,
+                TrangThai = dto.TrangThai,
+                Page = page,
+                PageSize = pageSize
+            };
 
-                result = await _khachSanService.LayDanhSachKhachSanOwnerAsync(ownerRequest, userId);
-            }
+            var result =
+                await _khachSanService.LayDanhSachKhachSanAdminAsync(request);
 
-            // 4. Trả về kết quả đồng bộ cho Frontend
             return Ok(result);
         }
+        
+        [Authorize(Roles = "Owner")]
+        [HttpPost("owner-get")]
+        public async Task<IActionResult> OwnerGetKhachSans(
+            [FromBody] OwnerFilterHotelRequestDto dto)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim) ||
+                !Guid.TryParse(userIdClaim, out var userId))
+            {
+                return Unauthorized(new
+                {
+                    message = "Không tìm thấy thông tin tài khoản hoặc phiên đăng nhập không hợp lệ."
+                });
+            }
+
+            var page = dto.Page <= 0 ? 1 : dto.Page;
+            var pageSize = dto.PageSize <= 0 ? 10 : dto.PageSize;
+
+            var request = new OwnerFilterHotelRequestDto
+            {
+                Page = page,
+                PageSize = pageSize
+            };
+
+            var result =
+                await _khachSanService.LayDanhSachKhachSanOwnerAsync(request, Guid.Parse(userIdClaim));
+
+            return Ok(result);
+        }
+        
         [HttpPost]
         [Route("chitiet")]
         public async Task<IActionResult> DetailHotel([FromBody] string id)
@@ -158,7 +169,7 @@ namespace Container_App.Controllers
             {
                 Console.WriteLine(ex.Message.ToString());
 
-                return StatusCode(500, new { message = "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau." });
+                return StatusCode(500, new { message = "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.", error = ex.Message.ToString() });
             }
         }
     }

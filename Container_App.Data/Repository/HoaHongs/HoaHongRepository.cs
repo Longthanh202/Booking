@@ -16,7 +16,16 @@ namespace Container_App.Data.Repository.HoaHongs
         public HoaHongRepository(AppDbContext context)
         {
             _context = context;
-        }   
+        }
+
+        public async Task<IEnumerable<HoaHong>> LayTheoOwnerId(Guid ownerId)
+        {
+            return await _context.HoaHongs
+                .Include(x => x.KhachSan)
+                .Where(x => x.KhachSan.NguoiTao == ownerId)
+                .OrderByDescending(x => x.NgayTao)
+                .ToListAsync();
+        }
 
         public Task<IEnumerable<HoaHong>> LayChuaThu()
         {

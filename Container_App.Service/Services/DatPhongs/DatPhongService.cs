@@ -94,6 +94,213 @@ namespace Container_App.Service.Services.DatPhongs
             }
         }
 
+        public async Task<DatPhongOwnerDto> GetListBookingOwner(
+            DatPhongOwnerRequest dto,
+            Guid ownerId)
+            {
+            var page = dto.Page <= 0 ? 1 : dto.Page;
+            var pageSize = dto.PageSize <= 0 ? 10 : dto.PageSize;
+
+            var result = await _datPhongRepository.GetListBookingOwner(
+                ownerId,
+                dto.khachSanId,
+                page,
+                pageSize);
+
+            var data = result.Items.Select(x => new DatPhongDto
+            {
+                // =========================
+                // Đặt phòng
+                // =========================
+                Id = x.Id,
+                TrangThai = x.TrangThai,
+                NgayTao = x.NgayTao,
+                NgayNhan = x.NgayNhanPhong,
+                NgayTra = x.NgayTraPhong,
+
+                // =========================
+                // Khách sạn
+                // =========================
+                KhachSanId = x.KhachSanId,
+                TenKhachSan = x.KhachSan?.TenKhachSan,
+
+                // =========================
+                // Thanh toán
+                // =========================
+                ThanhToan = x.ThanhToans
+                    .Select(t => t.PhuongThuc)
+                    .FirstOrDefault(),
+
+                // =========================
+                // Chi tiết đặt phòng
+                // =========================
+                ChiTietDatPhongs = x.ChiTietDatPhongs
+                    .Select(ct => new ChiTietDatPhongDto
+                    {
+                        Id = ct.Id,
+
+                        // Loại phòng
+                        LoaiPhongId = ct.LoaiPhongId,
+
+                        TenLoaiPhong = ct.LoaiPhong?.TenLoaiPhong,
+
+                        Gia = ct.GiaMoiDem,
+
+                        // =========================
+                        // Các phòng được đặt
+                        // =========================
+                        Phongs = ct.PhongDats
+                            .Select(pd => new PhongDto
+                            {
+                                Id = pd.Phong.Id,
+                                SoPhong = pd.Phong.SoPhong,
+                                TrangThai = pd.Phong.TrangThai
+                            })
+                            .ToList()
+                    })
+                    .ToList()
+
+            }).ToList();
+
+            var totalPage = (int)Math.Ceiling(
+                (double)result.TotalCount / pageSize);
+
+            return new DatPhongOwnerDto
+            {
+                Data = data,
+                TotalRow = result.TotalCount,
+                TotalPage = totalPage
+            };
+        }
+
+        public async Task<BookingHistory> BookingHistory(Guid userId, int pageIndex, int pageSize)
+        {
+            var page = pageIndex <= 0 ? 1 : pageIndex;
+            pageSize = pageSize <= 0 ? 10 : pageSize;
+
+            var result = await _datPhongRepository.BookingHistory(
+                userId,
+                page,
+                pageSize);
+
+            var data = result.Items.Select(x => new DatPhongDto
+            {
+                // =========================
+                // Đặt phòng
+                // =========================
+                Id = x.Id,
+                TrangThai = x.TrangThai,
+                NgayTao = x.NgayTao,
+
+                // =========================
+                // Khách sạn
+                // =========================
+                KhachSanId = x.KhachSanId,
+                TenKhachSan = x.KhachSan?.TenKhachSan,
+
+                // =========================
+                // Thanh toán
+                // =========================
+                ThanhToan = x.ThanhToans
+                    .Select(t => t.PhuongThuc)
+                    .FirstOrDefault(),
+
+                // =========================
+                // Chi tiết đặt phòng
+                // =========================
+                ChiTietDatPhongs = x.ChiTietDatPhongs
+                    .Select(ct => new ChiTietDatPhongDto
+                    {
+                        Id = ct.Id,
+
+                        // Loại phòng
+                        LoaiPhongId = ct.LoaiPhongId,
+
+                        TenLoaiPhong = ct.LoaiPhong?.TenLoaiPhong,
+
+                        Gia = ct.GiaMoiDem,
+
+                        // =========================
+                        // Các phòng được đặt
+                        // =========================
+                        Phongs = ct.PhongDats
+                            .Select(pd => new PhongDto
+                            {
+                                Id = pd.Phong.Id,
+                                SoPhong = pd.Phong.SoPhong,
+                                TrangThai = pd.Phong.TrangThai
+                            })
+                            .ToList()
+                    })
+                    .ToList()
+
+            }).ToList();
+
+            var totalPage = (int)Math.Ceiling(
+                (double)result.TotalCount / pageSize);
+
+            return new BookingHistory
+            {
+                Data = data,
+                TotalRow = result.TotalCount,
+                TotalPage = totalPage
+            };
+        }
+
+        public async Task CheckIn(Guid id)
+        {
+            var datPhong = await _datPhongRepository.LayTheoId(id);
+
+            if (datPhong == null)
+            {
+                throw new Exception("Booking không tồn tại");
+            }
+            if (!datPhong.NgayNhanPhong.HasValue)
+            {
+                throw new Exception("Booking chưa có ngày nhận phòng");
+            }
+            var today = DateTime.Now.Date;
+            var ngayNhanPhong = datPhong.NgayNhanPhong.Value.Date;
+            if (today < ngayNhanPhong)
+            {
+                throw new Exception("Chưa đến ngày check-in");
+            }
+
+            if (datPhong.TrangThai == TrangThaiDatPhong.DA_CHECK_IN.ToString())
+            {
+                throw new Exception("Booking đã check-in");
+            }
+
+            if (datPhong.TrangThai == TrangThaiDatPhong.DA_CHECK_OUT.ToString())
+            {
+                throw new Exception("Booking đã check-out");
+            }
+
+            await _datPhongRepository.CheckIn(id);
+        }
+
+        public async Task XacNhan(Guid id)
+        {
+            var datPhong = await _datPhongRepository.LayTheoId(id);
+
+            if (datPhong == null)
+            {
+                throw new Exception("Booking không tồn tại");
+            }
+
+            if (datPhong.TrangThai == TrangThaiDatPhong.DA_CHECK_IN.ToString())
+            {
+                throw new Exception("Booking đã check-in");
+            }
+
+            if (datPhong.TrangThai == TrangThaiDatPhong.DA_CHECK_OUT.ToString())
+            {
+                throw new Exception("Booking đã check-out");
+            }
+
+            await _datPhongRepository.XacNhan(id);
+        }
+
         public async Task<DatPhong> DatPhong(DatPhongRequest dp, Guid userId)
         {
             if (!dp.NgayNhanPhong.HasValue || !dp.NgayTraPhong.HasValue)
@@ -168,7 +375,8 @@ namespace Container_App.Service.Services.DatPhongs
                     NgayNhanPhong = dp.NgayNhanPhong,
                     NgayTraPhong = dp.NgayTraPhong,
                     TongTien = tongTien,
-                    TrangThai = TrangThaiDatPhong.DA_XAC_NHAN.ToString()
+                    TrangThai = TrangThaiDatPhong.CHO_XAC_NHAN.ToString(),
+                    NgayTao = DateTime.Now
                 };
 
                 // 7. Lưu tất cả thông tin vào DB

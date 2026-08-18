@@ -27,6 +27,10 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Container_App.Core.Model.Email;
+using Container_App.Data.Repository.Emails;
+using Container_App.Data.Repository.Roles;
+using Container_App.Service.Services.Roles;
 using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace Container_App.Service.Services.Users
@@ -41,10 +45,12 @@ namespace Container_App.Service.Services.Users
         private readonly ITokenService _tokenService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IRabbitMQPublisher _rabbitMQPublisher;
+        private readonly IEmailService _emailService;
+        private readonly IRoleRepository _roleRepository; 
         public UserServices(IUserRepository userRepository, ITokenService tokenService,
             IRefreshTokenRepository refreshTokenRepository, IHttpContextAccessor httpContextAccessor,
             IRedisService redisService, IPermissionRepository permissionRepository, IUnitOfWork unitOfWork,
-            IRabbitMQPublisher rabbitMQPublisher)
+            IRabbitMQPublisher rabbitMQPublisher, IEmailService emailService, IRoleRepository roleRepository) 
         {
             _userRepository = userRepository;
             _tokenService = tokenService;
@@ -55,6 +61,8 @@ namespace Container_App.Service.Services.Users
             _tokenService = tokenService;
             _unitOfWork = unitOfWork;
             _rabbitMQPublisher = rabbitMQPublisher;
+            _emailService = emailService;
+            _roleRepository = roleRepository;
         }
         public async Task<UserProfileResponse> GetById(Guid id, Guid roleId)
         {
@@ -170,6 +178,7 @@ namespace Container_App.Service.Services.Users
             try
             {
                 var userLoginId = Guid.NewGuid();
+                var roleCustomer = await _roleRepository.GetRoleCustomer();
                 await _userRepository.InsertUserLogin(new UserLogin
                 {
                     Id = userLoginId,
@@ -186,7 +195,7 @@ namespace Container_App.Service.Services.Users
                     IsDel = 0,
                     CreateAt = DateTime.Now,
                     CreateBy = user.CreateBy,
-                    RoleId = user.RoleId,
+                    RoleId = roleCustomer.Id,
                     UserLoginId = userLoginId,
                 };
 
@@ -211,6 +220,64 @@ namespace Container_App.Service.Services.Users
                 Console.WriteLine($"Error occurred while registering user: {ex.Message}");
                 throw;
             }
+        }
+
+        public async Task QuenMatKhau(string username)
+        {
+            var user = await _userRepository.QuenMatKhau(username);
+
+            if (user == null)
+            {
+                throw new Exception("Tài khoản không tồn tại");
+            }
+
+            // Tạo mã OTP 6 số
+            var code = RandomNumberGenerator
+                .GetInt32(100000, 1000000)
+                .ToString();
+
+            var mailRequest = new MailRequest
+            {
+                ToEmail = user.Email,
+                Subject = "Mã xác nhận đặt lại mật khẩu",
+                IsHtml = false,
+                Body = $@"
+                    Xin chào {user.FullName},
+
+                    Mã xác nhận đặt lại mật khẩu của bạn là:
+
+                    {code}
+
+                    Mã có hiệu lực trong 5 phút.
+
+                    Nếu bạn không yêu cầu đặt lại mật khẩu, vui lòng bỏ qua email này.
+                    "
+            };
+
+            await _emailService.SendEmailAsync(mailRequest);
+
+            await _redisService.SetObject(
+                username,
+                code,
+                TimeSpan.FromMinutes(5)
+            );
+        }
+
+        public async Task ComfirmQuenMatKhau(string username, string code)
+        {
+            var redisCode = await _redisService.GetObject<string>(
+                $"forgot-password:{username}");
+            if (redisCode == null)
+            {
+                throw new Exception("Mã xác nhận đã hết hạn hoặc không tồn tại");
+            }
+
+            if (redisCode != code)
+            {
+                throw new Exception("Mã xác nhận không chính xác");
+            }
+            
+            
         }
     }
 }

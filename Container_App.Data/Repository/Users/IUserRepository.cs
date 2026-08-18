@@ -14,5 +14,7 @@ namespace Container_App.Data.Repository.Users
         Task<UserProfile> Login(string userName, string passWord);
         Task<UserProfile> GetById(Guid id);
         bool IsAuthenticated();
+        Task<UserProfile> QuenMatKhau(string username);
+        Task<UserLogin> UpdatePassword(string username, string passage);
     }
 }

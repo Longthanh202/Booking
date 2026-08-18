@@ -37,77 +37,93 @@ namespace Container_App.Service.Consumers.BookingCheckout
         }
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var factory = new ConnectionFactory
+            Console.WriteLine("====================================");
+            Console.WriteLine("BookingCheckoutConsumer STARTED");
+            Console.WriteLine("====================================");
+            try
             {
-                HostName = _configuration["RabbitMQ:Host"],
-                UserName = _configuration["RabbitMQ:Username"],
-                Password = _configuration["RabbitMQ:Password"]
-            };
-
-            while (!stoppingToken.IsCancellationRequested)
-            {
-                try
+                var factory = new ConnectionFactory
                 {
-                    _connection = await factory.CreateConnectionAsync(stoppingToken);
-                    _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
+                    HostName = _configuration["RabbitMQ:Host"],
+                    UserName = _configuration["RabbitMQ:Username"],
+                    Password = _configuration["RabbitMQ:Password"]
+                };
 
-                    break;
-                }
-                catch (Exception ex)
+                while (!stoppingToken.IsCancellationRequested)
                 {
-                    _logger.LogWarning(ex, "RabbitMQ chưa sẵn sàng, thử lại sau 5 giây...");
-                    await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
-                }
-            }
-
-            await _channel.QueueDeclareAsync(
-                queue: "booking_checked_out",
-                durable: true,
-                exclusive: false,
-                autoDelete: false,
-                cancellationToken: stoppingToken);
-
-            var consumer = new AsyncEventingBasicConsumer(_channel);
-
-            consumer.ReceivedAsync += async (sender, ea) =>
-            {
-                try
-                {
-                    using var scope = _scopeFactory.CreateScope();
-
-                    var hoaHongService =
-                        scope.ServiceProvider.GetRequiredService<IHoaHongService>();
-
-                    var json = Encoding.UTF8.GetString(ea.Body.ToArray());
-
-                    var message =
-                        JsonSerializer.Deserialize<BookingCheckedOutEvent>(json);
-
-                    if (message != null)
+                    try
                     {
-                        await hoaHongService.TinhHoaHong(message.DatPhongId);
+                        Console.WriteLine("Đang kết nối RabbitMQ...");
+                        _connection = await factory.CreateConnectionAsync(stoppingToken);
+                        Console.WriteLine(
+                            "RabbitMQ CONNECTED");
+                        _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
+                        Console.WriteLine(
+                            "RabbitMQ CHANNEL CREATED");
+                        break;
                     }
-
-                    await _channel.BasicAckAsync(ea.DeliveryTag, false);
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(
+                            $"RabbitMQ ERROR: {ex.Message}");
+                        _logger.LogWarning(ex, "RabbitMQ chưa sẵn sàng, thử lại sau 5 giây...");
+                        await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+                    }
                 }
-                catch (Exception ex)
+
+                await _channel.QueueDeclareAsync(
+                    queue: "booking_checked_out",
+                    durable: true,
+                    exclusive: false,
+                    autoDelete: false,
+                    cancellationToken: stoppingToken);
+
+                var consumer = new AsyncEventingBasicConsumer(_channel);
+
+                consumer.ReceivedAsync += async (sender, ea) =>
                 {
-                    _logger.LogError(ex, "Lỗi xử lý message");
+                    try
+                    {
+                        using var scope = _scopeFactory.CreateScope();
 
-                    await _channel.BasicNackAsync(
-                        ea.DeliveryTag,
-                        multiple: false,
-                        requeue: true);
-                }
-            };
+                        var hoaHongService =
+                            scope.ServiceProvider.GetRequiredService<IHoaHongService>();
 
-            await _channel.BasicConsumeAsync(
-                queue: "booking_checked_out",
-                autoAck: false,
-                consumer: consumer,
-                cancellationToken: stoppingToken);
+                        var json = Encoding.UTF8.GetString(ea.Body.ToArray());
 
-            await Task.Delay(Timeout.Infinite, stoppingToken);
+                        var message =
+                            JsonSerializer.Deserialize<BookingCheckedOutEvent>(json);
+
+                        if (message != null)
+                        {
+                            await hoaHongService.TinhHoaHong(message.DatPhongId);
+                        }
+
+                        await _channel.BasicAckAsync(ea.DeliveryTag, false);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Lỗi xử lý message");
+
+                        await _channel.BasicNackAsync(
+                            ea.DeliveryTag,
+                            multiple: false,
+                            requeue: true);
+                    }
+                };
+
+                await _channel.BasicConsumeAsync(
+                    queue: "booking_checked_out",
+                    autoAck: false,
+                    consumer: consumer,
+                    cancellationToken: stoppingToken);
+
+                await Task.Delay(Timeout.Infinite, stoppingToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi xử lý message");
+            }
         }
     }
 }

@@ -15,5 +15,7 @@ namespace Container_App.Data.Repository.Users
         Task<UserProfileResponse> GetById(Guid id, Guid roleId);
         bool IsAuthenticated();
         Task<UserProfile> Register(UserRequset user);
+        Task QuenMatKhau(string username);
+        Task ComfirmQuenMatKhau(string username, string code);
     }
 }

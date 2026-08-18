@@ -14,6 +14,8 @@ namespace Container_App.Data.Repository.LichSuVis
         Task<IEnumerable<LichSuVi>> LayTheoVi(long viKhachSanId);
 
         Task<IEnumerable<LichSuVi>> LayTheoDatPhong(Guid datPhongId);
+        
+        Task<IEnumerable<LichSuVi>> LayTheoOwnerId(Guid ownerId);
 
         Task<IEnumerable<LichSuVi>> LayTheoKhoangThoiGian(
             long viKhachSanId,

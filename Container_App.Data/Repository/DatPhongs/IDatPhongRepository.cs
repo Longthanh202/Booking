@@ -13,5 +13,15 @@ namespace Container_App.Data.Repository.DatPhongs
         Task<DatPhong> DatPhong(DatPhong dp, List<ChiTietDatPhong> ctdp, List<PhongDat> phongDats);
         Task<DatPhong?> LayTheoId(Guid id);
         Task CapNhatTrangThai(DatPhong d);
+
+        Task<(List<DatPhong> Items, int TotalCount)> GetListBookingOwner(
+            Guid ownerId,
+            Guid khachSanId,
+            int pageIndex,
+            int pageSize);
+
+        Task<(List<DatPhong> Items, int TotalCount)> BookingHistory(Guid userId, int pageIndex, int pageSize);
+        Task<DatPhong> CheckIn(Guid id);
+        Task<DatPhong> XacNhan(Guid id);
     }
 }

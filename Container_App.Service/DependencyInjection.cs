@@ -22,6 +22,7 @@ using Container_App.Service.Services.Emails;
 using Container_App.Service.Services.HoaHongs;
 using Container_App.Service.Services.KhachSanImage;
 using Container_App.Service.Services.KhachSans;
+using Container_App.Service.Services.LichSuVis;
 using Container_App.Service.Services.LoaiPhongs;
 using Container_App.Service.Services.Notifications;
 using Container_App.Service.Services.Permissions;
@@ -63,23 +64,41 @@ namespace Container_App.Service
             services.AddScoped<IProvinceService, ProvinceService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IRabbitMQPublisher, RabbitMQPublisher>();
-            services.AddScoped<IRedisService, RedisService>();
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IAuthService, AuthService>();
             services.AddScoped<IHoaHongService, HoaHongService>();
             services.AddScoped<INotificationService, NotificationService>();
-
-            services.AddSingleton<IConnectionMultiplexer>(sp =>
+            services.AddScoped<ILichSuViService, LichSuViService>();
+            
+            var redisEnabled = configuration.GetValue<bool>("Redis:Enabled");
+            if (redisEnabled)
             {
-                var connectionString = configuration.GetConnectionString("Redis");
+                services.AddSingleton<IConnectionMultiplexer>(sp =>
+                {
+                    var connectionString =
+                        configuration.GetConnectionString("Redis");
 
-                return ConnectionMultiplexer.Connect(connectionString);
-            });
+                    if (string.IsNullOrWhiteSpace(connectionString))
+                    {
+                        throw new Exception(
+                            "Redis được bật nhưng chưa cấu hình ConnectionStrings:Redis");
+                    }
+
+                    return ConnectionMultiplexer.Connect(connectionString);
+                });
+
+                services.AddScoped<IRedisService, RedisService>();
+            }
 
             //Consumer
-            services.AddHostedService<EmailConsumer>();
-            services.AddHostedService<SendEmailBookingConsumer>();
-            services.AddHostedService<BookingCheckoutConsumner>();
+            var rabbitMqEnabled = configuration.GetValue<bool>("RabbitMQ:Enabled");
+
+            if (rabbitMqEnabled)
+            {
+                services.AddHostedService<EmailConsumer>();
+                services.AddHostedService<SendEmailBookingConsumer>();
+                services.AddHostedService<BookingCheckoutConsumner>();
+            }
             return services;
         }
     }

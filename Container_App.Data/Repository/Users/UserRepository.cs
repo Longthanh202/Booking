@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Container_App.Common.Shared;
 
 namespace Container_App.Data.Repository.Users
 {
@@ -52,6 +53,49 @@ namespace Container_App.Data.Repository.Users
             return _httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false;
         }
 
+        public async Task<UserProfile> QuenMatKhau(string username)
+        {
+            try
+            {
+                return await (
+                    from ul in _context.UserLogins
+                    join up in _context.UserProfiles on ul.Id equals up.UserLoginId
+                    where ul.Username == username && up.IsDel == 0
+                    select new UserProfile
+                    {
+                        Id = ul.Id,
+                        FullName = up.FullName,
+                        Phone = up.Phone,
+                        Email = up.Email,
+                        Address = up.Address
+                    }).FirstOrDefaultAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error QuenMatKhau: {ex.Message}");
+                return null;
+            }
+        }
+
+        public async Task<UserLogin> UpdatePassword(
+            string username,
+            string password)
+        {
+            var user = await _context.UserLogins
+                .FirstOrDefaultAsync(x => x.Username == username);
+
+            if (user == null)
+            {
+                throw new Exception("User không tồn tại");
+            }
+
+            _context.UserLogins.Update(user);
+
+            await _context.SaveChangesAsync();
+
+            return user;
+        }
+
         public async Task<UserProfile?> Login(string userName, string passWord)
         {
             try
@@ -77,7 +121,7 @@ namespace Container_App.Data.Repository.Users
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"An error occurred during login: {ex.Message}");
+                FileLogger.Log(ex);
                 return null;
             }
         }

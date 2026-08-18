@@ -32,5 +32,10 @@ namespace Container_App.Data.Repository.Roles
         {
             return await _context.Roles.FirstOrDefaultAsync(x => x.Id == id);
         }
+
+        public async Task<Role?> GetRoleCustomer()
+        {
+            return await _context.Roles.FirstOrDefaultAsync(x => x.RoleName == "Customer");
+        }
     }
 }

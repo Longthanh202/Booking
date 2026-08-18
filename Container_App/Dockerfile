@@ -22,12 +22,12 @@ COPY . .
 
 # Build
 WORKDIR /src/Container_App
-RUN dotnet build Container_App.csproj -c Release -o /app/build
+RUN dotnet build Container_App.csproj -c Debug -o /app/build
 
 # Publish
 FROM build AS publish
 RUN dotnet publish Container_App.csproj \
-    -c Release \
+    -c Debug \
     -o /app/publish \
     /p:UseAppHost=false
 

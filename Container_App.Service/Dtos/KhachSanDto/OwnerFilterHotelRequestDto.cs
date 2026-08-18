@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace Container_App.Service.Dtos.KhachSanDto
 {
-    public class OwnerFilterHotelRequestDto : AdminFilterHotelRequestDto
+    public class OwnerFilterHotelRequestDto
     {
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
+        
     }
 }

@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace Container_App.Core.Model.KhachSans
@@ -45,7 +46,7 @@ namespace Container_App.Core.Model.KhachSans
         public virtual ICollection<KhachSan_TienIch> KhachSan_TienIches { get; set; } = new List<KhachSan_TienIch>();
 
         public virtual ViKhachSan? ViKhachSan { get; set; }
-
+        [JsonIgnore]
         public virtual ICollection<HoaHong> HoaHongs { get; set; } = new List<HoaHong>();
 
         public virtual ICollection<ChiTraKhachSan> ChiTraKhachSans { get; set; } = new List<ChiTraKhachSan>();

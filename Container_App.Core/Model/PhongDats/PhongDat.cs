@@ -16,7 +16,7 @@ namespace Container_App.Core.Model.PhongDats
         public string? TrangThai {  get; set; }
 
         public ChiTietDatPhong? ChiTietDatPhong { get; set; }
-        public virtual ICollection<Phong> Phongs { get; set; } = new List<Phong>();
+        public Phong Phong { get; set; }
 
     }
 }

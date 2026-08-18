@@ -106,91 +106,104 @@ namespace Container_App.Service.Services.KhachSans
         public async Task<FilterHotelResponseDto> FilterHotelsAsync(FilterHotelRequestDto dto)
         {
             var stopwatch = Stopwatch.StartNew();
-
-            // 1. Tạo Cache Key chuẩn từ DTO
-            string cacheKey = $"hotel-filter:" +
-                              $"{dto.Keyword ?? ""}:" +
-                              $"{dto.ProvinceCode ?? ""}:" +
-                              $"{dto.SoKhach?.ToString() ?? ""}:" +
-                              $"{dto.NgayNhanPhong?.ToString("yyyyMMdd") ?? ""}:" +
-                              $"{dto.NgayTraPhong?.ToString("yyyyMMdd") ?? ""}:" +
-                              $"{dto.Page}:" +
-                              $"{dto.PageSize}";
-
-            // 2. Kiểm tra Cache trong Redis
-            var cachedData = await _redisService.GetObject<FilterHotelResponseDto>(cacheKey);
-            if (cachedData != null)
+            try
             {
-                stopwatch.Stop();
-                Console.WriteLine($"[Service] Load từ Redis: {stopwatch.ElapsedMilliseconds} ms");
-                return cachedData;
-            }
+                // 1. Tạo Cache Key chuẩn từ DTO
+                string cacheKey = $"hotel-filter:" +
+                                  $"{dto.Keyword ?? ""}:" +
+                                  $"{dto.ProvinceCode ?? ""}:" +
+                                  $"{dto.SoKhach?.ToString() ?? ""}:" +
+                                  $"{dto.NgayNhanPhong?.ToString("yyyyMMdd") ?? ""}:" +
+                                  $"{dto.NgayTraPhong?.ToString("yyyyMMdd") ?? ""}:" +
+                                  $"{dto.Page}:" +
+                                  $"{dto.PageSize}";
 
-            // 3. Gọi Repository lấy danh sách Khách sạn và Tổng số lượng dòng (TotalRow)
-            var (khachSans, totalRow) = await _khachSanRepository.FilterHotels(
-                dto.Keyword,
-                dto.ProvinceCode,
-                dto.SoKhach,
-                dto.NgayNhanPhong,
-                dto.NgayTraPhong,
-                dto.Page,
-                dto.PageSize);
-
-            // Nếu không tìm thấy khách sạn nào, trả về đối tượng rỗng
-            if (khachSans == null || !khachSans.Any())
-            {
-                return new FilterHotelResponseDto
+                // 2. Kiểm tra Cache trong Redis
+                var cachedData = await _redisService.GetObject<FilterHotelResponseDto>(cacheKey);
+                if (cachedData != null)
                 {
-                    Data = new List<FilterHotelItemDto>(),
-                    TotalRow = 0,
-                    TotalPage = 0
+                    stopwatch.Stop();
+                    Console.WriteLine($"[Service] Load từ Redis: {stopwatch.ElapsedMilliseconds} ms");
+                    return cachedData;
+                }
+
+                // 3. Gọi Repository lấy danh sách Khách sạn và Tổng số lượng dòng (TotalRow)
+                var (khachSans, totalRow) = await _khachSanRepository.FilterHotels(
+                    dto.Keyword,
+                    dto.ProvinceCode,
+                    dto.SoKhach,
+                    dto.NgayNhanPhong,
+                    dto.NgayTraPhong,
+                    dto.Page,
+                    dto.PageSize);
+
+                // Nếu không tìm thấy khách sạn nào, trả về đối tượng rỗng
+                if (khachSans == null || !khachSans.Any())
+                {
+                    return new FilterHotelResponseDto
+                    {
+                        Data = new List<FilterHotelItemDto>(),
+                        TotalRow = 0,
+                        TotalPage = 0
+                    };
+                }
+
+                // 4. Lấy danh sách Ảnh theo HotelIds (Tránh lỗi N+1 Query)
+                var hotelIds = khachSans.Select(x => x.Id).Distinct().ToList();
+                var hotelImages = await _khachSanImageRepository.GetHotelImages(hotelIds);
+
+                // Gom nhóm ảnh theo KhachSanId để Lookup nhanh với O(1)
+                var imageLookup = hotelImages
+                    .GroupBy(x => x.KhachSanId)
+                    .ToDictionary(g => g.Key, g => g.Select(img => img.Url).ToList());
+
+
+                var prices = await _giaPhongRepository.LayGiaPhongTheoDSKhachSanId(hotelIds);
+
+                var priceLookup = prices
+                    .Where(x => x?.LoaiPhong?.KhachSanId != null)
+                    .GroupBy(x => x.LoaiPhong.KhachSanId!.Value)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.Min(x => x.Gia)
+                    );
+                // 5. Map dữ liệu từ Entity -> FilterHotelItemDto
+                var hotelDtos = khachSans.Select(hotel => new FilterHotelItemDto
+                {
+                    Id = hotel.Id,
+                    TenKhachSan = hotel.TenKhachSan,
+                    MoTa = hotel.MoTa,
+                    DiaChi = hotel.DiaChi,
+                    SoSao = hotel.SoSao,
+                    Gia = priceLookup.TryGetValue(hotel.Id, out var gia) ? gia : 0,
+                    Urls = imageLookup.TryGetValue(hotel.Id, out var urls) ? urls : new List<string>()
+                }).ToList();
+
+                // 6. Tính tổng số trang bằng totalRow vừa nhận từ Repository
+                int totalPage = Paginations.GetTotalPages(totalRow, dto.PageSize);
+
+                var response = new FilterHotelResponseDto
+                {
+                    Data = hotelDtos,
+                    TotalRow = totalRow,
+                    TotalPage = totalPage
                 };
+
+                // 7. Lưu vào Redis (Cache trong 30 giây)
+                await _redisService.SetObject(cacheKey, response, TimeSpan.FromSeconds(30));
+
+                stopwatch.Stop();
+
+                Console.WriteLine($"[Service] FilterHotels DB Execution: {stopwatch.ElapsedMilliseconds} ms");
+
+                return response;
             }
-
-            // 4. Lấy danh sách Ảnh theo HotelIds (Tránh lỗi N+1 Query)
-            var hotelIds = khachSans.Select(x => x.Id).Distinct().ToList();
-            var hotelImages = await _khachSanImageRepository.GetHotelImages(hotelIds);
-
-            // Gom nhóm ảnh theo KhachSanId để Lookup nhanh với O(1)
-            var imageLookup = hotelImages
-                .GroupBy(x => x.KhachSanId)
-                .ToDictionary(g => g.Key, g => g.Select(img => img.Url).ToList());
-
-
-            var prices = await _giaPhongRepository.LayGiaPhongTheoDSKhachSanId(hotelIds);
-
-            var priceLookup = prices.ToDictionary(
-                x => x.LoaiPhong.KhachSanId!.Value,
-                x => x.Gia);
-            // 5. Map dữ liệu từ Entity -> FilterHotelItemDto
-            var hotelDtos = khachSans.Select(hotel => new FilterHotelItemDto
+            catch (Exception ex)
             {
-                Id = hotel.Id,
-                TenKhachSan = hotel.TenKhachSan,
-                MoTa = hotel.MoTa,
-                DiaChi = hotel.DiaChi,
-                SoSao = hotel.SoSao,
-                Gia = priceLookup.TryGetValue(hotel.Id, out var gia) ? gia: 0,
-                Urls = imageLookup.TryGetValue(hotel.Id, out var urls) ? urls : new List<string>()
-            }).ToList();
-
-            // 6. Tính tổng số trang bằng totalRow vừa nhận từ Repository
-            int totalPage = Paginations.GetTotalPages(totalRow, dto.PageSize);
-
-            var response = new FilterHotelResponseDto
-            {
-                Data = hotelDtos,
-                TotalRow = totalRow,
-                TotalPage = totalPage
-            };
-
-            // 7. Lưu vào Redis (Cache trong 30 giây)
-            await _redisService.SetObject(cacheKey, response, TimeSpan.FromSeconds(30));
-
-            stopwatch.Stop();
-            Console.WriteLine($"[Service] FilterHotels DB Execution: {stopwatch.ElapsedMilliseconds} ms");
-
-            return response;
+                FileLogger.Log(ex);
+                
+                throw;
+            }
         }
 
 
@@ -216,12 +229,7 @@ namespace Container_App.Service.Services.KhachSans
         public async Task<FilterHotelResponseDto> LayDanhSachKhachSanOwnerAsync(OwnerFilterHotelRequestDto dto, Guid ownerId)
         {
             var (khachSans, totalRow) = await _khachSanRepository.LayDanhSachKhachSanOwner(
-                dto.Keyword,
-                dto.ThanhPho,
-                dto.ViDo ?? 0,
-                dto.KinhDo ?? 0,
-                dto.SoSao,
-                dto.TrangThai,
+                
                 ownerId,
                 dto.Page,
                 dto.PageSize

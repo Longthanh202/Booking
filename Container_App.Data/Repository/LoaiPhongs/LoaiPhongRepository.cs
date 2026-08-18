@@ -18,7 +18,7 @@ namespace Container_App.Data.Repository.LoaiPhongs
         {
             _context = context;
         }
-        public async Task<List<LoaiPhong>> GetLoaiPhongByKhachSanId(Guid khachSanId)
+        public async Task<List<LoaiPhong>> GetLoaiPhongOwner(Guid khachSanId)
         {
             return await _context.LoaiPhongs
                 .Where(x => x.KhachSanId == khachSanId)

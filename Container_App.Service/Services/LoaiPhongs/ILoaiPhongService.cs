@@ -13,5 +13,6 @@ namespace Container_App.Data.Repository.LoaiPhongs
     {
         Task<LoaiPhong> TaoLoaiPhong(LoaiPhongRequest lp);
         Task<List<LoaiPhongHienThi>> GetLoaiPhongByKhachSanId(GetLoaiPhongDto input);
+        Task<List<LoaiPhong>> GetLoaiPhongOwner(Guid khachSanId);
     }
 }

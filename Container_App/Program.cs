@@ -1,47 +1,11 @@
 ﻿using Container_App.Common.Config;
 using Container_App.Core.Model.Email;
 using Container_App.Data;
-using Container_App.Data.Connection;
-using Container_App.Data.Repository.Banners;
-using Container_App.Data.Repository.DatPhongs;
-using Container_App.Data.Repository.Emails;
-using Container_App.Data.Repository.KhachSans;
-using Container_App.Data.Repository.LoaiPhongs;
-using Container_App.Data.Repository.Permissions;
-using Container_App.Data.Repository.Phongs;
-using Container_App.Data.Repository.Provinces;
-using Container_App.Data.Repository.RabbitMQ;
-using Container_App.Data.Repository.Redis;
-using Container_App.Data.Repository.RefreshTokens;
-using Container_App.Data.Repository.RolePermissions;
-using Container_App.Data.Repository.TienIchs;
-using Container_App.Data.Repository.Users;
 using Container_App.Middleware;
 using Container_App.Service;
-using Container_App.Service.Services.Banners;
-using Container_App.Service.Services.Cloudinarys;
-using Container_App.Service.Services.DatPhongs;
-using Container_App.Service.Services.Emails;
-using Container_App.Service.Services.KhachSans;
-using Container_App.Service.Services.LoaiPhongs;
-using Container_App.Service.Services.Permissions;
-using Container_App.Service.Services.Phongs;
-using Container_App.Service.Services.Provinces;
-using Container_App.Service.Services.RabbitMQ;
-using Container_App.Service.Services.Redis;
-using Container_App.Service.Services.RefreshTokens;
-using Container_App.Service.Services.RolePermissions;
-using Container_App.Service.Services.TienIchs;
-using Container_App.Service.Services.Users;
-using dotenv.net;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-using StackExchange.Redis;
-using System;
-using System.ComponentModel.Design;
 using System.Text;
 using Container_App.Service.Services.Hubs;
 
@@ -120,10 +84,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 
 // Program.cs
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = builder.Configuration["ConnectionRedis:Redis"];
-});
+// builder.Services.AddStackExchangeRedisCache(options =>
+// {
+//     options.Configuration = builder.Configuration["ConnectionRedis:Redis"];
+// });
 
 
 builder.Services.AddCors(options =>

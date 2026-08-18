@@ -35,6 +35,11 @@ namespace Container_App.Service.Services.LoaiPhongs
             }
         }
 
+        public async Task<List<LoaiPhong>> GetLoaiPhongOwner(Guid khachSanId)
+        {
+            return await _loaiPhongRepository.GetLoaiPhongOwner(khachSanId);
+        }
+
         public async Task<LoaiPhong> TaoLoaiPhong(LoaiPhongRequest lp)
         {
             try

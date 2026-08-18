@@ -12,5 +12,6 @@ namespace Container_App.Data.Repository.Roles
     {
         Task<Role> CheckRoleAdmin(Guid userId);
         Task<Role?> GetById(Guid id);
+        Task<Role?> GetRoleCustomer();
     }
 }
