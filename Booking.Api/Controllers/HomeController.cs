@@ -1,10 +1,10 @@
-﻿using Container_App.Common.Shared;
-using Container_App.Core.Model.KhachSans;
-using Container_App.Data.Repository.KhachSans;
-using Container_App.Data.Repository.LoaiPhongs;
-using Container_App.Data.Repository.Redis;
-using Container_App.Data.Repository.TienIchs;
-using Container_App.Service.Services.KhachSanImage;
+﻿using Booking.Common.Shared;
+using Booking.Core.Model.KhachSans;
+using Booking.Data.Repository.KhachSans;
+using Booking.Data.Repository.LoaiPhongs;
+using Booking.Data.Repository.Redis;
+using Booking.Data.Repository.TienIchs;
+using Booking.Service.Services.KhachSanImage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using RabbitMQ.Client;

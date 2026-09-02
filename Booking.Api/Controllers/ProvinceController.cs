@@ -1,4 +1,4 @@
-﻿using Container_App.Data.Repository.Provinces;
+﻿using Booking.Data.Repository.Provinces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Booking.Api.Controllers

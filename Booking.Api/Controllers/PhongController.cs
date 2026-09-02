@@ -1,6 +1,6 @@
-﻿using Container_App.Core.Model.Phongs;
-using Container_App.Data.Repository.Phongs;
-using Container_App.Service.Dtos.Phongs;
+﻿using Booking.Core.Model.Phongs;
+using Booking.Data.Repository.Phongs;
+using Booking.Service.Dtos.Phongs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 

@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
+	<LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>b05e44da-92dc-438f-bbbc-6ae471916fb9</UserSecretsId>
@@ -34,10 +35,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Container_App.Common\Container_App.Common.csproj" />
-    <ProjectReference Include="..\Container_App.Core\Container_App.Core.csproj" />
-    <ProjectReference Include="..\Container_App.Data\Container_App.Data.csproj" />
-    <ProjectReference Include="..\Container_App.Service\Container_App.Service.csproj" />
+    <ProjectReference Include="..\Booking.Common\Booking.Common.csproj" />
+    <ProjectReference Include="..\Booking.Core\Booking.Core.csproj" />
+    <ProjectReference Include="..\Booking.Data\Booking.Data.csproj" />
+    <ProjectReference Include="..\Booking.Service\Booking.Service.csproj" />
   </ItemGroup>
 
 </Project>

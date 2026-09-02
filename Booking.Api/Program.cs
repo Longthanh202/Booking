@@ -1,13 +1,13 @@
-﻿using Container_App.Common.Config;
-using Container_App.Core.Model.Email;
-using Container_App.Data;
-using Container_App.Middleware;
-using Container_App.Service;
+﻿using Booking.Common.Config;
+using Booking.Core.Model.Email;
+using Booking.Data;
+using Booking.Api.Middleware;
+using Booking.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
-using Container_App.Service.Services.Hubs;
+using Booking.Service.Services.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 

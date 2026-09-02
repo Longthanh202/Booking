@@ -5,13 +5,13 @@ VisualStudioVersion = 16.0.30114.105
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Booking.Api", "Booking.Api.csproj", "{86634572-7785-4B4A-8443-A72F9E5E060E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Container_App.Common", "..\Container_App.Common\Container_App.Common.csproj", "{D797FFA8-646F-4662-889E-8362C53599DC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Booking.Common", "..\Booking.Common\Booking.Common.csproj", "{D797FFA8-646F-4662-889E-8362C53599DC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Container_App.Data", "..\Container_App.Data\Container_App.Data.csproj", "{BCC3DA05-B46F-47C7-9538-539EA7AA78D8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Booking.Data", "..\Booking.Data\Booking.Data.csproj", "{BCC3DA05-B46F-47C7-9538-539EA7AA78D8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Container_App.Core", "..\Container_App.Core\Container_App.Core.csproj", "{900A8B0F-A71F-4D1D-A6F6-DF8554AB985D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Booking.Core", "..\Booking.Core\Booking.Core.csproj", "{900A8B0F-A71F-4D1D-A6F6-DF8554AB985D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Container_App.Service", "..\Container_App.Service\Container_App.Service.csproj", "{BAFB0E2C-9885-4D7D-9AC1-5948988FB2CA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Booking.Service", "..\Booking.Service\Booking.Service.csproj", "{BAFB0E2C-9885-4D7D-9AC1-5948988FB2CA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

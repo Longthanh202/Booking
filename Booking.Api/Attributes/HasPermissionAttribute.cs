@@ -1,5 +1,5 @@
-﻿using Container_App.Data.Repository.Permissions;
-using Container_App.Service.Services.Permissions;
+﻿using Booking.Data.Repository.Permissions;
+using Booking.Service.Services.Permissions;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;

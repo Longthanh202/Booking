@@ -1,5 +1,5 @@
-﻿using Container_App.Service.Dtos.GoogleLogin;
-using Container_App.Service.Services.Auths;
+﻿using Booking.Service.Dtos.GoogleLogin;
+using Booking.Service.Services.Auths;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 

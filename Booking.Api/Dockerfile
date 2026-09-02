@@ -8,25 +8,25 @@ FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
 
 # Copy file csproj
-COPY Container_App/Container_App.csproj Container_App/
+COPY Booking.Api/Booking.Api.csproj Booking.Api/
 COPY Container_App.Common/Container_App.Common.csproj Container_App.Common/
 COPY Container_App.Core/Container_App.Core.csproj Container_App.Core/
 COPY Container_App.Data/Container_App.Data.csproj Container_App.Data/
 COPY Container_App.Service/Container_App.Service.csproj Container_App.Service/
 
 # Restore
-RUN dotnet restore Container_App/Container_App.csproj
+RUN dotnet restore Booking.Api/Booking.Api.csproj
 
 # Copy source
 COPY . .
 
 # Build
-WORKDIR /src/Container_App
-RUN dotnet build Container_App.csproj -c Debug -o /app/build
+WORKDIR /src/Booking.Api
+RUN dotnet build Booking.Api.csproj -c Debug -o /app/build
 
 # Publish
 FROM build AS publish
-RUN dotnet publish Container_App.csproj \
+RUN dotnet publish Booking.Api.csproj \
     -c Debug \
     -o /app/publish \
     /p:UseAppHost=false
@@ -37,4 +37,4 @@ WORKDIR /app
 
 COPY --from=publish /app/publish .
 
-ENTRYPOINT ["dotnet", "Container_App.dll"]
+ENTRYPOINT ["dotnet", "Booking.Api.dll"]

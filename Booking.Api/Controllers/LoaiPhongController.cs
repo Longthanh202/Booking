@@ -1,6 +1,6 @@
-﻿using Container_App.Core.Model.LoaiPhongs;
-using Container_App.Data.Repository.LoaiPhongs;
-using Container_App.Service.Dtos.LoaiPhongs;
+﻿using Booking.Core.Model.LoaiPhongs;
+using Booking.Data.Repository.LoaiPhongs;
+using Booking.Service.Dtos.LoaiPhongs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;

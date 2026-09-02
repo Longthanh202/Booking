@@ -1,7 +1,7 @@
-﻿using Container_App.Core.Model.DatPhongs;
-using Container_App.Data.Repository.DatPhongs;
-using Container_App.Data.Repository.Users;
-using Container_App.Service.Dtos.DatPhongs;
+﻿using Booking.Core.Model.DatPhongs;
+using Booking.Data.Repository.DatPhongs;
+using Booking.Data.Repository.Users;
+using Booking.Service.Dtos.DatPhongs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;

@@ -1,6 +1,6 @@
-using System.Security.Claims;
-using Container_App.Data.Repository.Users;
-using Container_App.Service.Services.LichSuVis;
+﻿using System.Security.Claims;
+using Booking.Data.Repository.Users;
+using Booking.Service.Services.LichSuVis;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

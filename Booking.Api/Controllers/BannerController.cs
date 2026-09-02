@@ -1,7 +1,7 @@
-﻿using Container_App.Core.Model.Banners;
-using Container_App.Data.Repository.Banners;
-using Container_App.Service.Dtos.Banner;
-using Container_App.Service.Services.Cloudinarys;
+﻿using Booking.Core.Model.Banners;
+using Booking.Data.Repository.Banners;
+using Booking.Service.Dtos.Banner;
+using Booking.Service.Services.Cloudinarys;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 

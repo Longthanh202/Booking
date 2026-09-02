@@ -1,6 +1,6 @@
-﻿using Container_App.Core.Model.TienIchs;
-using Container_App.Data.Repository.TienIchs;
-using Container_App.Service.Dtos.TienIchs;
+﻿using Booking.Core.Model.TienIchs;
+using Booking.Data.Repository.TienIchs;
+using Booking.Service.Dtos.TienIchs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
