@@ -9,10 +9,10 @@ WORKDIR /src
 
 # Copy file csproj
 COPY Booking.Api/Booking.Api.csproj Booking.Api/
-COPY Container_App.Common/Container_App.Common.csproj Container_App.Common/
-COPY Container_App.Core/Container_App.Core.csproj Container_App.Core/
-COPY Container_App.Data/Container_App.Data.csproj Container_App.Data/
-COPY Container_App.Service/Container_App.Service.csproj Container_App.Service/
+COPY Booking.Common/Booking.Common.csproj Booking.Common/
+COPY Booking.Core/Booking.Core.csproj Booking.Core/
+COPY Booking.Data/Booking.Data.csproj Booking.Data/
+COPY Booking.Service/Booking.Service.csproj Booking.Service/
 
 # Restore
 RUN dotnet restore Booking.Api/Booking.Api.csproj
