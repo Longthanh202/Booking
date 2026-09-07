@@ -13,6 +13,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Booking.Core", "..\Booking.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Booking.Service", "..\Booking.Service\Booking.Service.csproj", "{BAFB0E2C-9885-4D7D-9AC1-5948988FB2CA}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Booking.Storage", "..\Booking.Storage\Booking.Storage.csproj", "{BDB1DF99-D7D6-41C9-B8B8-419CC0E61096}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{BAFB0E2C-9885-4D7D-9AC1-5948988FB2CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BAFB0E2C-9885-4D7D-9AC1-5948988FB2CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BAFB0E2C-9885-4D7D-9AC1-5948988FB2CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDB1DF99-D7D6-41C9-B8B8-419CC0E61096}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDB1DF99-D7D6-41C9-B8B8-419CC0E61096}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDB1DF99-D7D6-41C9-B8B8-419CC0E61096}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDB1DF99-D7D6-41C9-B8B8-419CC0E61096}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -3,11 +3,6 @@ using Booking.Core.Model.DatPhongs;
 using Booking.Core.Model.PhongDats;
 using Booking.Data.DBContext;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Booking.Data.Repository.DatPhongs
 {

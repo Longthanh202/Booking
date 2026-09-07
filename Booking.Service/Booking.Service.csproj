@@ -27,6 +27,7 @@
     <ProjectReference Include="..\Booking.Common\Booking.Common.csproj" />
     <ProjectReference Include="..\Booking.Core\Booking.Core.csproj" />
     <ProjectReference Include="..\Booking.Data\Booking.Data.csproj" />
+    <ProjectReference Include="..\Booking.Storage\Booking.Storage.csproj" />
   </ItemGroup>
 
 </Project>
