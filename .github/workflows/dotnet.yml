@@ -24,10 +24,10 @@ jobs:
           dotnet-version: 6.0.100
 
       - name: Restore dependencies
-        run: dotnet restore Booking/Booking.sln
-
+          run: dotnet restore Booking.Api/Booking.Api.sln
+  
       - name: Build
-        run: dotnet build Booking/Booking.sln --no-restore --configuration Release
+          run: dotnet build Booking.Api/Booking.Api.sln --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test Booking/Booking.sln --no-build --configuration Release --verbosity normal
+          run: dotnet test Booking.Api/Booking.Api.sln --no-build --configuration Release --verbosity normal
