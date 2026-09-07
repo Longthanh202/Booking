@@ -1,0 +1,27 @@
+﻿using Booking.Core.Model.DatPhongs;
+using Booking.Core.Model.PhongDats;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Booking.Data.Repository.DatPhongs
+{
+    public interface IDatPhongRepository
+    {
+        Task<DatPhong> DatPhong(DatPhong dp, List<ChiTietDatPhong> ctdp, List<PhongDat> phongDats);
+        Task<DatPhong?> LayTheoId(Guid id);
+        Task CapNhatTrangThai(DatPhong d);
+
+        Task<(List<DatPhong> Items, int TotalCount)> GetListBookingOwner(
+            Guid ownerId,
+            Guid khachSanId,
+            int pageIndex,
+            int pageSize);
+
+        Task<(List<DatPhong> Items, int TotalCount)> BookingHistory(Guid userId, int pageIndex, int pageSize);
+        Task<DatPhong> CheckIn(Guid id);
+        Task<DatPhong> XacNhan(Guid id);
+    }
+}

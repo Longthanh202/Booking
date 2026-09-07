@@ -2,7 +2,7 @@
   dotnet_webapi:
     build:
       context: .
-      dockerfile: Container_App/Dockerfile
+      dockerfile: Booking.Api/Dockerfile
 
     container_name: dotnet_webapi
 
@@ -14,7 +14,7 @@
 
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=host.docker.internal;Database=workpro;User Id=sa;Password=longle@123;TrustServerCertificate=True;
+      - ConnectionStrings__DefaultConnection=Server=host.docker.internal;Database=workpro;User Id=workpro;Password=workpro;TrustServerCertificate=True;
       - ConnectionStrings__Redis=redis_cache:6379
       - RabbitMQ__Host=rabbitmq_broker
 
