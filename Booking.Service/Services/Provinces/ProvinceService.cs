@@ -22,16 +22,7 @@ namespace Booking.Service.Services.Provinces
         }
         public async Task<List<Province>> GetProvinces()
         {
-            try
-            {
-                return await _provinceRepository.GetProvinces();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error when get list province: {ex.Message}");
-
-                return new List<Province>();
-            }
+            return await _provinceRepository.GetProvinces();
         }
     }
 }

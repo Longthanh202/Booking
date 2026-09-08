@@ -55,9 +55,7 @@ namespace Booking.Data.Repository.Users
 
         public async Task<UserProfile> QuenMatKhau(string username)
         {
-            try
-            {
-                return await (
+            return await (
                     from ul in _context.UserLogins
                     join up in _context.UserProfiles on ul.Id equals up.UserLoginId
                     where ul.Username == username && up.IsDel == 0
@@ -69,12 +67,6 @@ namespace Booking.Data.Repository.Users
                         Email = up.Email,
                         Address = up.Address
                     }).FirstOrDefaultAsync();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"An error QuenMatKhau: {ex.Message}");
-                return null;
-            }
         }
 
         public async Task<UserLogin> UpdatePassword(
@@ -98,9 +90,7 @@ namespace Booking.Data.Repository.Users
 
         public async Task<UserProfile?> Login(string userName, string passWord)
         {
-            try
-            {
-                return await (
+            return await (
                  from ul in _context.UserLogins
                  join up in _context.UserProfiles on ul.Id equals up.UserLoginId
                  join ur in _context.UserRoles on ul.Id equals ur.UserId
@@ -118,12 +108,6 @@ namespace Booking.Data.Repository.Users
                  RoleName = r.RoleName
 
              }).FirstOrDefaultAsync();
-            }
-            catch (Exception ex)
-            {
-                FileLogger.Log(ex);
-                return null;
-            }
         }
     }
 }

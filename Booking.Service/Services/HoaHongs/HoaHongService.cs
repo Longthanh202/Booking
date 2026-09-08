@@ -143,7 +143,6 @@ namespace Booking.Service.Services.HoaHongs
             }
             catch(Exception ex)
             {
-                FileLogger.Log(ex);
                 await _unitOfWork.RollbackAsync();
                 throw;
             }

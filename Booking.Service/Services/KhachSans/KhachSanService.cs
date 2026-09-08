@@ -57,57 +57,44 @@ namespace Booking.Service.Services.KhachSans
 
         public async Task<KhachSanDetailResponse?> DetailKhachSan(Guid id)
         {
-            try
+            // 1. Lấy Entity từ Repository
+            var khachSan = await _khachSanRepository.DetailKhachSan(id);
+            if (khachSan == null)
             {
-                // 1. Lấy Entity từ Repository
-                var khachSan = await _khachSanRepository.DetailKhachSan(id);
-                if (khachSan == null)
-                {
-                    return null;
-                }
-
-                // 2. Map sang DTO tinh gọn tại Service
-                return new KhachSanDetailResponse
-                {
-                    Id = khachSan.Id,
-                    TenKhachSan = khachSan.TenKhachSan,
-                    Mota = khachSan.MoTa,
-                    DiaChi = khachSan.DiaChi,
-                    SoSao = khachSan.SoSao,
-                    GioNhanPhong = khachSan.GioNhanPhong,
-                    GioTraPhong = khachSan.GioTraPhong,
-                    TenThanhPho = khachSan.Province?.full_name ?? string.Empty,                  
-
-                    // TienIchs bóc tách qua bảng trung gian
-                    TienIchs = khachSan.KhachSan_TienIches
-                        .Where(kst => kst.TienIch != null)
-                        .Select(kst => new TienIchDto
-                        {
-                            Id = kst.TienIch!.Id,
-                            TenTienIch = kst.TienIch.TenTienIch,
-                            Icon = kst.TienIch.Icon
-                        }).ToList(),
-
-                    // KhachSanImages chỉ gồm Id và Url
-                    KhachSanImages = khachSan.KhachSanImages.Select(img => new KhachSanImageDto
-                    {
-                        Id = img.Id,
-                        Url = img.Url
-                    }).ToList()
-                };
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error when get detail KhachSan: {ex.Message}");
                 return null;
             }
+
+            // 2. Map sang DTO tinh gọn tại Service
+            return new KhachSanDetailResponse
+            {
+                Id = khachSan.Id,
+                TenKhachSan = khachSan.TenKhachSan,
+                Mota = khachSan.MoTa,
+                DiaChi = khachSan.DiaChi,
+                SoSao = khachSan.SoSao,
+                GioNhanPhong = khachSan.GioNhanPhong,
+                GioTraPhong = khachSan.GioTraPhong,
+                TenThanhPho = khachSan.Province?.full_name ?? string.Empty,
+                TienIchs = khachSan.KhachSan_TienIches
+                    .Where(kst => kst.TienIch != null)
+                    .Select(kst => new TienIchDto
+                    {
+                        Id = kst.TienIch!.Id,
+                        TenTienIch = kst.TienIch.TenTienIch,
+                        Icon = kst.TienIch.Icon
+                    }).ToList(),
+                KhachSanImages = khachSan.KhachSanImages.Select(img => new KhachSanImageDto
+                {
+                    Id = img.Id,
+                    Url = img.Url
+                }).ToList()
+            };
         }
 
         public async Task<FilterHotelResponseDto> FilterHotelsAsync(FilterHotelRequestDto dto)
         {
             var stopwatch = Stopwatch.StartNew();
-            try
-            {
+
                 // 1. Tạo Cache Key chuẩn từ DTO
                 string cacheKey = $"hotel-filter:" +
                                   $"{dto.Keyword ?? ""}:" +
@@ -123,7 +110,7 @@ namespace Booking.Service.Services.KhachSans
                 if (cachedData != null)
                 {
                     stopwatch.Stop();
-                    Console.WriteLine($"[Service] Load từ Redis: {stopwatch.ElapsedMilliseconds} ms");
+                    Booking.Common.Shared.FileLogger.Log($"[Service] Load từ Redis: {stopwatch.ElapsedMilliseconds} ms");
                     return cachedData;
                 }
 
@@ -194,16 +181,9 @@ namespace Booking.Service.Services.KhachSans
 
                 stopwatch.Stop();
 
-                Console.WriteLine($"[Service] FilterHotels DB Execution: {stopwatch.ElapsedMilliseconds} ms");
+                Booking.Common.Shared.FileLogger.Log($"[Service] FilterHotels DB Execution: {stopwatch.ElapsedMilliseconds} ms");
 
                 return response;
-            }
-            catch (Exception ex)
-            {
-                FileLogger.Log(ex);
-                
-                throw;
-            }
         }
 
 
@@ -338,13 +318,7 @@ namespace Booking.Service.Services.KhachSans
             catch (Exception ex)
             {
                 await _unitOfWork.RollbackAsync();
-                Console.WriteLine($"Error when create KhachSan: {ex.Message}");
-                return new KhachSanCreateResponse
-                {
-                    status = false,
-                    message = "Tạo khách sạn thất bại",
-                    Data = null
-                };
+                throw;
             }
         }
     }

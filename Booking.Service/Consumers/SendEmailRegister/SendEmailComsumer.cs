@@ -63,38 +63,59 @@ namespace Booking.Service.Consumers.SendEmailRegister
                     sender,
                     ea) =>
                 {
-                    var body = ea.Body.ToArray();
+                    try
+                    {
+                        var body = ea.Body.ToArray();
 
-                    var json =
-                        Encoding.UTF8.GetString(body);
+                        var json =
+                            Encoding.UTF8.GetString(body);
 
-                    var email =
-                        JsonSerializer.Deserialize
-                        <SendEmailEvent>(json);
+                        var email =
+                            JsonSerializer.Deserialize
+                            <SendEmailEvent>(json);
 
-                    using var scope =
-                        _scopeFactory.CreateScope();
-
-                    var emailService =
-                        scope.ServiceProvider
-                        .GetRequiredService<IEmailService>();
-
-                    await emailService.SendEmailAsync(
-                        new MailRequest
+                        if (email == null)
                         {
-                            ToEmail =
-                                email.ToEmail,
+                            await channel.BasicNackAsync(ea.DeliveryTag, false, false);
+                            return;
+                        }
 
-                            Subject =
-                                email.Subject,
+                        using var scope =
+                            _scopeFactory.CreateScope();
 
-                            Body =
-                                email.Body
-                        });
+                        var emailService =
+                            scope.ServiceProvider
+                            .GetRequiredService<IEmailService>();
 
-                    await channel.BasicAckAsync(
-                        ea.DeliveryTag,
-                        false);
+                        await emailService.SendEmailAsync(
+                            new MailRequest
+                            {
+                                ToEmail =
+                                    email.ToEmail,
+
+                                Subject =
+                                    email.Subject,
+
+                                Body =
+                                    email.Body
+                            });
+
+                        await channel.BasicAckAsync(
+                            ea.DeliveryTag,
+                            false);
+                    }
+                    catch (Exception ex)
+                    {
+                        Booking.Common.Shared.FileLogger.Log(ex);
+
+                        if (channel.IsOpen)
+                        {
+                            await channel.BasicNackAsync(
+                                ea.DeliveryTag,
+                                false,
+                                true);
+                        }
+                    }
                 };
 
                 await channel.BasicConsumeAsync(
@@ -108,7 +129,7 @@ namespace Booking.Service.Consumers.SendEmailRegister
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString());
+                Booking.Common.Shared.FileLogger.Log(ex);
             }
         }
     }

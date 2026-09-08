@@ -23,10 +23,8 @@ namespace Booking.Api.Middleware
             }
             catch (Exception ex)
             {
-                _logger.LogError(
-                    ex,
-                    "Unhandled exception: {Message}",
-                    ex.Message);
+                Booking.Common.Shared.FileLogger.Log(ex);
+                _logger.LogError(ex, "Unhandled exception while processing HTTP request");
 
                 context.Response.StatusCode = StatusCodes.Status500InternalServerError;
                 context.Response.ContentType = "application/json";

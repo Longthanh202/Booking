@@ -49,16 +49,26 @@ namespace Booking.Service.Consumers.BookingCheckout
                 while (!stoppingToken.IsCancellationRequested)
                 {
                     try
-                    {                      
-                        _connection = await factory.CreateConnectionAsync(stoppingToken);                   
-                        _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);                    
+                    {
+                        _connection = await factory.CreateConnectionAsync(stoppingToken);
+                        _channel = await _connection.CreateChannelAsync(cancellationToken: stoppingToken);
                         break;
                     }
+                    catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
                     catch (Exception ex)
-                    {                     
+                    {
+                        Booking.Common.Shared.FileLogger.Log(ex);
                         _logger.LogWarning(ex, "RabbitMQ chưa sẵn sàng, thử lại sau 5 giây...");
                         await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
                     }
+                }
+
+                if (_channel == null || stoppingToken.IsCancellationRequested)
+                {
+                    return;
                 }
 
                 await _channel.QueueDeclareAsync(
@@ -93,12 +103,24 @@ namespace Booking.Service.Consumers.BookingCheckout
                     }
                     catch (Exception ex)
                     {
-                        _logger.LogError(ex, "Lỗi xử lý message");
+                        Booking.Common.Shared.FileLogger.Log(ex);
+                        _logger.LogError(ex, "Lỗi xử lý message booking checkout");
 
-                        await _channel.BasicNackAsync(
-                            ea.DeliveryTag,
-                            multiple: false,
-                            requeue: true);
+                        if (_channel.IsOpen)
+                        {
+                            try
+                            {
+                                await _channel.BasicNackAsync(
+                                    ea.DeliveryTag,
+                                    multiple: false,
+                                    requeue: true);
+                            }
+                            catch (Exception nackException)
+                            {
+                                Booking.Common.Shared.FileLogger.Log(nackException);
+                                _logger.LogError(nackException, "Lỗi trả lại message booking checkout vào RabbitMQ");
+                            }
+                        }
                     }
                 };
 
@@ -108,11 +130,23 @@ namespace Booking.Service.Consumers.BookingCheckout
                     consumer: consumer,
                     cancellationToken: stoppingToken);
 
-                await Task.Delay(Timeout.Infinite, stoppingToken);
+                try
+                {
+                    await Task.Delay(Timeout.Infinite, stoppingToken);
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                    _logger.LogInformation("Đang dừng dịch vụ BookingCheckoutConsumner...");
+                }
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                _logger.LogInformation("Đang dừng dịch vụ BookingCheckoutConsumner...");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi xử lý message");
+                Booking.Common.Shared.FileLogger.Log(ex);
+                _logger.LogError(ex, "Lỗi khởi động hoặc vận hành BookingCheckoutConsumner");
             }
         }
     }

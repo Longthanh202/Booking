@@ -44,8 +44,6 @@ namespace Booking.Data.Repository.KhachSans
     int pageIndex, 
     int pageSize)
 {
-    try
-    {
         // 1. Sử dụng AsNoTracking() để tăng hiệu năng và tránh lỗi tracking state
         IQueryable<KhachSan> query = _context.KhachSans.AsNoTracking();
 
@@ -103,13 +101,6 @@ namespace Booking.Data.Repository.KhachSans
 
         return (items ?? new List<KhachSan>(), totalCount);
     }
-    catch (Exception ex)
-    {
-        FileLogger.Log(ex);
-        // Ném lại Exception với thông tin rõ ràng hoặc xử lý tùy nhu cầu
-        throw new Exception($"Lỗi khi truy vấn danh sách khách sạn: {ex.Message}", ex);
-    }
-}
     
         public async Task<KhachSan> TaoKhachSan(KhachSan ks)
         {

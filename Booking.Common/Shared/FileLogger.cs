@@ -52,5 +52,36 @@ namespace Booking.Common.Shared
                 // Không throw để tránh vòng lặp vô hạn
             }
         }
+
+        public static void Log(string message)
+        {
+            try
+            {
+                var folder = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");
+
+                if (!Directory.Exists(folder))
+                {
+                    Directory.CreateDirectory(folder);
+                }
+
+                var file = Path.Combine(folder, $"log_{DateTime.Now:yyyyMMdd}.txt");
+                var content = $@"
+                    ==========================================
+                    Time: {DateTime.Now:yyyy-MM-dd HH:mm:ss}
+
+                    Message:
+                    {message}
+                    ";
+
+                lock (_lock)
+                {
+                    File.AppendAllText(file, content);
+                }
+            }
+            catch
+            {
+                // Không throw để tránh vòng lặp vô hạn
+            }
+        }
     }
 }

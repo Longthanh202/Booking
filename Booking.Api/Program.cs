@@ -69,13 +69,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnAuthenticationFailed = context =>
             {
-                Console.WriteLine($"[JWT Fail]: {context.Exception.Message}");
+                Booking.Common.Shared.FileLogger.Log(context.Exception);
                 return Task.CompletedTask;
             },
             OnMessageReceived = context =>
             {
-                var authHeader = context.Request.Headers["Authorization"].ToString();
-                Console.WriteLine($"[Debug] Authorization: '{authHeader}'");
                 return Task.CompletedTask;
             }
         };

@@ -54,6 +54,7 @@ public class SendEmailBookingConsumer : BackgroundService
             }
             catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
             {
+                Booking.Common.Shared.FileLogger.Log(ex);
                 _logger.LogWarning("Chưa thể kết nối tới RabbitMQ ({Message}). Thử lại sau 5 giây...", ex.Message);
                 await Task.Delay(5000, stoppingToken); // Đợi 5s rồi thử lại
             }
@@ -98,7 +99,7 @@ public class SendEmailBookingConsumer : BackgroundService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Lỗi gửi email booking.");
+                Booking.Common.Shared.FileLogger.Log(ex);
 
                 if (_channel != null && _channel.IsOpen)
                 {
@@ -131,7 +132,7 @@ public class SendEmailBookingConsumer : BackgroundService
     }
     catch (Exception ex)
     {
-        
+        Booking.Common.Shared.FileLogger.Log(ex);
     }
 }
 

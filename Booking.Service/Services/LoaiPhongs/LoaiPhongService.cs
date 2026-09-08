@@ -22,17 +22,8 @@ namespace Booking.Service.Services.LoaiPhongs
 
         public async Task<List<LoaiPhongHienThi>> GetLoaiPhongByKhachSanId(GetLoaiPhongDto input)
         {
-            try
-            {
-               return await _loaiPhongRepository.GetLoaiPhongByKhachSanId(input.khachSanId,
-                   input.soKhach, input.ngayNhan, input.ngayTra);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);  
-
-                return new List<LoaiPhongHienThi>();
-            }
+            return await _loaiPhongRepository.GetLoaiPhongByKhachSanId(input.khachSanId,
+                input.soKhach, input.ngayNhan, input.ngayTra);
         }
 
         public async Task<List<LoaiPhong>> GetLoaiPhongOwner(Guid khachSanId)
@@ -42,27 +33,17 @@ namespace Booking.Service.Services.LoaiPhongs
 
         public async Task<LoaiPhong> TaoLoaiPhong(LoaiPhongRequest lp)
         {
-            try
+            LoaiPhong input = new LoaiPhong
             {
-                LoaiPhong input = new LoaiPhong
-                {
-                    Id = Guid.NewGuid(),
-                    KhachSanId = lp.KhachSanId,
-                    TenLoaiPhong = lp.TenLoaiPhong,
-                    SoKhachToiDa = lp.SoKhachToiDa,
-                    KieuGiuong = lp.KieuGiuong,
-                    MoTa = lp.MoTa,
-                    NgayTao = DateTime.Now,
-                };
-                return await _loaiPhongRepository.TaoLoaiPhong(input);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message,
-                "Error when create LoaiPhong.");
-
-                return null;
-            }
+                Id = Guid.NewGuid(),
+                KhachSanId = lp.KhachSanId,
+                TenLoaiPhong = lp.TenLoaiPhong,
+                SoKhachToiDa = lp.SoKhachToiDa,
+                KieuGiuong = lp.KieuGiuong,
+                MoTa = lp.MoTa,
+                NgayTao = DateTime.Now,
+            };
+            return await _loaiPhongRepository.TaoLoaiPhong(input);
         }
     }
 }

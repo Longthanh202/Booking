@@ -4,7 +4,7 @@
       context: .
       dockerfile: Booking.Api/Dockerfile
 
-    container_name: dotnet_webapi
+    container_name: Stayro_api
 
     ports:
       - "5295:80"
@@ -14,7 +14,7 @@
 
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Server=host.docker.internal;Database=workpro;User Id=workpro;Password=workpro;TrustServerCertificate=True;
+      - ConnectionStrings__DefaultConnection=Server=host.docker.internal;Database=Stayro;User Id=stayro;Password=stayro;TrustServerCertificate=True;
       - ConnectionStrings__Redis=redis_cache:6379
       - RabbitMQ__Host=rabbitmq_broker
 

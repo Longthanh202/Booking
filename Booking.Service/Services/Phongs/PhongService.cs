@@ -21,25 +21,15 @@ namespace Booking.Service.Services.Phongs
         }
         public async Task<Phong> TaoPhong(PhongRequest p)
         {
-            try
+            Phong phong = new Phong
             {
-                Phong phong = new Phong
-                {
-                    Id = Guid.NewGuid(),
-                    LoaiPhongId = p.LoaiPhongId,
-                    SoPhong = p.SoPhong,
-                    Tang = p.Tang,
-                    TrangThai = TrangThaiPhong.DANG_SU_DUNG.ToString(),
-                };
-                return await _phongRepository.TaoPhong(phong);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message,
-                "Error when create Phong.");
-
-                return null;
-            }
+                Id = Guid.NewGuid(),
+                LoaiPhongId = p.LoaiPhongId,
+                SoPhong = p.SoPhong,
+                Tang = p.Tang,
+                TrangThai = TrangThaiPhong.DANG_SU_DUNG.ToString(),
+            };
+            return await _phongRepository.TaoPhong(phong);
         }
     }
 }

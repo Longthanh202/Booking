@@ -217,7 +217,6 @@ namespace Booking.Service.Services.Users
             catch (Exception ex)
             {
                 await _unitOfWork.RollbackAsync();
-                Console.WriteLine($"Error occurred while registering user: {ex.Message}");
                 throw;
             }
         }

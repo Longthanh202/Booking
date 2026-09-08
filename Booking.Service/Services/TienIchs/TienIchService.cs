@@ -29,17 +29,7 @@ namespace Booking.Service.Services.TienIchs
 
         public async Task<List<TienIch>> GetTienIchKhachSanByKhachSanId(Guid khachSanId)
         {
-            try
-            {
-                return await _tienIchRepository.GetTienIchKhachSanByKhachSanId(khachSanId);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message,
-                "Error when GetTienIchKhachSanByKhachSanId.");
-
-                return new List<TienIch>();
-            }
+            return await _tienIchRepository.GetTienIchKhachSanByKhachSanId(khachSanId);
         }
 
         public async Task<TienIch> ThemTienIch(TienIchRequest tienIch)
@@ -74,10 +64,7 @@ namespace Booking.Service.Services.TienIchs
             catch (Exception ex)
             {
                 await _unitOfWork.RollbackAsync();
-
-                Console.WriteLine(ex);
-
-                return null;
+                throw;
             }
         }
     }

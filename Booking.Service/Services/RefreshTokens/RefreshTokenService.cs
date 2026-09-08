@@ -31,29 +31,12 @@ namespace Booking.Service.Services.RefreshTokens
 
         public async Task<RefreshToken> CheckStatusefreshToken(string token)
         {
-            try
-            {
-                return await _refreshTokenRepository.CheckStatusefreshToken(token);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error when CheckStatusefreshToken: " + ex.Message);
-                return null;
-           
-            }
+            return await _refreshTokenRepository.CheckStatusefreshToken(token);
         }
 
         public async Task<RefreshToken> InsertRefreshToken(RefreshToken refreshToken)
         {
-            try
-            {
-                return await _refreshTokenRepository.InsertRefreshToken(refreshToken);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Error when InsertRefreshToken: " + ex.Message);
-                return null;
-            }
+            return await _refreshTokenRepository.InsertRefreshToken(refreshToken);
         }
 
         public async Task<string?> RefreshToken()

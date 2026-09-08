@@ -19,18 +19,10 @@ namespace Booking.Data.Repository.GiaPhongs
 
         public async Task<GiaPhong?> LayGiaPhongHienTai(Guid loaiPhongId)
         {
-            try
-            {
-                return await _context.GiaPhongs
+            return await _context.GiaPhongs
                 .FirstOrDefaultAsync(x =>
                     x.LoaiPhongId == loaiPhongId &&
                     x.IsActive);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-                return null;
-            }
         }
 
         public async Task<List<GiaPhong>> LayGiaPhongTheoDSKhachSanId(List<Guid> ids)
