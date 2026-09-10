@@ -9,7 +9,7 @@ namespace Booking.Data.Repository.LoaiPhongs
 {
     public interface ILoaiPhongRepository
     {
-        Task<LoaiPhong> TaoLoaiPhong(LoaiPhong lp);
+        Task<bool> TaoLoaiPhong(LoaiPhong lp);
         Task<List<LoaiPhongHienThi>> GetLoaiPhongByKhachSanId(Guid khachSanId, 
             int soKhach, DateTime? ngayNhan, DateTime? ngayTra);
 

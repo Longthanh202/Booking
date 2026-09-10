@@ -10,7 +10,7 @@ namespace Booking.Data.Repository.TienIchs
 {
     public interface ITienIchService
     {
-        Task<TienIch> ThemTienIch(TienIchRequest tienIch);
+        Task<int> ThemTienIch(List<TienIchRequest> tienIch);
         Task<List<TienIch>> GetTienIchKhachSanByKhachSanId(Guid khachSanId);
     }
 }

@@ -10,26 +10,14 @@ using Booking.Data.Connection;
 using Booking.Data.Repository.GiaPhongs;
 using Booking.Data.Repository.KhachSanImage;
 using Booking.Data.Repository.KhachSans;
-using Booking.Data.Repository.LoaiPhongs;
 using Booking.Data.Repository.Redis;
-using Booking.Data.Repository.TienIchs;
 using Booking.Service.Dtos.KhachSan;
 using Booking.Service.Dtos.KhachSanDto;
 using Booking.Service.Dtos.KhachSanImages;
-using Booking.Service.Dtos.LoaiPhongs;
 using Booking.Service.Dtos.TienIchs;
 using Booking.Service.Services.Cloudinarys;
-using Org.BouncyCastle.Math;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
 using System.Diagnostics;
-using System.Drawing.Printing;
-using System.Linq;
-using System.Security.Claims;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Booking.Service.Services.KhachSans
 {
@@ -69,7 +57,7 @@ namespace Booking.Service.Services.KhachSans
             {
                 Id = khachSan.Id,
                 TenKhachSan = khachSan.TenKhachSan,
-                Mota = khachSan.MoTa,
+                MoTa = khachSan.MoTa,
                 DiaChi = khachSan.DiaChi,
                 SoSao = khachSan.SoSao,
                 GioNhanPhong = khachSan.GioNhanPhong,
@@ -97,8 +85,7 @@ namespace Booking.Service.Services.KhachSans
 
                 // 1. Tạo Cache Key chuẩn từ DTO
                 string cacheKey = $"hotel-filter:" +
-                                  $"{dto.Keyword ?? ""}:" +
-                                  $"{dto.ProvinceCode ?? ""}:" +
+                                  $"{dto.Keyword ?? ""}:" +                            
                                   $"{dto.SoKhach?.ToString() ?? ""}:" +
                                   $"{dto.NgayNhanPhong?.ToString("yyyyMMdd") ?? ""}:" +
                                   $"{dto.NgayTraPhong?.ToString("yyyyMMdd") ?? ""}:" +
@@ -116,8 +103,7 @@ namespace Booking.Service.Services.KhachSans
 
                 // 3. Gọi Repository lấy danh sách Khách sạn và Tổng số lượng dòng (TotalRow)
                 var (khachSans, totalRow) = await _khachSanRepository.FilterHotels(
-                    dto.Keyword,
-                    dto.ProvinceCode,
+                    dto.Keyword,              
                     dto.SoKhach,
                     dto.NgayNhanPhong,
                     dto.NgayTraPhong,
@@ -304,6 +290,7 @@ namespace Booking.Service.Services.KhachSans
                     GioTraPhong = Convert.ToDateTime(ks.GioTraPhong).TimeOfDay,
                     TrangThai = TrangThaiKhachSan.CHO_DUYET.ToString(),
                     NguoiTao = nguoiTao,
+                    NgayTao = DateTime.Now
                 };
                 await _khachSanRepository.TaoKhachSan(KhachSan);
                 await _khachSanImageRepository.InsertKhachSanImage(khachSanId, images);

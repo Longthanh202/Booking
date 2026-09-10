@@ -31,19 +31,32 @@ namespace Booking.Service.Services.LoaiPhongs
             return await _loaiPhongRepository.GetLoaiPhongOwner(khachSanId);
         }
 
-        public async Task<LoaiPhong> TaoLoaiPhong(LoaiPhongRequest lp)
+        public async Task<int> TaoLoaiPhong(List<LoaiPhongRequest> lp)
         {
-            LoaiPhong input = new LoaiPhong
+            int count = 0;
+
+            foreach (var item in lp)
             {
-                Id = Guid.NewGuid(),
-                KhachSanId = lp.KhachSanId,
-                TenLoaiPhong = lp.TenLoaiPhong,
-                SoKhachToiDa = lp.SoKhachToiDa,
-                KieuGiuong = lp.KieuGiuong,
-                MoTa = lp.MoTa,
-                NgayTao = DateTime.Now,
-            };
-            return await _loaiPhongRepository.TaoLoaiPhong(input);
+                LoaiPhong input = new LoaiPhong
+                {
+                    Id = Guid.NewGuid(),
+                    KhachSanId = item.KhachSanId,
+                    TenLoaiPhong = item.TenLoaiPhong,
+                    SoKhachToiDa = item.SoKhachToiDa,
+                    KieuGiuong = item.KieuGiuong,
+                    MoTa = item.MoTa,
+                    NgayTao = DateTime.Now,
+                };
+
+                var result = await _loaiPhongRepository.TaoLoaiPhong(input);
+
+                if (result)
+                {
+                    count++;
+                }
+            }
+
+            return count;
         }
     }
 }

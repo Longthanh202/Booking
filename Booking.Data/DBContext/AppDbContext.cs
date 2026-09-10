@@ -14,6 +14,7 @@ using Booking.Core.Model.Permissions;
 using Booking.Core.Model.PhongDats;
 using Booking.Core.Model.Phongs;
 using Booking.Core.Model.Provinces;
+using Booking.Core.Model.QuangCaos;
 using Booking.Core.Model.RefreshTokens;
 using Booking.Core.Model.Resources;
 using Booking.Core.Model.RolePermissions;
@@ -68,6 +69,8 @@ namespace Booking.Data.DBContext
             modelBuilder.Entity<ChiTietChiTraKhachSan>().ToTable("ChiTietChiTraKhachSan");
             modelBuilder.Entity<HoaDonHoaHong>().ToTable("HoaDonHoaHong");
             modelBuilder.Entity<ChiTietHoaDonHoaHong>().ToTable("ChiTietHoaDonHoaHong");
+            modelBuilder.Entity<GoiQuangCao>().ToTable("GoiQuangCao");
+            modelBuilder.Entity<KhachSanQuangCao>().ToTable("KhachSanQuangCao");
 
             // Nếu muốn dùng bảng tỉnh thành, hãy đồng nhất 1 dòng ToTable duy nhất:
             modelBuilder.Entity<Province>().ToTable("provinces");
@@ -260,17 +263,13 @@ namespace Booking.Data.DBContext
         public DbSet<PhongDat> phongDats { get; set; } = null!;
         public DbSet<ExternalLogin> ExternalLogins { get; set; } = null!;
         public DbSet<HoaHong> HoaHongs { get; set; }
-
         public DbSet<ViKhachSan> ViKhachSans { get; set; }
-
         public DbSet<LichSuVi> LichSuVis { get; set; }
-
         public DbSet<ChiTraKhachSan> ChiTraKhachSans { get; set; }
-
         public DbSet<ChiTietChiTraKhachSan> ChiTietChiTraKhachSans { get; set; }
-
         public DbSet<HoaDonHoaHong> HoaDonHoaHongs { get; set; }
-
         public DbSet<ChiTietHoaDonHoaHong> ChiTietHoaDonHoaHongs { get; set; }
+        public DbSet<GoiQuangCao> GoiQuangCaos { get; set; }
+        public DbSet<KhachSanQuangCao> KhachSanQuangCaos { get; set; }
     }
 }
