@@ -20,50 +20,30 @@ namespace Booking.Service.Services.KhachSanImage
         }
         public async Task<IEnumerable<KhachSanImages>> GetHotelImages(List<Guid> ids)
         {
-            try
+            var tb = new DataTable();
+            tb.Columns.Add("Id", typeof(Guid));
+            foreach (var item in ids)
             {
-                var tb = new DataTable();
-                tb.Columns.Add("Id", typeof(Guid));
-                foreach (var item in ids)
+                tb.Rows.Add(item);
+            }
+            var arr = new[]
+            {
+                new SqlParameter("@HotelIds", SqlDbType.Structured)
                 {
-                    tb.Rows.Add(item);
+                    TypeName = "HotelIdList",
+                    Value = tb
                 }
-                var arr = new[]
-                {                  
-                    new SqlParameter("@HotelIds", SqlDbType.Structured)
-                    {
-                        TypeName = "HotelIdList",
-                        Value = tb
-                    }
-                };
-                return await _executor.QueryAsync<KhachSanImages>("sp_GetHotelImages", arr);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message,
-                "Error when GetHotelImages.");
-
-                return Enumerable.Empty<KhachSanImages>();
-            }
+            };
+            return await _executor.QueryAsync<KhachSanImages>("sp_GetHotelImages", arr);
         }
 
         public async Task<IEnumerable<KhachSanImages>> GetListImageByKhachSanId(Guid khachSanId)
         {
-            try
-            {               
-                var arr = new[]
-                {
-                    new SqlParameter("@KhachSanId", khachSanId)
-                };
-                return await _executor.QueryAsync<KhachSanImages>("sp_GetListImageByKhachSanId", arr);
-            }
-            catch (Exception ex)
+            var arr = new[]
             {
-                Console.WriteLine(ex.Message,
-                "Error when GetListImageByKhachSanId.");
-
-                return Enumerable.Empty<KhachSanImages>();
-            }
+                new SqlParameter("@KhachSanId", khachSanId)
+            };
+            return await _executor.QueryAsync<KhachSanImages>("sp_GetListImageByKhachSanId", arr);
         }
     }
 }

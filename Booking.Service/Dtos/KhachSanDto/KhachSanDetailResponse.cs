@@ -16,7 +16,7 @@ namespace Booking.Service.Dtos.KhachSanDto
     {
         public Guid Id { get; set; }
         public string? TenKhachSan { get; set; } = string.Empty;
-        public string? Mota { get; set; } = string.Empty;
+        public string? MoTa { get; set; } = string.Empty;
         public string? DiaChi { get; set; } = string.Empty;
         public int? SoSao { get; set; }
         public TimeSpan? GioNhanPhong { get; set; }

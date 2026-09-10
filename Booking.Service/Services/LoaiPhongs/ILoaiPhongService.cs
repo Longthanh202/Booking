@@ -11,7 +11,7 @@ namespace Booking.Data.Repository.LoaiPhongs
 {
     public interface ILoaiPhongService
     {
-        Task<LoaiPhong> TaoLoaiPhong(LoaiPhongRequest lp);
+        Task<int> TaoLoaiPhong(List<LoaiPhongRequest> lp);
         Task<List<LoaiPhongHienThi>> GetLoaiPhongByKhachSanId(GetLoaiPhongDto input);
         Task<List<LoaiPhong>> GetLoaiPhongOwner(Guid khachSanId);
     }

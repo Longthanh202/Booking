@@ -21,9 +21,7 @@ namespace Booking.Data.Repository.Phongs
 
         public async Task<List<Phong>> LayDanhSachPhongTrong(Guid loaiPhongId, DateTime? ngayNhan, DateTime? ngayTra)
         {
-            try
-            {
-                return await _context.Phongs
+            return await _context.Phongs
                 .Where(p => p.LoaiPhongId == loaiPhongId && p.TrangThai == TrangThaiPhong.DANG_SU_DUNG.ToString())
                 .Where(p => !_context.phongDats.Any(pd =>
                     pd.PhongId == p.Id &&
@@ -32,12 +30,6 @@ namespace Booking.Data.Repository.Phongs
                     pd.ChiTietDatPhong.DatPhong.NgayTraPhong > ngayNhan
                 ))
                 .ToListAsync();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-                return new List<Phong>();
-            }
         }
 
         public async Task<Phong> TaoPhong(Phong p)

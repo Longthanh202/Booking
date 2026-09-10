@@ -30,17 +30,9 @@ namespace Booking.Data.Repository.RefreshTokens
 
         public async Task<RefreshToken> InsertRefreshToken(RefreshToken refreshToken)
         {
-            try
-            {
-                await _context.AddAsync(refreshToken);
-                await _context.SaveChangesAsync();
-                return refreshToken;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error inserting refresh token: {ex.InnerException.Message}");
-                throw;
-            }
+            await _context.AddAsync(refreshToken);
+            await _context.SaveChangesAsync();
+            return refreshToken;
         }
     }
 }

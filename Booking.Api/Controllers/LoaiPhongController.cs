@@ -19,16 +19,16 @@ namespace Booking.Api.Controllers
         }
 
         [HttpPost("tao")]
-        public async Task<IActionResult> ThemLoaiPhong([FromBody] LoaiPhongRequest dto)
+        public async Task<IActionResult> ThemLoaiPhong([FromBody] List<LoaiPhongRequest> dto)
         {
             var result = await _loaiPhongService.TaoLoaiPhong(dto);
 
-            if (result != null)
+            if (result != 0)
             {
                 return Ok(new
                 {
-                    message = "Thêm loại phòng thành công"
-                });
+                    message = "Thêm thành công " + result + " loại phòng"
+                }); ;
             }
 
             return BadRequest(new

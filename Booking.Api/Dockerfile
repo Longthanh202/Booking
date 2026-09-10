@@ -13,6 +13,7 @@ COPY Booking.Common/Booking.Common.csproj Booking.Common/
 COPY Booking.Core/Booking.Core.csproj Booking.Core/
 COPY Booking.Data/Booking.Data.csproj Booking.Data/
 COPY Booking.Service/Booking.Service.csproj Booking.Service/
+COPY Booking.Storage/Booking.Storage.csproj Booking.Storage/
 
 # Restore
 RUN dotnet restore Booking.Api/Booking.Api.csproj

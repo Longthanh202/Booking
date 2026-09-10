@@ -26,18 +26,11 @@ namespace Booking.Api.Controllers
                 return BadRequest(new { message = "IdToken không được để trống!" });
             }
 
-            try
-            {
-                // Lấy Default RoleId (VD: Role Khách hàng) từ appsettings.json
-                Guid defaultRoleId = Guid.Parse(_config["AppSettings:DefaultCustomerRoleId"]!);
+            // Lấy Default RoleId (VD: Role Khách hàng) từ appsettings.json
+            Guid defaultRoleId = Guid.Parse(_config["AppSettings:DefaultCustomerRoleId"]!);
 
-                var response = await _authService.LoginWithGoogleAsync(request.IdToken, defaultRoleId);
-                return Ok(response);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            var response = await _authService.LoginWithGoogleAsync(request.IdToken, defaultRoleId);
+            return Ok(response);
         }
     }
 }

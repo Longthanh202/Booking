@@ -125,29 +125,13 @@ namespace Booking.Api.Controllers
         [Route("chitiet")]
         public async Task<IActionResult> DetailHotel([FromBody] string id)
         {
+            if (string.IsNullOrEmpty(id))
+            {
+                return BadRequest();
+            }
 
-            try
-            {
-                if (string.IsNullOrEmpty(id))
-                {
-                    return BadRequest();
-                }
-                var khachSan = await _khachSanService.DetailKhachSan(Guid.Parse(id));
-                return Ok(khachSan);
-
-            }
-            catch (SqlException ex)
-            {
-                // Log the exception (you can use a logging framework like Serilog, NLog, etc.)
-                Console.Error.WriteLine($"SQL Exception: {ex.Message}");
-                return StatusCode(500, "An error occurred while processing your request.");
-            }
-            catch (Exception ex)
-            {
-                // Log the exception
-                Console.Error.WriteLine($"General Exception: {ex.Message}");
-                return StatusCode(500, "An unexpected error occurred.");
-            }
+            var khachSan = await _khachSanService.DetailKhachSan(Guid.Parse(id));
+            return Ok(khachSan);
         }
         [HttpPost]
         [Route("filter")]
@@ -157,20 +141,9 @@ namespace Booking.Api.Controllers
             {
                 return BadRequest(new { message = "Số trang (Page) và Kích thước trang (PageSize) phải lớn hơn 0." });
             }
-            try
-            {
-                // 2. Gọi Service xử lý logic
-                var result = await _khachSanService.FilterHotelsAsync(dto);
-
-                // 3. Trả về kết quả HTTP 200 OK
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message.ToString());
-
-                return StatusCode(500, new { message = "Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.", error = ex.Message.ToString() });
-            }
+            // Gọi Service xử lý logic; exception được xử lý bởi global middleware.
+            var result = await _khachSanService.FilterHotelsAsync(dto);
+            return Ok(result);
         }
     }
 }

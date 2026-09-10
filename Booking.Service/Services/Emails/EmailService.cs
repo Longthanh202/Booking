@@ -17,47 +17,40 @@ namespace Booking.Service.Services.Emails
         }
         public async Task SendEmailAsync(MailRequest request)
         {
-            try
-            {
-                var email = new MimeMessage();
+            var email = new MimeMessage();
 
-                email.From.Add(
-                    new MailboxAddress(
-                        _settings.DisplayName,
-                        _settings.Mail));
+            email.From.Add(
+                new MailboxAddress(
+                    _settings.DisplayName,
+                    _settings.Mail));
 
-                email.To.Add(MailboxAddress.Parse(request.ToEmail));
+            email.To.Add(MailboxAddress.Parse(request.ToEmail));
 
-                email.Subject = request.Subject;
+            email.Subject = request.Subject;
 
-                var builder = new BodyBuilder();
+            var builder = new BodyBuilder();
 
-                if (request.IsHtml)
-                    builder.HtmlBody = request.Body;
-                else
-                    builder.TextBody = request.Body;
+            if (request.IsHtml)
+                builder.HtmlBody = request.Body;
+            else
+                builder.TextBody = request.Body;
 
-                email.Body = builder.ToMessageBody();
+            email.Body = builder.ToMessageBody();
 
-                using var smtp = new SmtpClient();
+            using var smtp = new SmtpClient();
 
-                await smtp.ConnectAsync(
-                    _settings.Host,
-                    _settings.Port,
-                    SecureSocketOptions.StartTls);
+            await smtp.ConnectAsync(
+                _settings.Host,
+                _settings.Port,
+                SecureSocketOptions.StartTls);
 
-                await smtp.AuthenticateAsync(
-                    _settings.Mail,
-                    _settings.Password);
+            await smtp.AuthenticateAsync(
+                _settings.Mail,
+                _settings.Password);
 
-                await smtp.SendAsync(email);
+            await smtp.SendAsync(email);
 
-                await smtp.DisconnectAsync(true);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
+            await smtp.DisconnectAsync(true);
         }
     }
 }

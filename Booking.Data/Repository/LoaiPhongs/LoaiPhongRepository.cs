@@ -111,11 +111,21 @@ namespace Booking.Data.Repository.LoaiPhongs
             return result;
         }
 
-        public async Task<LoaiPhong> TaoLoaiPhong(LoaiPhong lp)
+        public async Task<bool> TaoLoaiPhong(LoaiPhong lp)
         {
-            await _context.LoaiPhongs.AddAsync(lp);
-            await _context.SaveChangesAsync();
-            return lp;
+            try
+            {
+                await _context.LoaiPhongs.AddAsync(lp);
+
+                var result = await _context.SaveChangesAsync();
+
+                return result > 0;
+            }
+            catch
+            {
+                return false;
+            }
         }
+
     }
 }

@@ -1,16 +1,8 @@
-﻿using Booking.Common.Shared.Enum.Booking;
+﻿using Booking.Common.Shared.Enum;
+using Booking.Common.Shared.Enum.Booking;
 using Booking.Core.Model.KhachSans;
-using Booking.Core.Model.LoaiPhongs;
-using Booking.Core.Model.TienIchs;
 using Booking.Data.DBContext;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Drawing.Printing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Booking.Common.Shared;
 
 namespace Booking.Data.Repository.KhachSans
 {
@@ -32,85 +24,92 @@ namespace Booking.Data.Repository.KhachSans
                 .Include(ks => ks.KhachSanImages)
                 .Include(ks => ks.KhachSan_TienIches)
                     .ThenInclude(kst => kst.TienIch) // Đi sâu vào lấy data bảng TienIch
-                .FirstOrDefaultAsync(ks => ks.Id == id);
+                .FirstOrDefaultAsync(ks => ks.Id == id) ?? null;
         }
 
         public async Task<(List<KhachSan> Items, int TotalCount)> FilterHotels(
-    string? keyword, 
-    string provinceCode, 
-    int? soKhach, 
-    DateTime? ngayNhanPhong, 
-    DateTime? ngayTraPhong, 
-    int pageIndex, 
-    int pageSize)
-{
-    try
-    {
-        // 1. Sử dụng AsNoTracking() để tăng hiệu năng và tránh lỗi tracking state
-        IQueryable<KhachSan> query = _context.KhachSans.AsNoTracking();
-
-        // 2. Lọc theo Keyword
-        if (!string.IsNullOrWhiteSpace(keyword))
+            string? keyword,
+            int? soKhach,
+            DateTime? ngayNhanPhong,
+            DateTime? ngayTraPhong,
+            int pageIndex,
+            int pageSize)
         {
-            query = query.Where(x => x.TenKhachSan.Contains(keyword));
+
+            IQueryable<KhachSan> query = _context.KhachSans.AsNoTracking();
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                var kw = keyword.Trim();
+
+                query =
+                    from ks in query
+                    join p in _context.Provinces
+                        on ks.ThanhPho equals p.code into pGroup
+                    from p in pGroup.DefaultIfEmpty()
+                    where ks.TenKhachSan.Contains(kw)
+                          || (p != null && p.name.Contains(kw))
+                    select ks;
+            }
+
+            if (soKhach.HasValue)
+            {
+                query = query.Where(x => x.LoaiPhongs.Any(lp => lp.SoKhachToiDa >= soKhach.Value));
+            }
+
+            if (ngayNhanPhong.HasValue && ngayTraPhong.HasValue)
+            {
+                string trangThaiDaHuy = TrangThaiDatPhong.DA_HUY.ToString();
+                query = query.Where(x => x.LoaiPhongs.Any(lp =>
+                    !lp.ChiTietDatPhongs.Any(ct =>
+                        ct.DatPhong.NgayNhanPhong < ngayTraPhong.Value &&
+                        ct.DatPhong.NgayTraPhong > ngayNhanPhong.Value &&
+                        ct.DatPhong.TrangThai != trangThaiDaHuy)));
+            }
+
+            var advertisingScores =
+               from ksqc in _context.KhachSanQuangCaos
+               join gqc in _context.GoiQuangCaos
+                   on ksqc.GoiQuanCaoId equals gqc.Id
+               where ksqc.TrangThai == TrangThaiQuangCao.DANG_HIEN_THI.ToString()
+               group gqc by ksqc.KhachSanId into grouped
+               select new
+               {
+                   KhachSanId = grouped.Key,
+                   DiemUuTien = grouped.Max(x => x.DiemUuTien)
+               };
+
+            var queryWithPriority =
+               from ks in query
+               join qc in advertisingScores
+                   on ks.Id equals qc.KhachSanId into qcGroup
+               from qc in qcGroup.DefaultIfEmpty()
+               select new
+               {
+                   KhachSan = ks,
+                   DiemUuTien = qc != null
+                       ? qc.DiemUuTien
+                       : 0
+               };
+
+            int totalCount = await query.CountAsync();
+            if (totalCount == 0)
+            {
+                return (new List<KhachSan>(), 0);
+            }
+
+            int skip = (pageIndex - 1) * pageSize;
+            var items = await query
+                .Include(x => x.LoaiPhongs)
+                .AsSplitQuery()
+                .OrderByDescending(x => x.NgayTao)
+                .Skip(skip < 0 ? 0 : skip)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items ?? new List<KhachSan>(), totalCount);
         }
 
-        // 3. Lọc theo Tỉnh/Thành phố
-        if (!string.IsNullOrEmpty(provinceCode))
-        {
-            query = query.Where(x => x.ThanhPho == provinceCode);
-        }
-
-        // 4. Lọc theo Số khách
-        if (soKhach.HasValue)
-        {
-            query = query.Where(x => x.LoaiPhongs.Any(lp => lp.SoKhachToiDa >= soKhach.Value));
-        }
-
-        // 5. Lọc theo ngày nhận/trả phòng (Kiểm tra phòng trống)
-        if (ngayNhanPhong.HasValue && ngayTraPhong.HasValue)
-        {
-            string trangThaiDaHuy = TrangThaiDatPhong.DA_HUY.ToString();
-
-            query = query.Where(x => x.LoaiPhongs.Any(lp => 
-                !lp.ChiTietDatPhongs.Any(ct =>
-                    ct.DatPhong.NgayNhanPhong < ngayTraPhong.Value &&
-                    ct.DatPhong.NgayTraPhong > ngayNhanPhong.Value &&
-                    ct.DatPhong.TrangThai != trangThaiDaHuy)));
-        }
-
-        // 6. Đếm tổng số bản ghi
-        int totalCount = await query.CountAsync();
-
-        // Nếu không có bản ghi nào thì trả về luôn, tránh chạy câu Query nặng bên dưới
-        if (totalCount == 0)
-        {
-            return (new List<KhachSan>(), 0);
-        }
-
-        // 7. Phân trang
-        int skip = (pageIndex - 1) * pageSize;
-
-        // Bổ sung Include LoaiPhongs TẠI BƯỚC NÀY thay vì đặt ở đầu query
-        // Sử dụng AsSplitQuery() để tránh lỗi Cartesian Explosion khi Skip/Take có Include
-        var items = await query
-            .Include(x => x.LoaiPhongs)
-            .AsSplitQuery() // <--- GIẢI PHÁP QUAN TRỌNG CHO EF CORE
-            .OrderByDescending(x => x.NgayTao)
-            .Skip(skip < 0 ? 0 : skip)
-            .Take(pageSize)
-            .ToListAsync();
-
-        return (items ?? new List<KhachSan>(), totalCount);
-    }
-    catch (Exception ex)
-    {
-        FileLogger.Log(ex);
-        // Ném lại Exception với thông tin rõ ràng hoặc xử lý tùy nhu cầu
-        throw new Exception($"Lỗi khi truy vấn danh sách khách sạn: {ex.Message}", ex);
-    }
-}
-    
         public async Task<KhachSan> TaoKhachSan(KhachSan ks)
         {
             ks.Id = Guid.NewGuid();

@@ -43,7 +43,6 @@ namespace Booking.Service.Services.RolePermissions
             catch (Exception ex)
             {
                 await _unitOfWork.RollbackAsync();
-                Console.WriteLine($"Error inserting role permissions: {ex.Message}");
                 throw;
             }
         }

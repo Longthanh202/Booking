@@ -13,6 +13,5 @@ namespace Booking.Service.Dtos.LoaiPhongs
         public int? SoKhachToiDa { get; set; }
         public string? KieuGiuong { get; set; }
         public string? MoTa { get; set; }
-        public DateTime? NgayTao { get; set; }
     }
 }

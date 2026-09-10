@@ -21,15 +21,7 @@ namespace Booking.Service.Services.Roles
         }
         public async Task<Role> CheckRoleAdmin(Guid userId)
         {
-            try
-            {              
-                return await _roleRepository.CheckRoleAdmin(userId);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message, "Error when check role admin");
-                throw;
-            }
+            return await _roleRepository.CheckRoleAdmin(userId);
         }
     }
 }

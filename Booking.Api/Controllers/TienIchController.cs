@@ -1,7 +1,5 @@
-﻿using Booking.Core.Model.TienIchs;
-using Booking.Data.Repository.TienIchs;
+﻿using Booking.Data.Repository.TienIchs;
 using Booking.Service.Dtos.TienIchs;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Booking.Api.Controllers
@@ -18,11 +16,11 @@ namespace Booking.Api.Controllers
         }
 
         [HttpPost("tao")]
-        public async Task<IActionResult> ThemTienIch([FromBody] TienIchRequest dto)
+        public async Task<IActionResult> ThemTienIch([FromBody] List<TienIchRequest> dto)
         {
             var result = await _tienIchService.ThemTienIch(dto);
 
-            if (result != null)
+            if (result != 0)
             {
                 return Ok(new
                 {

@@ -89,47 +89,25 @@ namespace Booking.Api.Controllers
         [HttpPut("{id}/check-in")]
         public async Task<IActionResult> CheckIn(Guid id)
         {
-            try
-            {
-                await _datPhongService.CheckIn(id);
+            await _datPhongService.CheckIn(id);
 
-                return Ok(new
-                {
-                    status = true,
-                    message = "Check-in thành công"
-                });
-            }
-            catch (Exception ex)
+            return Ok(new
             {
-                return BadRequest(new
-                {
-                    status = false,
-                    message = ex.Message
-                });
-            }
+                status = true,
+                message = "Check-in thành công"
+            });
         }
         [Authorize(Roles = "Owner")]
         [HttpPut("{id}/xacnhan")]
         public async Task<IActionResult> XacNhan(Guid id)
         {
-            try
-            {
-                await _datPhongService.XacNhan(id);
+            await _datPhongService.XacNhan(id);
 
-                return Ok(new
-                {
-                    status = true,
-                    message = "Xác nhận Booking thành công"
-                });
-            }
-            catch (Exception ex)
+            return Ok(new
             {
-                return BadRequest(new
-                {
-                    status = false,
-                    message = ex.Message
-                });
-            }
+                status = true,
+                message = "Xác nhận Booking thành công"
+            });
         }
     }
 }
