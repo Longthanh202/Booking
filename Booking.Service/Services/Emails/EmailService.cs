@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using MimeKit;
 using MailKit.Net.Smtp;
 using Booking.Data.Repository.Emails;
+using Booking.Service.Dtos.Email;
 
 namespace Booking.Service.Services.Emails
 {

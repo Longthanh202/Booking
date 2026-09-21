@@ -2,7 +2,7 @@
 using Booking.Core.Model.Phongs;
 using Booking.Data.Connection;
 using Booking.Data.Repository.Phongs;
-using Booking.Service.Dtos.Phongs;
+using Booking.Service.Dtos.Rooms;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -19,7 +19,7 @@ namespace Booking.Service.Services.Phongs
         {
            _phongRepository = phongRepository;
         }
-        public async Task<Phong> CreateRoom(PhongRequest p)
+        public async Task<Phong> CreateRoom(CreateRoomRequest p)
         {
             Phong phong = new Phong
             {

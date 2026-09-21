@@ -9,9 +9,9 @@ using Booking.Data.Repository.RabbitMQ;
 using Booking.Data.Repository.RefreshTokens;
 using Booking.Data.Repository.RolePermissions;
 using Booking.Data.Repository.Users;
-using Booking.Service.Dtos.Login;
-using Booking.Service.Dtos.RolePermission;
-using Booking.Service.Dtos.UserProfile;
+using Booking.Service.Dtos.Authentication;
+using Booking.Service.Dtos.RolePermissions;
+using Booking.Service.Dtos.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Rewrite;
@@ -46,11 +46,11 @@ namespace Booking.Api.Controllers
 
         [HttpPost]
         [Route("login")]
-        public async Task<IActionResult> Login([FromBody] LoginResquest dto)
+        public async Task<IActionResult> Login([FromBody] LoginRequest dto)
         {
             var result = await _userServices.Login(dto);
 
-            if (!result.status)
+            if (!result.Status)
                 return BadRequest(result);
 
             return Ok(result);
@@ -89,7 +89,7 @@ namespace Booking.Api.Controllers
         [HttpPost]
         [Route("role-permissions")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> AddRolePermissions([FromBody] RolePermissionRequset dto)
+        public async Task<IActionResult> AddRolePermissions([FromBody] RolePermissionRequest dto)
         {
             await _rolePermissionService.AddRolePermissions(dto);
             return Ok();
@@ -97,7 +97,7 @@ namespace Booking.Api.Controllers
 
         [HttpPost]
         [Route("register")]
-        public async Task<IActionResult> Register([FromBody] UserRequset u)
+        public async Task<IActionResult> Register([FromBody] RegisterUserRequest u)
         {
             var result =  await _userServices.Register(u);
             if(result != null)

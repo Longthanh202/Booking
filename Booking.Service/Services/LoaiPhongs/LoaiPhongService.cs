@@ -2,7 +2,7 @@
 using Booking.Core.Model.LoaiPhongs;
 using Booking.Data.Connection;
 using Booking.Data.Repository.LoaiPhongs;
-using Booking.Service.Dtos.LoaiPhongs;
+using Booking.Service.Dtos.RoomTypes;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -20,10 +20,10 @@ namespace Booking.Service.Services.LoaiPhongs
             _loaiPhongRepository = loaiPhongRepository;
         }
 
-        public async Task<List<LoaiPhongHienThi>> GetRoomTypesByHotelId(GetLoaiPhongDto input)
+        public async Task<List<LoaiPhongHienThi>> GetRoomTypesByHotelId(RoomTypeSearchRequest input)
         {
-            return await _loaiPhongRepository.GetRoomTypesByHotelId(input.khachSanId,
-                input.soKhach, input.ngayNhan, input.ngayTra);
+            return await _loaiPhongRepository.GetRoomTypesByHotelId(input.KhachSanId,
+                input.SoKhach, input.NgayNhan, input.NgayTra);
         }
 
         public async Task<List<LoaiPhong>> GetOwnerRoomTypes(Guid khachSanId)
@@ -31,7 +31,7 @@ namespace Booking.Service.Services.LoaiPhongs
             return await _loaiPhongRepository.GetOwnerRoomTypes(khachSanId);
         }
 
-        public async Task<int> CreateRoomTypes(List<LoaiPhongRequest> lp)
+        public async Task<int> CreateRoomTypes(List<CreateRoomTypeRequest> lp)
         {
             int count = 0;
 

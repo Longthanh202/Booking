@@ -1,5 +1,5 @@
 ﻿using Booking.Core.Model.Users;
-using Booking.Service.Dtos.UserProfile;
+using Booking.Service.Dtos.Users;
 using System;
 using System.Collections.Generic;
 using System.Linq;

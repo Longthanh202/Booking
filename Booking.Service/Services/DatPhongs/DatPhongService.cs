@@ -13,7 +13,7 @@ using Booking.Data.Repository.Phongs;
 using Booking.Data.Repository.RabbitMQ;
 using Booking.Data.Repository.ThanhToans;
 using Booking.Data.Repository.Users;
-using Booking.Service.Dtos.DatPhongs;
+using Booking.Service.Dtos.Bookings;
 using Booking.Service.Dtos.Email;
 using System;
 using System.Collections.Generic;
@@ -94,8 +94,8 @@ namespace Booking.Service.Services.DatPhongs
             }
         }
 
-        public async Task<DatPhongOwnerDto> GetOwnerBookings(
-            DatPhongOwnerRequest dto,
+        public async Task<OwnerBookingResponse> GetOwnerBookings(
+            OwnerBookingSearchRequest dto,
             Guid ownerId)
             {
             var page = dto.Page <= 0 ? 1 : dto.Page;
@@ -103,11 +103,11 @@ namespace Booking.Service.Services.DatPhongs
 
             var result = await _datPhongRepository.GetOwnerBookings(
                 ownerId,
-                dto.khachSanId,
+                dto.KhachSanId,
                 page,
                 pageSize);
 
-            var data = result.Items.Select(x => new DatPhongDto
+            var data = result.Items.Select(x => new BookingDto
             {
                 // =========================
                 // Đặt phòng
@@ -135,7 +135,7 @@ namespace Booking.Service.Services.DatPhongs
                 // Chi tiết đặt phòng
                 // =========================
                 ChiTietDatPhongs = x.ChiTietDatPhongs
-                    .Select(ct => new ChiTietDatPhongDto
+                    .Select(ct => new BookingRoomTypeDetailDto
                     {
                         Id = ct.Id,
 
@@ -150,7 +150,7 @@ namespace Booking.Service.Services.DatPhongs
                         // Các phòng được đặt
                         // =========================
                         Phongs = ct.PhongDats
-                            .Select(pd => new PhongDto
+                            .Select(pd => new BookedRoomDto
                             {
                                 Id = pd.Phong.Id,
                                 SoPhong = pd.Phong.SoPhong,
@@ -165,7 +165,7 @@ namespace Booking.Service.Services.DatPhongs
             var totalPage = (int)Math.Ceiling(
                 (double)result.TotalCount / pageSize);
 
-            return new DatPhongOwnerDto
+            return new OwnerBookingResponse
             {
                 Data = data,
                 TotalRow = result.TotalCount,
@@ -173,7 +173,7 @@ namespace Booking.Service.Services.DatPhongs
             };
         }
 
-        public async Task<BookingHistory> GetBookingHistory(Guid userId, int pageIndex, int pageSize)
+        public async Task<BookingHistoryResponse> GetBookingHistory(Guid userId, int pageIndex, int pageSize)
         {
             var page = pageIndex <= 0 ? 1 : pageIndex;
             pageSize = pageSize <= 0 ? 10 : pageSize;
@@ -183,7 +183,7 @@ namespace Booking.Service.Services.DatPhongs
                 page,
                 pageSize);
 
-            var data = result.Items.Select(x => new DatPhongDto
+            var data = result.Items.Select(x => new BookingDto
             {
                 // =========================
                 // Đặt phòng
@@ -209,7 +209,7 @@ namespace Booking.Service.Services.DatPhongs
                 // Chi tiết đặt phòng
                 // =========================
                 ChiTietDatPhongs = x.ChiTietDatPhongs
-                    .Select(ct => new ChiTietDatPhongDto
+                    .Select(ct => new BookingRoomTypeDetailDto
                     {
                         Id = ct.Id,
 
@@ -224,7 +224,7 @@ namespace Booking.Service.Services.DatPhongs
                         // Các phòng được đặt
                         // =========================
                         Phongs = ct.PhongDats
-                            .Select(pd => new PhongDto
+                            .Select(pd => new BookedRoomDto
                             {
                                 Id = pd.Phong.Id,
                                 SoPhong = pd.Phong.SoPhong,
@@ -239,7 +239,7 @@ namespace Booking.Service.Services.DatPhongs
             var totalPage = (int)Math.Ceiling(
                 (double)result.TotalCount / pageSize);
 
-            return new BookingHistory
+            return new BookingHistoryResponse
             {
                 Data = data,
                 TotalRow = result.TotalCount,
@@ -301,7 +301,7 @@ namespace Booking.Service.Services.DatPhongs
             await _datPhongRepository.ConfirmBooking(id);
         }
 
-        public async Task<DatPhong> CreateBooking(DatPhongRequest dp, Guid userId)
+        public async Task<DatPhong> CreateBooking(CreateBookingRequest dp, Guid userId)
         {
             if (!dp.NgayNhanPhong.HasValue || !dp.NgayTraPhong.HasValue)
             {
@@ -397,7 +397,7 @@ namespace Booking.Service.Services.DatPhongs
 
                 await _rabbitMQPublisher.PublishAsync(
                     "booking_email_queue",
-                    new DatPhongEvent
+                    new BookingCreatedEvent
                 {
                     BookingId = datPhong.Id,
                     HoTen = user.FullName,
@@ -418,7 +418,7 @@ namespace Booking.Service.Services.DatPhongs
         }
 
         public async Task<(int datPhong, double tongTien)> GetOwnerBookingStatistics(
-            ThongKeOwnerRequest input)
+            OwnerBookingStatisticsRequest input)
         {
             try
             {
@@ -428,49 +428,49 @@ namespace Booking.Service.Services.DatPhongs
                     throw new ArgumentNullException(nameof(input), "Dữ liệu thống kê không được null");
                 }
 
-                if (input.hotelId == Guid.Empty)
+                if (input.HotelId == Guid.Empty)
                 {
                     throw new ArgumentException(
                         "HotelId không hợp lệ",
-                        nameof(input.hotelId));
+                        nameof(input.HotelId));
                 }
 
-                if (input.batDau == default)
+                if (input.StartDate == default)
                 {
                     throw new ArgumentException(
                         "Ngày bắt đầu không hợp lệ",
-                        nameof(input.batDau));
+                        nameof(input.StartDate));
                 }
 
-                if (input.ketThuc == default)
+                if (input.EndDate == default)
                 {
                     throw new ArgumentException(
                         "Ngày kết thúc không hợp lệ",
-                        nameof(input.ketThuc));
+                        nameof(input.EndDate));
                 }
 
-                if (input.batDau > input.ketThuc)
+                if (input.StartDate > input.EndDate)
                 {
                     throw new ArgumentException(
                         "Ngày bắt đầu không được lớn hơn ngày kết thúc");
                 }
 
-                if ((input.ketThuc - input.batDau).TotalDays > 365)
+                if ((input.EndDate - input.StartDate).TotalDays > 365)
                 {
                     throw new ArgumentException(
                         "Khoảng thời gian thống kê không được vượt quá 365 ngày");
                 }
 
-                if (!string.IsNullOrWhiteSpace(input.trangThai))
+                if (!string.IsNullOrWhiteSpace(input.Status))
                 {
-                    input.trangThai = input.trangThai.Trim();
+                    input.Status = input.Status.Trim();
                 }
 
                 return await _datPhongRepository.GetOwnerBookingStatistics(
-                    input.hotelId,
-                    input.batDau,
-                    input.ketThuc,
-                    input.trangThai
+                    input.HotelId,
+                    input.StartDate,
+                    input.EndDate,
+                    input.Status
                 );
             }
             catch (Exception ex)
@@ -480,7 +480,7 @@ namespace Booking.Service.Services.DatPhongs
             }
         }
 
-        public async Task<DatPhongOwnerDto> GetBookingsByOwner(DatPhongOwner_v0 dto, Guid ownerId)
+        public async Task<OwnerBookingResponse> GetBookingsByOwner(OwnerBookingListRequest dto, Guid ownerId)
         {
             var page = dto.Page <= 0 ? 1 : dto.Page;
             var pageSize = dto.PageSize <= 0 ? 10 : dto.PageSize;
@@ -490,7 +490,7 @@ namespace Booking.Service.Services.DatPhongs
                 page,
                 pageSize);
 
-            var data = result.Items.Select(x => new DatPhongDto
+            var data = result.Items.Select(x => new BookingDto
             {
                 // =========================
                 // Đặt phòng
@@ -518,7 +518,7 @@ namespace Booking.Service.Services.DatPhongs
                 // Chi tiết đặt phòng
                 // =========================
                 ChiTietDatPhongs = x.ChiTietDatPhongs
-                    .Select(ct => new ChiTietDatPhongDto
+                    .Select(ct => new BookingRoomTypeDetailDto
                     {
                         Id = ct.Id,
 
@@ -533,7 +533,7 @@ namespace Booking.Service.Services.DatPhongs
                         // Các phòng được đặt
                         // =========================
                         Phongs = ct.PhongDats
-                            .Select(pd => new PhongDto
+                            .Select(pd => new BookedRoomDto
                             {
                                 Id = pd.Phong.Id,
                                 SoPhong = pd.Phong.SoPhong,
@@ -548,7 +548,7 @@ namespace Booking.Service.Services.DatPhongs
             var totalPage = (int)Math.Ceiling(
                 (double)result.TotalCount / pageSize);
 
-            return new DatPhongOwnerDto
+            return new OwnerBookingResponse
             {
                 Data = data,
                 TotalRow = result.TotalCount,

@@ -18,7 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Booking.Service.Dtos.HoaHong;
+using Booking.Service.Dtos.Commissions;
 
 namespace Booking.Service.Services.HoaHongs
 {
@@ -148,11 +148,11 @@ namespace Booking.Service.Services.HoaHongs
             }
         }
 
-        public async Task<List<HoaHongDto>> GetCommissionsByOwnerId(Guid ownerId)
+        public async Task<List<CommissionDto>> GetCommissionsByOwnerId(Guid ownerId)
         {
             var result = await _hoaHongRepository.GetCommissionsByOwnerId(ownerId);
 
-            return result.Select(x => new HoaHongDto
+            return result.Select(x => new CommissionDto
             {
                 MaHoaHong = x.MaHoaHong,
                 MaDatPhong = x.MaDatPhong,

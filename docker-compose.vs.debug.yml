@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  dotnet_webapi:
+    build:
+      target: base
+      labels:
+        com.microsoft.created-by: visual-studio
+        com.microsoft.visual-studio.project-name: Booking.Api
+    environment:
+      DOTNET_USE_POLLING_FILE_WATCHER: "1"
+      ASPNETCORE_LOGGING__CONSOLE__DISABLECOLORS: "true"
+      COMPLUS_ReadyToRun: "0"
+    volumes:
+      - .\Booking.Api:/app
+      - ${USERPROFILE}\.nuget\packages:/root/.nuget/packages:ro
+      - ${APPDATA}\Microsoft\UserSecrets:/root/.microsoft/usersecrets:ro
+    entrypoint: tail -f /dev/null
+    labels:
+      com.microsoft.visualstudio.debuggee.program: dotnet
+      com.microsoft.visualstudio.debuggee.arguments: " /app/bin/Debug/net6.0/Booking.Api.dll"
+      com.microsoft.visualstudio.debuggee.workingdirectory: /app
+      com.microsoft.visualstudio.debuggee.killprogram: "/bin/sh -c kill $(pidof dotnet)"

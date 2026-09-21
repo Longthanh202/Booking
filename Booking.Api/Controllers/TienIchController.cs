@@ -1,5 +1,5 @@
 ﻿using Booking.Data.Repository.TienIchs;
-using Booking.Service.Dtos.TienIchs;
+using Booking.Service.Dtos.Amenities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,7 +18,7 @@ namespace Booking.Api.Controllers
 
         [Authorize(Roles = "Owner")]
         [HttpPost]
-        public async Task<IActionResult> CreateAmenities([FromBody] List<TienIchRequest> dto)
+        public async Task<IActionResult> CreateAmenities([FromBody] List<CreateAmenityRequest> dto)
         {
             var result = await _tienIchService.CreateAmenities(dto);
 

@@ -3,7 +3,7 @@ using Booking.Core.Model.TienIchs;
 using Booking.Core.Model.Users;
 using Booking.Data.Connection;
 using Booking.Data.Repository.RefreshTokens;
-using Booking.Service.Dtos.UserProfile;
+using Booking.Service.Dtos.Users;
 using Booking.Service.Services.Tokens;
 using Microsoft.AspNetCore.Http;
 using Org.BouncyCastle.Asn1.Ocsp;

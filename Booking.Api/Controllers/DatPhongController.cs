@@ -1,7 +1,7 @@
 ﻿using Booking.Core.Model.DatPhongs;
 using Booking.Data.Repository.DatPhongs;
 using Booking.Data.Repository.Users;
-using Booking.Service.Dtos.DatPhongs;
+using Booking.Service.Dtos.Bookings;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -24,7 +24,7 @@ namespace Booking.Api.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Customer")]
-        public async Task<IActionResult> CreateBooking(DatPhongRequest input)
+        public async Task<IActionResult> CreateBooking(CreateBookingRequest input)
         {
             if (!_userServices.IsAuthenticated())
             {
@@ -59,7 +59,7 @@ namespace Booking.Api.Controllers
 
         [Authorize(Roles = "Owner")]
         [HttpPost("owner")]
-        public async Task<IActionResult> GetOwnerBookings([FromBody] DatPhongOwnerRequest dto)
+        public async Task<IActionResult> GetOwnerBookings([FromBody] OwnerBookingSearchRequest dto)
         {
             if (!_userServices.IsAuthenticated())
             {
@@ -112,7 +112,7 @@ namespace Booking.Api.Controllers
 
         [Authorize(Roles ="Owner")]
         [HttpPost("owner/statistics")]
-        public async Task<IActionResult> GetOwnerBookingStatistics([FromBody]ThongKeOwnerRequest input)
+        public async Task<IActionResult> GetOwnerBookingStatistics([FromBody]OwnerBookingStatisticsRequest input)
         {
             if (!ModelState.IsValid)
             {
@@ -138,7 +138,7 @@ namespace Booking.Api.Controllers
 
         [Authorize(Roles = "Owner")]
         [HttpPost("owner/all")]
-        public async Task<IActionResult> GetBookingsByOwner([FromBody] DatPhongOwner_v0 dto)
+        public async Task<IActionResult> GetBookingsByOwner([FromBody] OwnerBookingListRequest dto)
         {
             if (!_userServices.IsAuthenticated())
             {

@@ -1,11 +1,11 @@
 ﻿using Booking.Core.Model.Banners;
-using Booking.Service.Dtos.Banner;
+using Booking.Service.Dtos.Banners;
 
 namespace Booking.Data.Repository.Banners
 {
     public interface IBannerService
     {
-        Task<Banner> CreateBanner(InsertBannerDto banner);
+        Task<Banner> CreateBanner(CreateBannerRequest banner);
         Task<List<Banner>> GetBanners(string keyword, int isActive, int startRow, int endRow);
 
         Task<List<Banner>> GetActiveBanners();

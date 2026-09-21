@@ -1,6 +1,6 @@
 ﻿using Booking.Common.Shared;
 using Booking.Data.Repository.Emails;
-using Booking.Service.Dtos.DatPhongs;
+using Booking.Service.Dtos.Bookings;
 using Booking.Service.Services.HoaHongs;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

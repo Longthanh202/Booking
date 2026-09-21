@@ -1,6 +1,6 @@
 ﻿using Booking.Core.Model.Banners;
 using Booking.Data.Repository.Banners;
-using Booking.Service.Dtos.Banner;
+using Booking.Service.Dtos.Banners;
 using Booking.Service.Services.Cloudinarys;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -20,7 +20,7 @@ namespace Booking.Api.Controllers
 
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> CreateBanner([FromForm] InsertBannerDto file)
+        public async Task<IActionResult> CreateBanner([FromForm] CreateBannerRequest file)
         {
             var banner = await _bannerService.CreateBanner(file);
             return Ok(banner);

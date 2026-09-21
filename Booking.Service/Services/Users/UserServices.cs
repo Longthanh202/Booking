@@ -9,8 +9,8 @@ using Booking.Data.Repository.Redis;
 using Booking.Data.Repository.RefreshTokens;
 using Booking.Data.Repository.Users;
 using Booking.Service.Dtos.Email;
-using Booking.Service.Dtos.Login;
-using Booking.Service.Dtos.UserProfile;
+using Booking.Service.Dtos.Authentication;
+using Booking.Service.Dtos.Users;
 using Booking.Service.Services.Tokens;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Distributed;
@@ -108,26 +108,26 @@ namespace Booking.Service.Services.Users
             return _userRepository.IsAuthenticated();
         }
 
-        public async Task<LoginReponse> Login(LoginResquest input)
+        public async Task<LoginResponse> Login(LoginRequest input)
         {
-            if (string.IsNullOrEmpty(input.username) || string.IsNullOrEmpty(input.password))
+            if (string.IsNullOrEmpty(input.Username) || string.IsNullOrEmpty(input.Password))
             {
-                return new LoginReponse
+                return new LoginResponse
                 {
-                    status = false,
-                    token = null,
-                    message = "Username hoặc Password không được để trống"
+                    Status = false,
+                    Token = null,
+                    Message = "Username hoặc Password không được để trống"
                 };
             }
-            string passwordHash = Hash.HashPassword(input.password);
-            var user = await _userRepository.Login(input.username, passwordHash);
+            string passwordHash = Hash.HashPassword(input.Password);
+            var user = await _userRepository.Login(input.Username, passwordHash);
             if (user == null)
             {
-                return new LoginReponse
+                return new LoginResponse
                 {
-                    status = false,
-                    token = null,
-                    message = "Username hoặc Password không đúng"
+                    Status = false,
+                    Token = null,
+                    Message = "Username hoặc Password không đúng"
                 };
             }
 
@@ -169,15 +169,15 @@ namespace Booking.Service.Services.Users
                     Expires = DateTime.UtcNow.AddDays(30)
                 });
 
-            return new LoginReponse
+            return new LoginResponse
             {
-                status = true,
-                token = token,
-                message = "Đăng nhập thành công"
+                Status = true,
+                Token = token,
+                Message = "Đăng nhập thành công"
             };
         }
 
-        public async Task<UserProfile> Register(UserRequset user)
+        public async Task<UserProfile> Register(RegisterUserRequest user)
         {
             await _unitOfWork.BeginTransactionAsync();
             try

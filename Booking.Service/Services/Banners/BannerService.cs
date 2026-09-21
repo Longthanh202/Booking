@@ -1,7 +1,7 @@
 ﻿
 using Booking.Core.Model.Banners;
 using Booking.Data.Repository.Banners;
-using Booking.Service.Dtos.Banner;
+using Booking.Service.Dtos.Banners;
 using Booking.Service.Services.Cloudinarys;
 
 
@@ -26,7 +26,7 @@ namespace Booking.Service.Services.Banners
             return await _bannerRepository.GetActiveBanners();
         }
 
-        public async Task<Banner> CreateBanner(InsertBannerDto banner)
+        public async Task<Banner> CreateBanner(CreateBannerRequest banner)
         {
             var url = await _cloudinaryService.UploadImageAsync(banner.File);
             var input = new Banner

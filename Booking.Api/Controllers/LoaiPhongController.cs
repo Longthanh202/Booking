@@ -1,6 +1,6 @@
 ﻿using Booking.Core.Model.LoaiPhongs;
 using Booking.Data.Repository.LoaiPhongs;
-using Booking.Service.Dtos.LoaiPhongs;
+using Booking.Service.Dtos.RoomTypes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -21,7 +21,7 @@ namespace Booking.Api.Controllers
 
         [Authorize(Roles = "Owner")]
         [HttpPost]
-        public async Task<IActionResult> ThemLoaiPhong([FromBody] List<LoaiPhongRequest> dto)
+        public async Task<IActionResult> ThemLoaiPhong([FromBody] List<CreateRoomTypeRequest> dto)
         {
             var result = await _loaiPhongService.CreateRoomTypes(dto);
 
@@ -40,7 +40,7 @@ namespace Booking.Api.Controllers
         }
         
         [HttpPost("by-hotel")]
-        public async Task<IActionResult> GetLoaiPhongByKSID([FromBody] GetLoaiPhongDto dto)
+        public async Task<IActionResult> GetLoaiPhongByKSID([FromBody] RoomTypeSearchRequest dto)
         {
             var result = await _loaiPhongService.GetRoomTypesByHotelId(dto);
             if (result.IsNullOrEmpty())

@@ -4,7 +4,7 @@ using Booking.Data;
 using Booking.Data.Connection;
 using Booking.Data.Repository.KhachSanTienIch;
 using Booking.Data.Repository.TienIchs;
-using Booking.Service.Dtos.TienIchs;
+using Booking.Service.Dtos.Amenities;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -33,7 +33,7 @@ namespace Booking.Service.Services.TienIchs
             return await _tienIchRepository.GetAmenitiesByHotelId(khachSanId);
         }
 
-        public async Task<int> CreateAmenities(List<TienIchRequest> tienIch)
+        public async Task<int> CreateAmenities(List<CreateAmenityRequest> tienIch)
         {
             if (tienIch == null || tienIch.Count == 0)
                 return 0;

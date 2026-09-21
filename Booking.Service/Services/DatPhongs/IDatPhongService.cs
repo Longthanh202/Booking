@@ -1,5 +1,5 @@
 ﻿using Booking.Core.Model.DatPhongs;
-using Booking.Service.Dtos.DatPhongs;
+using Booking.Service.Dtos.Bookings;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,14 +10,14 @@ namespace Booking.Data.Repository.DatPhongs
 {
     public interface IDatPhongService
     {
-        Task<DatPhong> CreateBooking(DatPhongRequest dp, Guid userId);
+        Task<DatPhong> CreateBooking(CreateBookingRequest dp, Guid userId);
         Task<DatPhong> UpdateBookingStatus(Guid id);
-        Task<DatPhongOwnerDto> GetOwnerBookings(DatPhongOwnerRequest dto, Guid ownerId);
-        Task<DatPhongOwnerDto> GetBookingsByOwner(DatPhongOwner_v0 dto, Guid ownerId);
+        Task<OwnerBookingResponse> GetOwnerBookings(OwnerBookingSearchRequest dto, Guid ownerId);
+        Task<OwnerBookingResponse> GetBookingsByOwner(OwnerBookingListRequest dto, Guid ownerId);
 
-        Task<BookingHistory> GetBookingHistory(Guid userId, int pageIndex, int pageSize);
+        Task<BookingHistoryResponse> GetBookingHistory(Guid userId, int pageIndex, int pageSize);
         Task CheckIn(Guid id);
         Task ConfirmBooking(Guid id);
-        Task<(int datPhong, double tongTien)> GetOwnerBookingStatistics(ThongKeOwnerRequest input);
+        Task<(int datPhong, double tongTien)> GetOwnerBookingStatistics(OwnerBookingStatisticsRequest input);
     }
 }
