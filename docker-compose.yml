@@ -1,25 +1,6 @@
-version: "3.8"
+﻿version: '3.8'
 
 services:
-  dotnet_webapi:
-    build:
-      context: .
-      dockerfile: Booking.Api/Dockerfile
-    container_name: Stayro_api
-    ports:
-      - "5295:80"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    environment:
-      ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__DefaultConnection: "Server=host.docker.internal;Database=Stayro;User Id=stayro;Password=stayro;TrustServerCertificate=True;"
-      ConnectionStrings__Redis: redis_cache:6379
-      RabbitMQ__Host: rabbitmq_broker
-    depends_on:
-      rabbitmq_broker:
-        condition: service_healthy
-      redis_cache:
-        condition: service_started
 
   redis_cache:
     image: redis:alpine

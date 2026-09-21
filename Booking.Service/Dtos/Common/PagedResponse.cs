@@ -1,8 +1,11 @@
-namespace Booking.Service.Dtos.Common;
+using System.Collections.Generic;
 
-public abstract class PagedResponse<TItem>
+namespace Booking.Service.Dtos.Common
 {
-    public List<TItem> Data { get; set; } = new();
-    public int TotalRow { get; set; }
-    public int TotalPage { get; set; }
+    public abstract class PagedResponse<TItem>
+    {
+        public List<TItem> Data { get; set; } = new();
+        public int TotalRow { get; set; }
+        public int TotalPage { get; set; }
+    }
 }

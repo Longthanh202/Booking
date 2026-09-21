@@ -1,8 +1,10 @@
 ﻿using Booking.Service.Dtos.Wallet;
 
-namespace Booking.Service.Services.LichSuVis;
-
-public interface ILichSuViService
+namespace Booking.Service.Services.LichSuVis
 {
-    Task<List<WalletHistoryDto>> GetOwnerWalletHistory(Guid ownerId);
+    public interface ILichSuViService
+    {
+        Task<List<WalletHistoryDto>> GetOwnerWalletHistory(Guid ownerId);
+    }
 }
+

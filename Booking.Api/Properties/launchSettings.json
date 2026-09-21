@@ -10,7 +10,7 @@
   "$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
     "Container_App": {
-      "commandName": "Docker",
+      "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {

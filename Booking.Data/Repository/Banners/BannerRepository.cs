@@ -1,6 +1,8 @@
 ﻿using Booking.Core.Model.Banners;
 using Booking.Data.DBContext;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Booking.Data.Repository.Banners
 {

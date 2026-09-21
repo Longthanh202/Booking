@@ -1,22 +1,26 @@
-﻿namespace Booking.Service.Dtos.Commissions;
+﻿using System;
 
-public class CommissionDto
+namespace Booking.Service.Dtos.Commissions
 {
-    public long MaHoaHong { get; set; }
 
-    public Guid MaDatPhong { get; set; }
+    public class CommissionDto
+    {
+        public long MaHoaHong { get; set; }
 
-    public Guid MaKhachSan { get; set; }
-    
-    public string TenKhachSan { get; set; }
+        public Guid MaDatPhong { get; set; }
 
-    public decimal TyLeHoaHong { get; set; }
+        public Guid MaKhachSan { get; set; }
 
-    public decimal SoTienHoaHong { get; set; }
+        public string TenKhachSan { get; set; }
 
-    public string? TrangThai { get; set; }
+        public decimal TyLeHoaHong { get; set; }
 
-    public DateTime NgayTao { get; set; } = DateTime.Now;
+        public decimal SoTienHoaHong { get; set; }
 
-    public DateTime? NgayThu { get; set; }
+        public string? TrangThai { get; set; }
+
+        public DateTime NgayTao { get; set; } = DateTime.Now;
+
+        public DateTime? NgayThu { get; set; }
+    }
 }

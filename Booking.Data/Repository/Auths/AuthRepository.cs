@@ -2,6 +2,7 @@
 using Booking.Core.Model.Users;
 using Booking.Data.DBContext;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace Booking.Data.Repository.Auths
 {
