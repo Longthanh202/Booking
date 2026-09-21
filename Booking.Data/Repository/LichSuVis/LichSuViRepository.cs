@@ -42,12 +42,14 @@ namespace Booking.Data.Repository.LichSuVis
                 .ToListAsync();
         }
 
-        public async Task<IEnumerable<LichSuVi>> LayTheoOwnerId(Guid ownerId)
+        public async Task<IEnumerable<LichSuVi>> GetWalletHistoryByOwnerId(Guid ownerId)
         {
             return await _context.LichSuVis
                 .Include(x => x.DatPhong)
                 .ThenInclude(x => x.KhachSan)
-                .Where(x => x.DatPhong.KhachSan.NguoiTao == ownerId)
+                .Where(x => x.DatPhong != null &&
+                            x.DatPhong.KhachSan != null &&
+                            x.DatPhong.KhachSan.NguoiTao == ownerId)
                 .OrderByDescending(x => x.NgayTao)
                 .ToListAsync();
         }

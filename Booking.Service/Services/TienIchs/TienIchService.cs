@@ -28,12 +28,12 @@ namespace Booking.Service.Services.TienIchs
             _khachSanTienIchRepository = khachSanTienIchRepository ;
         }
 
-        public async Task<List<TienIch>> GetTienIchKhachSanByKhachSanId(Guid khachSanId)
+        public async Task<List<TienIch>> GetAmenitiesByHotelId(Guid khachSanId)
         {
-            return await _tienIchRepository.GetTienIchKhachSanByKhachSanId(khachSanId);
+            return await _tienIchRepository.GetAmenitiesByHotelId(khachSanId);
         }
 
-        public async Task<int> ThemTienIch(List<TienIchRequest> tienIch)
+        public async Task<int> CreateAmenities(List<TienIchRequest> tienIch)
         {
             if (tienIch == null || tienIch.Count == 0)
                 return 0;
@@ -53,7 +53,7 @@ namespace Booking.Service.Services.TienIchs
                         Icon = item.Icon
                     };
 
-                    await _tienIchRepository.ThemTienIch(input);
+                    await _tienIchRepository.CreateAmenity(input);
 
                     var ksti = new KhachSan_TienIch
                     {

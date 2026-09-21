@@ -16,7 +16,7 @@ namespace Booking.Data.Repository.ThanhToans
         {
             _context = context;
         }
-        public async Task<ThanhToan> Tao(ThanhToan t)
+        public async Task<ThanhToan> CreatePayment(ThanhToan t)
         {
             await _context.AddAsync(t);
             return t;

@@ -6,9 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Booking.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/commissions")]
     [ApiController]
-    public class HoaHongController : Controller
+    public class HoaHongController : ControllerBase
     {
         private readonly IHoaHongService _hoaHongService;
         private readonly IUserServices _userServices;
@@ -22,7 +22,7 @@ namespace Booking.Api.Controllers
 
         [Authorize(Roles = "Owner")]
         [HttpGet("owner")]
-        public async Task<IActionResult> GetHoaHong()
+        public async Task<IActionResult> GetOwnerCommissions()
         {
             if (!_userServices.IsAuthenticated())
             {
@@ -34,7 +34,7 @@ namespace Booking.Api.Controllers
                 return BadRequest("OwnerId không hợp lệ.");
             }
 
-            var result = await _hoaHongService.LayTheoOwnerId(Guid.Parse(userId));
+            var result = await _hoaHongService.GetCommissionsByOwnerId(Guid.Parse(userId));
 
             return Ok(result);
         }

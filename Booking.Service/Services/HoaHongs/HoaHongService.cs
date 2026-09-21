@@ -51,9 +51,9 @@ namespace Booking.Service.Services.HoaHongs
             _config = config;
             _tyLeHoaHong = config.GetValue<decimal>("HoaHong:TyLeHoaHong");
         }
-        public async Task TinhHoaHong(Guid datPhongId)
+        public async Task CalculateCommission(Guid datPhongId)
         {         
-            var datPhong = await _datPhongRepository.LayTheoId(datPhongId);
+            var datPhong = await _datPhongRepository.GetBookingById(datPhongId);
 
             if (datPhong == null)
                 throw new Exception("Không tìm thấy đơn đặt phòng.");
@@ -148,9 +148,9 @@ namespace Booking.Service.Services.HoaHongs
             }
         }
 
-        public async Task<List<HoaHongDto>> LayTheoOwnerId(Guid ownerId)
+        public async Task<List<HoaHongDto>> GetCommissionsByOwnerId(Guid ownerId)
         {
-            var result = await _hoaHongRepository.LayTheoOwnerId(ownerId);
+            var result = await _hoaHongRepository.GetCommissionsByOwnerId(ownerId);
 
             return result.Select(x => new HoaHongDto
             {

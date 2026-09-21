@@ -23,7 +23,7 @@ namespace Booking.Data.Repository.Roles
                 from ur in _context.UserRoles
                 join r in _context.Roles
                     on ur.RoleId equals r.Id
-                where ur.UserId == userId
+                where ur.UserId == userId && r.RoleName == "Admin"
                 select r
             ).FirstOrDefaultAsync();
         }

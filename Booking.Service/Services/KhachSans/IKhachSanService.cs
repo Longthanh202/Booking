@@ -11,10 +11,10 @@ namespace Booking.Data.Repository.KhachSans
 {
     public interface IKhachSanService
     {
-        Task<KhachSanCreateResponse> TaoKhachSan(KhachSanCreateRequest ks, Guid nguoiTao);
+        Task<KhachSanCreateResponse> CreateHotel(KhachSanCreateRequest ks, Guid nguoiTao);
         Task<FilterHotelResponseDto> LayDanhSachKhachSanAdminAsync(AdminFilterHotelRequestDto dto);
         Task<FilterHotelResponseDto> LayDanhSachKhachSanOwnerAsync(OwnerFilterHotelRequestDto dto, Guid ownerId);
         Task<FilterHotelResponseDto> FilterHotelsAsync(FilterHotelRequestDto dto);
-        Task<KhachSanDetailResponse?> DetailKhachSan(Guid id);
+        Task<KhachSanDetailResponse?> GetHotelDetails(Guid id);
     }
 }

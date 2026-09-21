@@ -9,12 +9,12 @@ namespace Booking.Data.Repository.Users
 {
     public interface IUserRepository
     {
-        Task<UserProfile> Insert(UserProfile user);
-        Task<UserLogin> InsertUserLogin(UserLogin userLogin);
-        Task<UserProfile> Login(string userName, string passWord);
-        Task<UserProfile> GetById(Guid id);
+        Task<UserProfile> AddUserProfile(UserProfile user);
+        Task<UserLogin> AddUserLogin(UserLogin userLogin);
+        Task<UserProfile?> Login(string userName, string passWord);
+        Task<UserProfile?> GetUserProfileById(Guid id);
         bool IsAuthenticated();
-        Task<UserProfile> QuenMatKhau(string username);
+        Task<UserProfile?> FindUserByUsernameForPasswordReset(string username);
         Task<UserLogin> UpdatePassword(string username, string passage);
     }
 }

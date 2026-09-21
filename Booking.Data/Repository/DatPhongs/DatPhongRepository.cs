@@ -14,13 +14,13 @@ namespace Booking.Data.Repository.DatPhongs
             _context = context;
         }
 
-        public Task CapNhatTrangThai(DatPhong d)
+        public Task UpdateBookingStatus(DatPhong d)
         {
              _context.DatPhongs.Update(d);
             return Task.CompletedTask;
         }
 
-        public async Task<(List<DatPhong> Items, int TotalCount)> GetListBookingOwner(
+        public async Task<(List<DatPhong> Items, int TotalCount)> GetOwnerBookings(
             Guid ownerId,
             Guid khachSanId,
             int pageIndex,
@@ -42,6 +42,7 @@ namespace Booking.Data.Repository.DatPhongs
 
                 .Where(x =>
                     x.KhachSanId == khachSanId &&
+                    x.KhachSan != null &&
                     x.KhachSan.NguoiTao == ownerId
                 );
 
@@ -56,7 +57,7 @@ namespace Booking.Data.Repository.DatPhongs
             return (items, totalCount);
         }
 
-        public async Task<(List<DatPhong> Items, int TotalCount)> BookingHistory(Guid userId, int pageIndex, int pageSize)
+        public async Task<(List<DatPhong> Items, int TotalCount)> GetBookingHistory(Guid userId, int pageIndex, int pageSize)
         {
             var query = _context.DatPhongs
                 .AsNoTracking()
@@ -104,7 +105,7 @@ namespace Booking.Data.Repository.DatPhongs
             return datPhong;
         }
 
-        public async Task<DatPhong> XacNhan(Guid id)
+        public async Task<DatPhong> ConfirmBooking(Guid id)
         {
             var datPhong = await _context.DatPhongs
                 .FirstOrDefaultAsync(x => x.Id == id);
@@ -121,7 +122,7 @@ namespace Booking.Data.Repository.DatPhongs
             return datPhong;
         }
 
-        public async Task<DatPhong> DatPhong(DatPhong dp, List<ChiTietDatPhong> ctdp, List<PhongDat> phongDats)
+        public async Task<DatPhong> CreateBooking(DatPhong dp, List<ChiTietDatPhong> ctdp, List<PhongDat> phongDats)
         {
             // 1. Thêm Đặt phòng chính
             await _context.DatPhongs.AddAsync(dp);
@@ -143,12 +144,68 @@ namespace Booking.Data.Repository.DatPhongs
 
             return dp;
         }
-        public async Task<DatPhong?> LayTheoId(Guid id)
+        public async Task<DatPhong?> GetBookingById(Guid id)
         {
             return await _context.DatPhongs
                 .Include(x => x.KhachSan)
                 .Include(x => x.ThanhToans)
                 .FirstOrDefaultAsync(x => x.Id == id);
+        }
+
+        public async Task<(int datPhong, double tongTien)> GetOwnerBookingStatistics(Guid hotelId, DateTime batDau, DateTime ketThuc, string trangThai)
+        {
+            var query = _context.DatPhongs
+                .AsNoTracking()
+                .Where(x =>
+                    x.KhachSanId == hotelId &&
+                    x.NgayTao >= batDau &&
+                    x.NgayTao <= ketThuc
+                );
+
+            // Nếu truyền trạng thái thì lọc theo trạng thái
+            if (!string.IsNullOrWhiteSpace(trangThai))
+            {
+                query = query.Where(x => x.TrangThai == trangThai);
+            }
+
+            var datPhong = await query.CountAsync();
+
+            var tongTien = await query
+                .Select(x => (double?)x.TongTien)
+                .SumAsync() ?? 0;
+
+            return (datPhong, tongTien);
+        }
+
+        public async Task<(List<DatPhong> Items, int TotalCount)> GetBookingsByOwner(Guid ownerId, int pageIndex, int pageSize)
+        {
+            var query = _context.DatPhongs
+                .AsNoTracking()
+
+                .Include(x => x.KhachSan)
+
+                .Include(x => x.ThanhToans)
+
+                .Include(x => x.ChiTietDatPhongs)
+                .ThenInclude(x => x.LoaiPhong)
+
+                .Include(x => x.ChiTietDatPhongs)
+                .ThenInclude(x => x.PhongDats)
+                .ThenInclude(x => x.Phong)
+
+                .Where(x => x.KhachSan != null &&
+                            x.KhachSan.NguoiTao == ownerId
+                );
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .OrderByDescending(x => x.NgayTao)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
         }
     }
 }

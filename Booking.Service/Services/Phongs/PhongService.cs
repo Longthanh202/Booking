@@ -19,7 +19,7 @@ namespace Booking.Service.Services.Phongs
         {
            _phongRepository = phongRepository;
         }
-        public async Task<Phong> TaoPhong(PhongRequest p)
+        public async Task<Phong> CreateRoom(PhongRequest p)
         {
             Phong phong = new Phong
             {
@@ -29,7 +29,7 @@ namespace Booking.Service.Services.Phongs
                 Tang = p.Tang,
                 TrangThai = TrangThaiPhong.DANG_SU_DUNG.ToString(),
             };
-            return await _phongRepository.TaoPhong(phong);
+            return await _phongRepository.CreateRoom(phong);
         }
     }
 }

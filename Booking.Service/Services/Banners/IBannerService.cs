@@ -5,9 +5,9 @@ namespace Booking.Data.Repository.Banners
 {
     public interface IBannerService
     {
-        Task<Banner> InsertBanner(InsertBannerDto banner);
-        Task<List<Banner>> GetAllBanner(string keyword, int isActive, int startRow, int endRow);
+        Task<Banner> CreateBanner(InsertBannerDto banner);
+        Task<List<Banner>> GetBanners(string keyword, int isActive, int startRow, int endRow);
 
-        Task<List<Banner>> GetBannerIsActive();
+        Task<List<Banner>> GetActiveBanners();
     }
 }

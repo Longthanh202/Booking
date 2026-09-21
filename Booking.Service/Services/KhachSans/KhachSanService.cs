@@ -43,10 +43,10 @@ namespace Booking.Service.Services.KhachSans
             _redisService = redisService;
         }
 
-        public async Task<KhachSanDetailResponse?> DetailKhachSan(Guid id)
+        public async Task<KhachSanDetailResponse?> GetHotelDetails(Guid id)
         {
             // 1. Lấy Entity từ Repository
-            var khachSan = await _khachSanRepository.DetailKhachSan(id);
+            var khachSan = await _khachSanRepository.GetHotelDetails(id);
             if (khachSan == null)
             {
                 return null;
@@ -177,7 +177,7 @@ namespace Booking.Service.Services.KhachSans
         // 1. Dành cho Admin: Lấy tất cả khách sạn theo bộ lọc
         public async Task<FilterHotelResponseDto> LayDanhSachKhachSanAdminAsync(AdminFilterHotelRequestDto dto)
         {
-            var (khachSans, totalRow) = await _khachSanRepository.LayDanhSachKhachSanAdmin(
+            var (khachSans, totalRow) = await _khachSanRepository.GetHotelsForAdmin(
                 dto.Keyword,
                 dto.ThanhPho,
                 dto.ViDo ?? 0,
@@ -194,7 +194,7 @@ namespace Booking.Service.Services.KhachSans
         // 2. Dành cho Owner: Lấy danh sách khách sạn do Owner đó sở hữu
         public async Task<FilterHotelResponseDto> LayDanhSachKhachSanOwnerAsync(OwnerFilterHotelRequestDto dto, Guid ownerId)
         {
-            var (khachSans, totalRow) = await _khachSanRepository.LayDanhSachKhachSanOwner(
+            var (khachSans, totalRow) = await _khachSanRepository.GetHotelsForOwner(
                 
                 ownerId,
                 dto.Page,
@@ -253,7 +253,7 @@ namespace Booking.Service.Services.KhachSans
             };
         }
 
-        public async Task<KhachSanCreateResponse> TaoKhachSan(KhachSanCreateRequest ks, Guid nguoiTao)
+        public async Task<KhachSanCreateResponse> CreateHotel(KhachSanCreateRequest ks, Guid nguoiTao)
         {
             await _unitOfWork.BeginTransactionAsync();
             try
@@ -292,7 +292,7 @@ namespace Booking.Service.Services.KhachSans
                     NguoiTao = nguoiTao,
                     NgayTao = DateTime.Now
                 };
-                await _khachSanRepository.TaoKhachSan(KhachSan);
+                await _khachSanRepository.CreateHotel(KhachSan);
                 await _khachSanImageRepository.InsertKhachSanImage(khachSanId, images);
                 await _unitOfWork.CommitAsync();
                 return new KhachSanCreateResponse

@@ -18,7 +18,7 @@ namespace Booking.Data.Repository.LoaiPhongs
         {
             _context = context;
         }
-        public async Task<List<LoaiPhong>> GetLoaiPhongOwner(Guid khachSanId)
+        public async Task<List<LoaiPhong>> GetOwnerRoomTypes(Guid khachSanId)
         {
             return await _context.LoaiPhongs
                 .Where(x => x.KhachSanId == khachSanId)
@@ -33,7 +33,7 @@ namespace Booking.Data.Repository.LoaiPhongs
                 .ToListAsync();
         }
 
-        public async Task<List<LoaiPhongHienThi>> GetLoaiPhongByKhachSanId(
+        public async Task<List<LoaiPhongHienThi>> GetRoomTypesByHotelId(
             Guid khachSanId,
             int soKhach,
             DateTime? ngayNhan,
@@ -111,7 +111,7 @@ namespace Booking.Data.Repository.LoaiPhongs
             return result;
         }
 
-        public async Task<bool> TaoLoaiPhong(LoaiPhong lp)
+        public async Task<bool> CreateRoomType(LoaiPhong lp)
         {
             try
             {

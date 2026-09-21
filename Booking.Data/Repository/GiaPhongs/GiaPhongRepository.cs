@@ -19,10 +19,16 @@ namespace Booking.Data.Repository.GiaPhongs
 
         public async Task<GiaPhong?> LayGiaPhongHienTai(Guid loaiPhongId)
         {
+            var now = DateTime.Now;
+
             return await _context.GiaPhongs
-                .FirstOrDefaultAsync(x =>
+                .Where(x =>
                     x.LoaiPhongId == loaiPhongId &&
-                    x.IsActive);
+                    x.IsActive &&
+                    x.NgayBatDau <= now &&
+                    (!x.NgayKetThuc.HasValue || x.NgayKetThuc.Value > now))
+                .OrderByDescending(x => x.NgayBatDau)
+                .FirstOrDefaultAsync();
         }
 
         public async Task<List<GiaPhong>> LayGiaPhongTheoDSKhachSanId(List<Guid> ids)

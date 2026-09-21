@@ -19,11 +19,11 @@ namespace Booking.Data.Repository.HoaHongs
             _context = context;
         }
 
-        public async Task<IEnumerable<HoaHong>> LayTheoOwnerId(Guid ownerId)
+        public async Task<IEnumerable<HoaHong>> GetCommissionsByOwnerId(Guid ownerId)
         {
             return await _context.HoaHongs
                 .Include(x => x.KhachSan)
-                .Where(x => x.KhachSan.NguoiTao == ownerId)
+                .Where(x => x.KhachSan != null && x.KhachSan.NguoiTao == ownerId)
                 .OrderByDescending(x => x.NgayTao)
                 .ToListAsync();
         }

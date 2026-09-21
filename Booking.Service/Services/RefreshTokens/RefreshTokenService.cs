@@ -29,9 +29,9 @@ namespace Booking.Service.Services.RefreshTokens
             _tokenService = tokenService;
         }
 
-        public async Task<RefreshToken> CheckStatusefreshToken(string token)
+        public async Task<RefreshToken> GetValidRefreshToken(string token)
         {
-            return await _refreshTokenRepository.CheckStatusefreshToken(token);
+            return await _refreshTokenRepository.GetValidRefreshToken(token);
         }
 
         public async Task<RefreshToken> InsertRefreshToken(RefreshToken refreshToken)
@@ -48,7 +48,7 @@ namespace Booking.Service.Services.RefreshTokens
             if (string.IsNullOrWhiteSpace(refreshToken))
                 return null;
 
-            var existingToken = await _refreshTokenRepository.CheckStatusefreshToken(refreshToken);
+            var existingToken = await _refreshTokenRepository.GetValidRefreshToken(refreshToken);
 
             if (existingToken == null)
                 return null;

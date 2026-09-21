@@ -12,10 +12,10 @@ namespace Booking.Data.Repository.Users
     public interface IUserServices
     {     
         Task<LoginReponse> Login(LoginResquest input);
-        Task<UserProfileResponse> GetById(Guid id, Guid roleId);
+        Task<UserProfileResponse> GetUserProfileById(Guid id, Guid roleId);
         bool IsAuthenticated();
         Task<UserProfile> Register(UserRequset user);
-        Task QuenMatKhau(string username);
-        Task ComfirmQuenMatKhau(string username, string code);
+        Task RequestPasswordReset(string username);
+        Task ConfirmPasswordReset(string username, string code);
     }
 }

@@ -10,11 +10,14 @@ namespace Booking.Data.Repository.DatPhongs
 {
     public interface IDatPhongService
     {
-        Task<DatPhong> DatPhong(DatPhongRequest dp, Guid userId);
-        Task<DatPhong> CapNhatTrangThai(Guid id);
-        Task<DatPhongOwnerDto> GetListBookingOwner(DatPhongOwnerRequest dto, Guid ownerId);
-        Task<BookingHistory> BookingHistory(Guid userId, int pageIndex, int pageSize);
+        Task<DatPhong> CreateBooking(DatPhongRequest dp, Guid userId);
+        Task<DatPhong> UpdateBookingStatus(Guid id);
+        Task<DatPhongOwnerDto> GetOwnerBookings(DatPhongOwnerRequest dto, Guid ownerId);
+        Task<DatPhongOwnerDto> GetBookingsByOwner(DatPhongOwner_v0 dto, Guid ownerId);
+
+        Task<BookingHistory> GetBookingHistory(Guid userId, int pageIndex, int pageSize);
         Task CheckIn(Guid id);
-        Task XacNhan(Guid id);
+        Task ConfirmBooking(Guid id);
+        Task<(int datPhong, double tongTien)> GetOwnerBookingStatistics(ThongKeOwnerRequest input);
     }
 }

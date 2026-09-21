@@ -1,10 +1,11 @@
 ﻿using Booking.Data.Repository.TienIchs;
 using Booking.Service.Dtos.TienIchs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Booking.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/amenities")]
     [ApiController]
     public class TienIchController : ControllerBase
     {
@@ -15,10 +16,11 @@ namespace Booking.Api.Controllers
             _tienIchService = tienIchService;
         }
 
-        [HttpPost("tao")]
-        public async Task<IActionResult> ThemTienIch([FromBody] List<TienIchRequest> dto)
+        [Authorize(Roles = "Owner")]
+        [HttpPost]
+        public async Task<IActionResult> CreateAmenities([FromBody] List<TienIchRequest> dto)
         {
-            var result = await _tienIchService.ThemTienIch(dto);
+            var result = await _tienIchService.CreateAmenities(dto);
 
             if (result != 0)
             {

@@ -14,7 +14,7 @@ namespace Booking.Data.Repository.KhachSans
             _context = context;
         }
         // Ở tầng KhachSanRepository
-        public async Task<KhachSan?> DetailKhachSan(Guid id)
+        public async Task<KhachSan?> GetHotelDetails(Guid id)
         {
             return await _context.KhachSans
                 .AsNoTracking() // Tăng tốc độ đọc, không track để lưu cache thừa
@@ -35,6 +35,16 @@ namespace Booking.Data.Repository.KhachSans
             int pageIndex,
             int pageSize)
         {
+            if (pageIndex <= 0 || pageSize <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(pageIndex), "Thông tin phân trang không hợp lệ.");
+            }
+
+            if (ngayNhanPhong.HasValue != ngayTraPhong.HasValue ||
+                (ngayNhanPhong.HasValue && ngayTraPhong <= ngayNhanPhong))
+            {
+                throw new ArgumentException("Khoảng thời gian nhận và trả phòng không hợp lệ.");
+            }
 
             IQueryable<KhachSan> query = _context.KhachSans.AsNoTracking();
 
@@ -62,6 +72,7 @@ namespace Booking.Data.Repository.KhachSans
                 string trangThaiDaHuy = TrangThaiDatPhong.DA_HUY.ToString();
                 query = query.Where(x => x.LoaiPhongs.Any(lp =>
                     !lp.ChiTietDatPhongs.Any(ct =>
+                        ct.DatPhong != null &&
                         ct.DatPhong.NgayNhanPhong < ngayTraPhong.Value &&
                         ct.DatPhong.NgayTraPhong > ngayNhanPhong.Value &&
                         ct.DatPhong.TrangThai != trangThaiDaHuy)));
@@ -99,10 +110,10 @@ namespace Booking.Data.Repository.KhachSans
             }
 
             int skip = (pageIndex - 1) * pageSize;
-            var items = await query
-                .Include(x => x.LoaiPhongs)
-                .AsSplitQuery()
-                .OrderByDescending(x => x.NgayTao)
+            var items = await queryWithPriority
+                .OrderByDescending(x => x.DiemUuTien)
+                .ThenByDescending(x => x.KhachSan.NgayTao)
+                .Select(x => x.KhachSan)
                 .Skip(skip < 0 ? 0 : skip)
                 .Take(pageSize)
                 .ToListAsync();
@@ -110,7 +121,7 @@ namespace Booking.Data.Repository.KhachSans
             return (items ?? new List<KhachSan>(), totalCount);
         }
 
-        public async Task<KhachSan> TaoKhachSan(KhachSan ks)
+        public async Task<KhachSan> CreateHotel(KhachSan ks)
         {
             ks.Id = Guid.NewGuid();
 
@@ -119,7 +130,7 @@ namespace Booking.Data.Repository.KhachSans
             return ks;
         }
 
-        public async Task<(List<KhachSan> Items, int TotalCount)> LayDanhSachKhachSanAdmin(
+        public async Task<(List<KhachSan> Items, int TotalCount)> GetHotelsForAdmin(
             string? keyword,
             string? thanhPho,
             double viDo,
@@ -132,7 +143,7 @@ namespace Booking.Data.Repository.KhachSans
             return await LayDanhSachKhachSanInternal(keyword, thanhPho, viDo, kinhDo, soSao, trangThai, null, pageIndex, pageSize);
         }
 
-        public async Task<(List<KhachSan> Items, int TotalCount)> LayDanhSachKhachSanOwner(
+        public async Task<(List<KhachSan> Items, int TotalCount)> GetHotelsForOwner(
             Guid ownerId,
             int pageIndex,
             int pageSize)

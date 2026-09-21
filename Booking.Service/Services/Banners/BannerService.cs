@@ -16,17 +16,17 @@ namespace Booking.Service.Services.Banners
             _bannerRepository = bannerRepository;
             _cloudinaryService = cloudinaryService;
         }
-        public async Task<List<Banner>> GetAllBanner(string keyword, int isActive, int startRow, int endRow)
+        public async Task<List<Banner>> GetBanners(string keyword, int isActive, int startRow, int endRow)
         {
-            return await _bannerRepository.GetAllBanner(keyword, isActive, startRow, endRow);
+            return await _bannerRepository.GetBanners(keyword, isActive, startRow, endRow);
         }
 
-        public async Task<List<Banner>> GetBannerIsActive()
+        public async Task<List<Banner>> GetActiveBanners()
         {
-            return await _bannerRepository.GetBannerIsActive();
+            return await _bannerRepository.GetActiveBanners();
         }
 
-        public async Task<Banner> InsertBanner(InsertBannerDto banner)
+        public async Task<Banner> CreateBanner(InsertBannerDto banner)
         {
             var url = await _cloudinaryService.UploadImageAsync(banner.File);
             var input = new Banner
@@ -36,7 +36,7 @@ namespace Booking.Service.Services.Banners
                 IsActive = banner.IsActive,
                 Url = url
             };
-            return await _bannerRepository.InsertBanner(input);
+            return await _bannerRepository.CreateBanner(input);
         }
     }
 }

@@ -64,7 +64,7 @@ namespace Booking.Service.Services.Users
             _emailService = emailService;
             _roleRepository = roleRepository;
         }
-        public async Task<UserProfileResponse> GetById(Guid id, Guid roleId)
+        public async Task<UserProfileResponse> GetUserProfileById(Guid id, Guid roleId)
         {
             var cacheKey = $"Permission_Role_{roleId}";
             List<string>? permissionKeys;
@@ -77,7 +77,7 @@ namespace Booking.Service.Services.Users
             }
             else
             {
-                var permissions = await _permissionRepository.GetListPermissionByUser(id);
+                var permissions = await _permissionRepository.GetPermissionsByUserId(id);
 
                 permissionKeys = permissions
                     .Select(x => $"{x.ResourceName.ToLower()}_{x.Action.ToLower()}")
@@ -89,7 +89,12 @@ namespace Booking.Service.Services.Users
                     TimeSpan.FromMinutes(20));
             }
 
-            var user = await _userRepository.GetById(id);
+            var user = await _userRepository.GetUserProfileById(id);
+
+            if (user == null)
+            {
+                throw new KeyNotFoundException("Không tìm thấy thông tin người dùng.");
+            }
 
             return new UserProfileResponse
             {
@@ -179,7 +184,7 @@ namespace Booking.Service.Services.Users
             {
                 var userLoginId = Guid.NewGuid();
                 var roleCustomer = await _roleRepository.GetRoleCustomer();
-                await _userRepository.InsertUserLogin(new UserLogin
+                await _userRepository.AddUserLogin(new UserLogin
                 {
                     Id = userLoginId,
                     Username = user.Username,
@@ -199,7 +204,7 @@ namespace Booking.Service.Services.Users
                     UserLoginId = userLoginId,
                 };
 
-                await _userRepository.Insert(profile);
+                await _userRepository.AddUserProfile(profile);
                 await _unitOfWork.CommitAsync();
                 await _rabbitMQPublisher.PublishAsync(
                 "register_email_queue",
@@ -221,9 +226,9 @@ namespace Booking.Service.Services.Users
             }
         }
 
-        public async Task QuenMatKhau(string username)
+        public async Task RequestPasswordReset(string username)
         {
-            var user = await _userRepository.QuenMatKhau(username);
+            var user = await _userRepository.FindUserByUsernameForPasswordReset(username);
 
             if (user == null)
             {
@@ -262,7 +267,7 @@ namespace Booking.Service.Services.Users
             );
         }
 
-        public async Task ComfirmQuenMatKhau(string username, string code)
+        public async Task ConfirmPasswordReset(string username, string code)
         {
             var redisCode = await _redisService.GetObject<string>(
                 $"forgot-password:{username}");

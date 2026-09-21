@@ -24,7 +24,7 @@ namespace Booking.Service.Services.RolePermissions
             _unitOfWork = unitOfWork;
         }
 
-        public async Task Insert(RolePermissionRequset input)
+        public async Task AddRolePermissions(RolePermissionRequset input)
         {
             await _unitOfWork.BeginTransactionAsync();
             try
@@ -37,7 +37,7 @@ namespace Booking.Service.Services.RolePermissions
                     PermissionId = p.PermissionId,
                     
                 }).ToList();
-                await _rolePermissionRepository.Insert(input.RoleId, rolePermissions);
+                await _rolePermissionRepository.AddRolePermissions(input.RoleId, rolePermissions);
                 await _unitOfWork.CommitAsync();
             }
             catch (Exception ex)

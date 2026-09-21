@@ -96,7 +96,7 @@ namespace Booking.Service.Consumers.BookingCheckout
 
                         if (message != null)
                         {
-                            await hoaHongService.TinhHoaHong(message.DatPhongId);
+                            await hoaHongService.CalculateCommission(message.DatPhongId);
                         }
 
                         await _channel.BasicAckAsync(ea.DeliveryTag, false);

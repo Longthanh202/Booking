@@ -20,7 +20,7 @@ namespace Booking.Data.Repository.Users
             _context = context;
             _httpContextAccessor = httpContextAccessor;
         }
-        public async Task<UserProfile?> GetById(Guid id)
+        public async Task<UserProfile?> GetUserProfileById(Guid id)
         {
             var user = await _context.UserProfiles
                 .Where(u => u.UserLoginId == id)
@@ -36,13 +36,13 @@ namespace Booking.Data.Repository.Users
             return user;
         }
 
-        public async Task<UserProfile> Insert(UserProfile user)
+        public async Task<UserProfile> AddUserProfile(UserProfile user)
         {
             await _context.UserProfiles.AddAsync(user);        
             return user;
         }
 
-        public async Task<UserLogin> InsertUserLogin(UserLogin userLogin)
+        public async Task<UserLogin> AddUserLogin(UserLogin userLogin)
         {
             await _context.UserLogins.AddAsync(userLogin);
             return userLogin;
@@ -53,7 +53,7 @@ namespace Booking.Data.Repository.Users
             return _httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false;
         }
 
-        public async Task<UserProfile> QuenMatKhau(string username)
+        public async Task<UserProfile> FindUserByUsernameForPasswordReset(string username)
         {
             return await (
                     from ul in _context.UserLogins

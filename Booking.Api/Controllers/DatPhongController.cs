@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Booking.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/bookings")]
     [ApiController]
     public class DatPhongController : ControllerBase
     {
@@ -23,8 +23,8 @@ namespace Booking.Api.Controllers
         }
 
         [HttpPost]
-        [Route("tao")]
-        public async Task<IActionResult> DatPhong(DatPhongRequest input)
+        [Authorize(Roles = "Customer")]
+        public async Task<IActionResult> CreateBooking(DatPhongRequest input)
         {
             if (!_userServices.IsAuthenticated())
             {
@@ -32,7 +32,7 @@ namespace Booking.Api.Controllers
             }
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var result = await _datPhongService.DatPhong(input, Guid.Parse(userId));
+            var result = await _datPhongService.CreateBooking(input, Guid.Parse(userId));
             if (result != null)
             {
                 return Ok(new { Message = "Đặt phòng thành công" });
@@ -46,9 +46,9 @@ namespace Booking.Api.Controllers
         [Authorize(Roles = "Owner")]
         [HttpPut]
         [Route("{id}/check-out")]
-        public async Task<IActionResult> Checkout(Guid id)
+        public async Task<IActionResult> CheckOut(Guid id)
         {
-            var datPhong = await _datPhongService.CapNhatTrangThai(id);
+            var datPhong = await _datPhongService.UpdateBookingStatus(id);
             if (datPhong != null)
             {
                 return Ok();
@@ -58,8 +58,8 @@ namespace Booking.Api.Controllers
         }
 
         [Authorize(Roles = "Owner")]
-        [HttpPost("owner-bookings")]
-        public async Task<IActionResult> GetBookingsOwner([FromBody] DatPhongOwnerRequest dto)
+        [HttpPost("owner")]
+        public async Task<IActionResult> GetOwnerBookings([FromBody] DatPhongOwnerRequest dto)
         {
             if (!_userServices.IsAuthenticated())
             {
@@ -67,13 +67,13 @@ namespace Booking.Api.Controllers
             }
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var data = await _datPhongService.GetListBookingOwner(dto, Guid.Parse(userId));
+            var data = await _datPhongService.GetOwnerBookings(dto, Guid.Parse(userId));
             return Ok(data);
         }
 
         [Authorize(Roles = "Customer")]
-        [HttpPost("booking-history")]
-        public async Task<IActionResult> BookingHistory(int pageIndex, int pageSize)
+        [HttpGet("history")]
+        public async Task<IActionResult> GetBookingHistory(int pageIndex, int pageSize)
         {
             if (!_userServices.IsAuthenticated())
             {
@@ -81,7 +81,7 @@ namespace Booking.Api.Controllers
             }
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var data = await _datPhongService.BookingHistory(Guid.Parse(userId), pageIndex, pageSize);
+            var data = await _datPhongService.GetBookingHistory(Guid.Parse(userId), pageIndex, pageSize);
             return Ok(data);
         }
 
@@ -98,16 +98,56 @@ namespace Booking.Api.Controllers
             });
         }
         [Authorize(Roles = "Owner")]
-        [HttpPut("{id}/xacnhan")]
-        public async Task<IActionResult> XacNhan(Guid id)
+        [HttpPut("{id}/confirm")]
+        public async Task<IActionResult> ConfirmBooking(Guid id)
         {
-            await _datPhongService.XacNhan(id);
+            await _datPhongService.ConfirmBooking(id);
 
             return Ok(new
             {
                 status = true,
                 message = "Xác nhận Booking thành công"
             });
+        }
+
+        [Authorize(Roles ="Owner")]
+        [HttpPost("owner/statistics")]
+        public async Task<IActionResult> GetOwnerBookingStatistics([FromBody]ThongKeOwnerRequest input)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            if (input == null)
+            {
+                return BadRequest(new
+                {
+                    message = "Dữ liệu thống kê không được để trống"
+                });
+            }
+
+            var result = await _datPhongService.GetOwnerBookingStatistics(input);
+
+            return Ok(new
+            {
+                datPhong = result.datPhong,
+                tongTien = result.tongTien
+            });
+        }
+
+        [Authorize(Roles = "Owner")]
+        [HttpPost("owner/all")]
+        public async Task<IActionResult> GetBookingsByOwner([FromBody] DatPhongOwner_v0 dto)
+        {
+            if (!_userServices.IsAuthenticated())
+            {
+                return Unauthorized(new { Message = "Vui lòng đăng nhập để đặt phòng" });
+            }
+
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var data = await _datPhongService.GetBookingsByOwner(dto, Guid.Parse(userId));
+            return Ok(data);
         }
     }
 }

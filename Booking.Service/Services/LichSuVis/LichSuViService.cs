@@ -12,9 +12,9 @@ namespace Booking.Service.Services.LichSuVis
         {
             _lichSuViRepository = lichSuViRepository;
         }
-        public async Task<List<LichSuViDto>> LayLichSuViOwner(Guid ownerId)
+        public async Task<List<LichSuViDto>> GetOwnerWalletHistory(Guid ownerId)
         {
-            var result = await _lichSuViRepository.LayTheoOwnerId(ownerId);
+            var result = await _lichSuViRepository.GetWalletHistoryByOwnerId(ownerId);
 
             return result.Select(x => new LichSuViDto
             {

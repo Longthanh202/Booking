@@ -11,8 +11,8 @@ namespace Booking.Data.Repository.LoaiPhongs
 {
     public interface ILoaiPhongService
     {
-        Task<int> TaoLoaiPhong(List<LoaiPhongRequest> lp);
-        Task<List<LoaiPhongHienThi>> GetLoaiPhongByKhachSanId(GetLoaiPhongDto input);
-        Task<List<LoaiPhong>> GetLoaiPhongOwner(Guid khachSanId);
+        Task<int> CreateRoomTypes(List<LoaiPhongRequest> lp);
+        Task<List<LoaiPhongHienThi>> GetRoomTypesByHotelId(GetLoaiPhongDto input);
+        Task<List<LoaiPhong>> GetOwnerRoomTypes(Guid khachSanId);
     }
 }

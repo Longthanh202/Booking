@@ -10,6 +10,6 @@ namespace Booking.Data.Repository.RolePermissions
 {
     public interface IRolePermissionService
     {
-        Task Insert(RolePermissionRequset input);
+        Task AddRolePermissions(RolePermissionRequset input);
     }
 }

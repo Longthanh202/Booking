@@ -11,6 +11,6 @@ namespace Booking.Data.Repository.Phongs
 {
     public interface IPhongService
     {
-        Task<Phong> TaoPhong(PhongRequest p);
+        Task<Phong> CreateRoom(PhongRequest p);
     }
 }

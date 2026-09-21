@@ -20,7 +20,7 @@ using System.Security.Claims;
 
 namespace Booking.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/hotels")]
     [ApiController]
     public class KhachSanController : Controller
     {
@@ -34,8 +34,7 @@ namespace Booking.Api.Controllers
 
         [Authorize(Roles = "Owner")]
         [HttpPost]
-        [Route("tao")]
-        public async Task<IActionResult> TaoKhachSan([FromForm] KhachSanCreateRequest dto)
+        public async Task<IActionResult> CreateHotel([FromForm] KhachSanCreateRequest dto)
         {
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -45,7 +44,7 @@ namespace Booking.Api.Controllers
             }
 
             
-            var result = await _khachSanService.TaoKhachSan(dto, Guid.Parse(userId));
+            var result = await _khachSanService.CreateHotel(dto, Guid.Parse(userId));
             if (!result.status)
             {
                 return BadRequest();
@@ -54,7 +53,7 @@ namespace Booking.Api.Controllers
         }
         
         [Authorize(Roles = "Admin")]
-        [HttpPost("admin-get")]
+        [HttpPost("admin/search")]
         public async Task<IActionResult> AdminGetKhachSans(
             [FromBody] AdminFilterHotelRequestDto dto)
         {
@@ -91,7 +90,7 @@ namespace Booking.Api.Controllers
         }
         
         [Authorize(Roles = "Owner")]
-        [HttpPost("owner-get")]
+        [HttpPost("owner/search")]
         public async Task<IActionResult> OwnerGetKhachSans(
             [FromBody] OwnerFilterHotelRequestDto dto)
         {
@@ -121,20 +120,13 @@ namespace Booking.Api.Controllers
             return Ok(result);
         }
         
-        [HttpPost]
-        [Route("chitiet")]
-        public async Task<IActionResult> DetailHotel([FromBody] string id)
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> DetailHotel(Guid id)
         {
-            if (string.IsNullOrEmpty(id))
-            {
-                return BadRequest();
-            }
-
-            var khachSan = await _khachSanService.DetailKhachSan(Guid.Parse(id));
+            var khachSan = await _khachSanService.GetHotelDetails(id);
             return Ok(khachSan);
         }
-        [HttpPost]
-        [Route("filter")]
+        [HttpPost("search")]
         public async Task<IActionResult> FilterHotels([FromBody] FilterHotelRequestDto dto)
         {
             if (dto.Page <= 0 || dto.PageSize <= 0)

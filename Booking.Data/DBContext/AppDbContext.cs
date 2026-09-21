@@ -47,7 +47,6 @@ namespace Booking.Data.DBContext
             modelBuilder.Entity<ChiTietDatPhong>().ToTable("ChiTietDatPhong");
             modelBuilder.Entity<ThanhToan>().ToTable("ThanhToan");
             modelBuilder.Entity<Permission>().ToTable("Permissions"); // Khớp chữ 's' với SQL của bạn
-            modelBuilder.Entity<Province>().ToTable("UserProfile"); // Lưu ý check lại tên bảng thực tế dưới DB (provinces hay province)
             modelBuilder.Entity<RefreshToken>().ToTable("RefreshToken");
             modelBuilder.Entity<Resources>().ToTable("Resources");
             modelBuilder.Entity<Role>().ToTable("Roles");
@@ -72,7 +71,6 @@ namespace Booking.Data.DBContext
             modelBuilder.Entity<GoiQuangCao>().ToTable("GoiQuangCao");
             modelBuilder.Entity<KhachSanQuangCao>().ToTable("KhachSanQuangCao");
 
-            // Nếu muốn dùng bảng tỉnh thành, hãy đồng nhất 1 dòng ToTable duy nhất:
             modelBuilder.Entity<Province>().ToTable("provinces");
 
 

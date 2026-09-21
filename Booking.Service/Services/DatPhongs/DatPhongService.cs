@@ -56,9 +56,9 @@ namespace Booking.Service.Services.DatPhongs
             _notificationService = notificationService;
         }
 
-        public async Task<DatPhong> CapNhatTrangThai(Guid id)
+        public async Task<DatPhong> UpdateBookingStatus(Guid id)
         {
-            var datPhong = await _datPhongRepository.LayTheoId(id);
+            var datPhong = await _datPhongRepository.GetBookingById(id);
 
             if (datPhong == null)
                 throw new Exception("Không tìm thấy đơn đặt phòng.");
@@ -72,11 +72,11 @@ namespace Booking.Service.Services.DatPhongs
             {
                 datPhong.TrangThai = TrangThaiDatPhong.DA_CHECK_OUT.ToString();
 
-                await _datPhongRepository.CapNhatTrangThai(datPhong);
+                await _datPhongRepository.UpdateBookingStatus(datPhong);
 
                 await _unitOfWork.CommitAsync();
 
-                var check = await _datPhongRepository.LayTheoId(id);
+                var check = await _datPhongRepository.GetBookingById(id);
                         
                 await _rabbitMQPublisher.PublishAsync(
                     "booking_checked_out",
@@ -94,14 +94,14 @@ namespace Booking.Service.Services.DatPhongs
             }
         }
 
-        public async Task<DatPhongOwnerDto> GetListBookingOwner(
+        public async Task<DatPhongOwnerDto> GetOwnerBookings(
             DatPhongOwnerRequest dto,
             Guid ownerId)
             {
             var page = dto.Page <= 0 ? 1 : dto.Page;
             var pageSize = dto.PageSize <= 0 ? 10 : dto.PageSize;
 
-            var result = await _datPhongRepository.GetListBookingOwner(
+            var result = await _datPhongRepository.GetOwnerBookings(
                 ownerId,
                 dto.khachSanId,
                 page,
@@ -173,12 +173,12 @@ namespace Booking.Service.Services.DatPhongs
             };
         }
 
-        public async Task<BookingHistory> BookingHistory(Guid userId, int pageIndex, int pageSize)
+        public async Task<BookingHistory> GetBookingHistory(Guid userId, int pageIndex, int pageSize)
         {
             var page = pageIndex <= 0 ? 1 : pageIndex;
             pageSize = pageSize <= 0 ? 10 : pageSize;
 
-            var result = await _datPhongRepository.BookingHistory(
+            var result = await _datPhongRepository.GetBookingHistory(
                 userId,
                 page,
                 pageSize);
@@ -249,7 +249,7 @@ namespace Booking.Service.Services.DatPhongs
 
         public async Task CheckIn(Guid id)
         {
-            var datPhong = await _datPhongRepository.LayTheoId(id);
+            var datPhong = await _datPhongRepository.GetBookingById(id);
 
             if (datPhong == null)
             {
@@ -279,9 +279,9 @@ namespace Booking.Service.Services.DatPhongs
             await _datPhongRepository.CheckIn(id);
         }
 
-        public async Task XacNhan(Guid id)
+        public async Task ConfirmBooking(Guid id)
         {
-            var datPhong = await _datPhongRepository.LayTheoId(id);
+            var datPhong = await _datPhongRepository.GetBookingById(id);
 
             if (datPhong == null)
             {
@@ -298,10 +298,10 @@ namespace Booking.Service.Services.DatPhongs
                 throw new Exception("Booking đã check-out");
             }
 
-            await _datPhongRepository.XacNhan(id);
+            await _datPhongRepository.ConfirmBooking(id);
         }
 
-        public async Task<DatPhong> DatPhong(DatPhongRequest dp, Guid userId)
+        public async Task<DatPhong> CreateBooking(DatPhongRequest dp, Guid userId)
         {
             if (!dp.NgayNhanPhong.HasValue || !dp.NgayTraPhong.HasValue)
             {
@@ -380,9 +380,9 @@ namespace Booking.Service.Services.DatPhongs
                 };
 
                 // 7. Lưu tất cả thông tin vào DB
-                await _datPhongRepository.DatPhong(datPhong, ctdps, phongDats);
+                await _datPhongRepository.CreateBooking(datPhong, ctdps, phongDats);
 
-                await _thanhToanRepository.Tao(new ThanhToan
+                    await _thanhToanRepository.CreatePayment(new ThanhToan
                 {
                     DatPhongId = datPhongId,
                     PhuongThuc = dp.PhuongThucThanhToan,
@@ -393,7 +393,7 @@ namespace Booking.Service.Services.DatPhongs
                 await _unitOfWork.CommitAsync();
                 await _notificationService.BookingSuccess(userId, datPhong);
 
-                var user = await _userRepository.GetById(userId);
+                var user = await _userRepository.GetUserProfileById(userId);
 
                 await _rabbitMQPublisher.PublishAsync(
                     "booking_email_queue",
@@ -415,6 +415,145 @@ namespace Booking.Service.Services.DatPhongs
                 await _unitOfWork.RollbackAsync();
                 throw;
             }
+        }
+
+        public async Task<(int datPhong, double tongTien)> GetOwnerBookingStatistics(
+            ThongKeOwnerRequest input)
+        {
+            try
+            {
+                // Validate input
+                if (input == null)
+                {
+                    throw new ArgumentNullException(nameof(input), "Dữ liệu thống kê không được null");
+                }
+
+                if (input.hotelId == Guid.Empty)
+                {
+                    throw new ArgumentException(
+                        "HotelId không hợp lệ",
+                        nameof(input.hotelId));
+                }
+
+                if (input.batDau == default)
+                {
+                    throw new ArgumentException(
+                        "Ngày bắt đầu không hợp lệ",
+                        nameof(input.batDau));
+                }
+
+                if (input.ketThuc == default)
+                {
+                    throw new ArgumentException(
+                        "Ngày kết thúc không hợp lệ",
+                        nameof(input.ketThuc));
+                }
+
+                if (input.batDau > input.ketThuc)
+                {
+                    throw new ArgumentException(
+                        "Ngày bắt đầu không được lớn hơn ngày kết thúc");
+                }
+
+                if ((input.ketThuc - input.batDau).TotalDays > 365)
+                {
+                    throw new ArgumentException(
+                        "Khoảng thời gian thống kê không được vượt quá 365 ngày");
+                }
+
+                if (!string.IsNullOrWhiteSpace(input.trangThai))
+                {
+                    input.trangThai = input.trangThai.Trim();
+                }
+
+                return await _datPhongRepository.GetOwnerBookingStatistics(
+                    input.hotelId,
+                    input.batDau,
+                    input.ketThuc,
+                    input.trangThai
+                );
+            }
+            catch (Exception ex)
+            {
+                FileLogger.Log(ex);
+                throw;
+            }
+        }
+
+        public async Task<DatPhongOwnerDto> GetBookingsByOwner(DatPhongOwner_v0 dto, Guid ownerId)
+        {
+            var page = dto.Page <= 0 ? 1 : dto.Page;
+            var pageSize = dto.PageSize <= 0 ? 10 : dto.PageSize;
+
+            var result = await _datPhongRepository.GetBookingsByOwner(
+                ownerId,
+                page,
+                pageSize);
+
+            var data = result.Items.Select(x => new DatPhongDto
+            {
+                // =========================
+                // Đặt phòng
+                // =========================
+                Id = x.Id,
+                TrangThai = x.TrangThai,
+                NgayTao = x.NgayTao,
+                NgayNhan = x.NgayNhanPhong,
+                NgayTra = x.NgayTraPhong,
+
+                // =========================
+                // Khách sạn
+                // =========================
+                KhachSanId = x.KhachSanId,
+                TenKhachSan = x.KhachSan?.TenKhachSan,
+
+                // =========================
+                // Thanh toán
+                // =========================
+                ThanhToan = x.ThanhToans
+                    .Select(t => t.PhuongThuc)
+                    .FirstOrDefault(),
+
+                // =========================
+                // Chi tiết đặt phòng
+                // =========================
+                ChiTietDatPhongs = x.ChiTietDatPhongs
+                    .Select(ct => new ChiTietDatPhongDto
+                    {
+                        Id = ct.Id,
+
+                        // Loại phòng
+                        LoaiPhongId = ct.LoaiPhongId,
+
+                        TenLoaiPhong = ct.LoaiPhong?.TenLoaiPhong,
+
+                        Gia = ct.GiaMoiDem,
+
+                        // =========================
+                        // Các phòng được đặt
+                        // =========================
+                        Phongs = ct.PhongDats
+                            .Select(pd => new PhongDto
+                            {
+                                Id = pd.Phong.Id,
+                                SoPhong = pd.Phong.SoPhong,
+                                TrangThai = pd.Phong.TrangThai
+                            })
+                            .ToList()
+                    })
+                    .ToList()
+
+            }).ToList();
+
+            var totalPage = (int)Math.Ceiling(
+                (double)result.TotalCount / pageSize);
+
+            return new DatPhongOwnerDto
+            {
+                Data = data,
+                TotalRow = result.TotalCount,
+                TotalPage = totalPage
+            };
         }
     }
 }
