@@ -1,6 +1,5 @@
 ﻿using Booking.Core.Model.KhachSans;
-using Booking.Service.Dtos.KhachSan;
-using Booking.Service.Dtos.KhachSanDto;
+using Booking.Service.Dtos.Hotels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,10 +10,10 @@ namespace Booking.Data.Repository.KhachSans
 {
     public interface IKhachSanService
     {
-        Task<KhachSanCreateResponse> TaoKhachSan(KhachSanCreateRequest ks, Guid nguoiTao);
-        Task<FilterHotelResponseDto> LayDanhSachKhachSanAdminAsync(AdminFilterHotelRequestDto dto);
-        Task<FilterHotelResponseDto> LayDanhSachKhachSanOwnerAsync(OwnerFilterHotelRequestDto dto, Guid ownerId);
-        Task<FilterHotelResponseDto> FilterHotelsAsync(FilterHotelRequestDto dto);
-        Task<KhachSanDetailResponse?> DetailKhachSan(Guid id);
+        Task<CreateHotelResponse> CreateHotel(CreateHotelRequest ks, Guid nguoiTao);
+        Task<HotelFilterResponse> LayDanhSachKhachSanAdminAsync(AdminHotelFilterRequest dto);
+        Task<HotelFilterResponse> LayDanhSachKhachSanOwnerAsync(OwnerHotelFilterRequest dto, Guid ownerId);
+        Task<HotelFilterResponse> FilterHotelsAsync(HotelFilterRequest dto);
+        Task<HotelDetailsResponse?> GetHotelDetails(Guid id);
     }
 }

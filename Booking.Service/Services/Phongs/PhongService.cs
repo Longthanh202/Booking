@@ -2,7 +2,7 @@
 using Booking.Core.Model.Phongs;
 using Booking.Data.Connection;
 using Booking.Data.Repository.Phongs;
-using Booking.Service.Dtos.Phongs;
+using Booking.Service.Dtos.Rooms;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -19,7 +19,7 @@ namespace Booking.Service.Services.Phongs
         {
            _phongRepository = phongRepository;
         }
-        public async Task<Phong> TaoPhong(PhongRequest p)
+        public async Task<Phong> CreateRoom(CreateRoomRequest p)
         {
             Phong phong = new Phong
             {
@@ -29,7 +29,7 @@ namespace Booking.Service.Services.Phongs
                 Tang = p.Tang,
                 TrangThai = TrangThaiPhong.DANG_SU_DUNG.ToString(),
             };
-            return await _phongRepository.TaoPhong(phong);
+            return await _phongRepository.CreateRoom(phong);
         }
     }
 }

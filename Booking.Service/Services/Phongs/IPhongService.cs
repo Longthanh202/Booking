@@ -1,6 +1,6 @@
 ﻿using Booking.Core.Model.LoaiPhongs;
 using Booking.Core.Model.Phongs;
-using Booking.Service.Dtos.Phongs;
+using Booking.Service.Dtos.Rooms;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,6 +11,6 @@ namespace Booking.Data.Repository.Phongs
 {
     public interface IPhongService
     {
-        Task<Phong> TaoPhong(PhongRequest p);
+        Task<Phong> CreateRoom(CreateRoomRequest p);
     }
 }

@@ -15,7 +15,7 @@ namespace Booking.Data.Repository.HoaHongs
 
         Task<IEnumerable<HoaHong>> LayTheoKhachSan(Guid khachSanId);
         
-        Task<IEnumerable<HoaHong>> LayTheoOwnerId(Guid ownerId);
+        Task<IEnumerable<HoaHong>> GetCommissionsByOwnerId(Guid ownerId);
 
         Task<IEnumerable<HoaHong>> LayChuaThu();
 

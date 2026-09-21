@@ -48,7 +48,7 @@ namespace Booking.Api.Attributes
             if (!cache.TryGetValue(cacheKey, out List<string> permissions))
             {
                 var permissionsFromDb = (await permissionService
-                .GetListPermissionByUser(Guid.Parse(userId)))
+                .GetPermissionsByUserId(Guid.Parse(userId)))
                 .ToList();
 
                 permissions = permissionsFromDb

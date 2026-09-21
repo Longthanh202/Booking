@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Booking.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/provinces")]
     [ApiController]
     public class ProvinceController : ControllerBase
     {
@@ -13,7 +13,6 @@ namespace Booking.Api.Controllers
             _provinceService = provinceService;
         }
         [HttpGet]
-        [Route("get")]
         public async Task<IActionResult> GetProvinces()
         {
             var result = await _provinceService.GetProvinces();

@@ -2,7 +2,7 @@
 using Booking.Core.Model.Users;
 using Booking.Data.Repository.Auths;
 using Booking.Data.Repository.Roles;
-using Booking.Service.Dtos.Auths;
+using Booking.Service.Dtos.Authentication;
 using Booking.Service.Services.Tokens;
 using Google.Apis.Auth;
 using Microsoft.Extensions.Configuration;

@@ -9,6 +9,6 @@ namespace Booking.Data.Repository.Permissions
 {
     public interface IPermissionRepository
     {
-        Task<List<PermissionInfo>> GetListPermissionByUser(Guid userId);
+        Task<List<PermissionInfo>> GetPermissionsByUserId(Guid userId);
     }
 }

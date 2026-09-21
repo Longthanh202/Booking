@@ -9,8 +9,7 @@ using Booking.Data.Repository.LoaiPhongs;
 using Booking.Data.Repository.Phongs;
 using Booking.Data.Repository.TienIchs;
 using Booking.Data.Repository.Users;
-using Booking.Service.Dtos.KhachSan;
-using Booking.Service.Dtos.KhachSanDto;
+using Booking.Service.Dtos.Hotels;
 using Booking.Service.Services.Cloudinarys;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -20,7 +19,7 @@ using System.Security.Claims;
 
 namespace Booking.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/hotels")]
     [ApiController]
     public class KhachSanController : Controller
     {
@@ -34,8 +33,7 @@ namespace Booking.Api.Controllers
 
         [Authorize(Roles = "Owner")]
         [HttpPost]
-        [Route("tao")]
-        public async Task<IActionResult> TaoKhachSan([FromForm] KhachSanCreateRequest dto)
+        public async Task<IActionResult> CreateHotel([FromForm] CreateHotelRequest dto)
         {
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -45,8 +43,8 @@ namespace Booking.Api.Controllers
             }
 
             
-            var result = await _khachSanService.TaoKhachSan(dto, Guid.Parse(userId));
-            if (!result.status)
+            var result = await _khachSanService.CreateHotel(dto, Guid.Parse(userId));
+            if (!result.Status)
             {
                 return BadRequest();
             }
@@ -54,9 +52,9 @@ namespace Booking.Api.Controllers
         }
         
         [Authorize(Roles = "Admin")]
-        [HttpPost("admin-get")]
+        [HttpPost("admin/search")]
         public async Task<IActionResult> AdminGetKhachSans(
-            [FromBody] AdminFilterHotelRequestDto dto)
+            [FromBody] AdminHotelFilterRequest dto)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -72,7 +70,7 @@ namespace Booking.Api.Controllers
             var page = dto.Page <= 0 ? 1 : dto.Page;
             var pageSize = dto.PageSize <= 0 ? 10 : dto.PageSize;
 
-            var request = new AdminFilterHotelRequestDto
+            var request = new AdminHotelFilterRequest
             {
                 Keyword = dto.Keyword,
                 ThanhPho = dto.ThanhPho,
@@ -91,9 +89,9 @@ namespace Booking.Api.Controllers
         }
         
         [Authorize(Roles = "Owner")]
-        [HttpPost("owner-get")]
+        [HttpPost("owner/search")]
         public async Task<IActionResult> OwnerGetKhachSans(
-            [FromBody] OwnerFilterHotelRequestDto dto)
+            [FromBody] OwnerHotelFilterRequest dto)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -109,7 +107,7 @@ namespace Booking.Api.Controllers
             var page = dto.Page <= 0 ? 1 : dto.Page;
             var pageSize = dto.PageSize <= 0 ? 10 : dto.PageSize;
 
-            var request = new OwnerFilterHotelRequestDto
+            var request = new OwnerHotelFilterRequest
             {
                 Page = page,
                 PageSize = pageSize
@@ -121,21 +119,14 @@ namespace Booking.Api.Controllers
             return Ok(result);
         }
         
-        [HttpPost]
-        [Route("chitiet")]
-        public async Task<IActionResult> DetailHotel([FromBody] string id)
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> DetailHotel(Guid id)
         {
-            if (string.IsNullOrEmpty(id))
-            {
-                return BadRequest();
-            }
-
-            var khachSan = await _khachSanService.DetailKhachSan(Guid.Parse(id));
+            var khachSan = await _khachSanService.GetHotelDetails(id);
             return Ok(khachSan);
         }
-        [HttpPost]
-        [Route("filter")]
-        public async Task<IActionResult> FilterHotels([FromBody] FilterHotelRequestDto dto)
+        [HttpPost("search")]
+        public async Task<IActionResult> FilterHotels([FromBody] HotelFilterRequest dto)
         {
             if (dto.Page <= 0 || dto.PageSize <= 0)
             {

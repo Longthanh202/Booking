@@ -1,13 +1,14 @@
 ﻿using Booking.Core.Model.Banners;
 using Booking.Data.Repository.Banners;
-using Booking.Service.Dtos.Banner;
+using Booking.Service.Dtos.Banners;
 using Booking.Service.Services.Cloudinarys;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Booking.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/banners")]
     [ApiController]
     public class BannerController : ControllerBase
     {
@@ -18,18 +19,18 @@ namespace Booking.Api.Controllers
         }
 
         [HttpPost]
-        [Route("tao")]
-        public async Task<IActionResult> InsertBanner([FromForm] InsertBannerDto file)
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> CreateBanner([FromForm] CreateBannerRequest file)
         {
-            var banner = await _bannerService.InsertBanner(file);
+            var banner = await _bannerService.CreateBanner(file);
             return Ok(banner);
         }
 
         [HttpGet]
-        [Route("get")]
-        public async Task<IActionResult> GetBannerIsActive()
+        [Route("active")]
+        public async Task<IActionResult> GetActiveBanners()
         {
-            var result = await _bannerService.GetBannerIsActive();
+            var result = await _bannerService.GetActiveBanners();
             return Ok(result);
         }
     }

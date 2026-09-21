@@ -11,10 +11,9 @@ using Booking.Data.Repository.GiaPhongs;
 using Booking.Data.Repository.KhachSanImage;
 using Booking.Data.Repository.KhachSans;
 using Booking.Data.Repository.Redis;
-using Booking.Service.Dtos.KhachSan;
-using Booking.Service.Dtos.KhachSanDto;
-using Booking.Service.Dtos.KhachSanImages;
-using Booking.Service.Dtos.TienIchs;
+using Booking.Service.Dtos.Hotels;
+using Booking.Service.Dtos.HotelImages;
+using Booking.Service.Dtos.Amenities;
 using Booking.Service.Services.Cloudinarys;
 using System.Data;
 using System.Diagnostics;
@@ -43,17 +42,17 @@ namespace Booking.Service.Services.KhachSans
             _redisService = redisService;
         }
 
-        public async Task<KhachSanDetailResponse?> DetailKhachSan(Guid id)
+        public async Task<HotelDetailsResponse?> GetHotelDetails(Guid id)
         {
             // 1. Lấy Entity từ Repository
-            var khachSan = await _khachSanRepository.DetailKhachSan(id);
+            var khachSan = await _khachSanRepository.GetHotelDetails(id);
             if (khachSan == null)
             {
                 return null;
             }
 
             // 2. Map sang DTO tinh gọn tại Service
-            return new KhachSanDetailResponse
+            return new HotelDetailsResponse
             {
                 Id = khachSan.Id,
                 TenKhachSan = khachSan.TenKhachSan,
@@ -65,13 +64,13 @@ namespace Booking.Service.Services.KhachSans
                 TenThanhPho = khachSan.Province?.full_name ?? string.Empty,
                 TienIchs = khachSan.KhachSan_TienIches
                     .Where(kst => kst.TienIch != null)
-                    .Select(kst => new TienIchDto
+                    .Select(kst => new AmenityDto
                     {
                         Id = kst.TienIch!.Id,
                         TenTienIch = kst.TienIch.TenTienIch,
                         Icon = kst.TienIch.Icon
                     }).ToList(),
-                KhachSanImages = khachSan.KhachSanImages.Select(img => new KhachSanImageDto
+                KhachSanImages = khachSan.KhachSanImages.Select(img => new HotelImageDto
                 {
                     Id = img.Id,
                     Url = img.Url
@@ -79,7 +78,7 @@ namespace Booking.Service.Services.KhachSans
             };
         }
 
-        public async Task<FilterHotelResponseDto> FilterHotelsAsync(FilterHotelRequestDto dto)
+        public async Task<HotelFilterResponse> FilterHotelsAsync(HotelFilterRequest dto)
         {
             var stopwatch = Stopwatch.StartNew();
 
@@ -93,7 +92,7 @@ namespace Booking.Service.Services.KhachSans
                                   $"{dto.PageSize}";
 
                 // 2. Kiểm tra Cache trong Redis
-                var cachedData = await _redisService.GetObject<FilterHotelResponseDto>(cacheKey);
+                var cachedData = await _redisService.GetObject<HotelFilterResponse>(cacheKey);
                 if (cachedData != null)
                 {
                     stopwatch.Stop();
@@ -113,9 +112,9 @@ namespace Booking.Service.Services.KhachSans
                 // Nếu không tìm thấy khách sạn nào, trả về đối tượng rỗng
                 if (khachSans == null || !khachSans.Any())
                 {
-                    return new FilterHotelResponseDto
+                    return new HotelFilterResponse
                     {
-                        Data = new List<FilterHotelItemDto>(),
+                        Data = new List<HotelFilterItem>(),
                         TotalRow = 0,
                         TotalPage = 0
                     };
@@ -140,8 +139,8 @@ namespace Booking.Service.Services.KhachSans
                         g => g.Key,
                         g => g.Min(x => x.Gia)
                     );
-                // 5. Map dữ liệu từ Entity -> FilterHotelItemDto
-                var hotelDtos = khachSans.Select(hotel => new FilterHotelItemDto
+                // 5. Map dữ liệu từ Entity -> HotelFilterItem
+                var hotelDtos = khachSans.Select(hotel => new HotelFilterItem
                 {
                     Id = hotel.Id,
                     TenKhachSan = hotel.TenKhachSan,
@@ -155,7 +154,7 @@ namespace Booking.Service.Services.KhachSans
                 // 6. Tính tổng số trang bằng totalRow vừa nhận từ Repository
                 int totalPage = Paginations.GetTotalPages(totalRow, dto.PageSize);
 
-                var response = new FilterHotelResponseDto
+                var response = new HotelFilterResponse
                 {
                     Data = hotelDtos,
                     TotalRow = totalRow,
@@ -175,9 +174,9 @@ namespace Booking.Service.Services.KhachSans
 
 
         // 1. Dành cho Admin: Lấy tất cả khách sạn theo bộ lọc
-        public async Task<FilterHotelResponseDto> LayDanhSachKhachSanAdminAsync(AdminFilterHotelRequestDto dto)
+        public async Task<HotelFilterResponse> LayDanhSachKhachSanAdminAsync(AdminHotelFilterRequest dto)
         {
-            var (khachSans, totalRow) = await _khachSanRepository.LayDanhSachKhachSanAdmin(
+            var (khachSans, totalRow) = await _khachSanRepository.GetHotelsForAdmin(
                 dto.Keyword,
                 dto.ThanhPho,
                 dto.ViDo ?? 0,
@@ -188,24 +187,24 @@ namespace Booking.Service.Services.KhachSans
                 dto.PageSize
             );
 
-            return await MapToFilterHotelResponseDtoAsync(khachSans, totalRow, dto.PageSize);
+            return await MapToHotelFilterResponseAsync(khachSans, totalRow, dto.PageSize);
         }
 
         // 2. Dành cho Owner: Lấy danh sách khách sạn do Owner đó sở hữu
-        public async Task<FilterHotelResponseDto> LayDanhSachKhachSanOwnerAsync(OwnerFilterHotelRequestDto dto, Guid ownerId)
+        public async Task<HotelFilterResponse> LayDanhSachKhachSanOwnerAsync(OwnerHotelFilterRequest dto, Guid ownerId)
         {
-            var (khachSans, totalRow) = await _khachSanRepository.LayDanhSachKhachSanOwner(
+            var (khachSans, totalRow) = await _khachSanRepository.GetHotelsForOwner(
                 
                 ownerId,
                 dto.Page,
                 dto.PageSize
             );
 
-            return await MapToFilterHotelResponseDtoAsync(khachSans, totalRow, dto.PageSize);
+            return await MapToHotelFilterResponseAsync(khachSans, totalRow, dto.PageSize);
         }
 
         // Private Helper: Xử lý gom nhóm Ảnh, Mapping DTO và Phân trang để dùng chung
-        private async Task<FilterHotelResponseDto> MapToFilterHotelResponseDtoAsync(
+        private async Task<HotelFilterResponse> MapToHotelFilterResponseAsync(
             List<KhachSan> khachSans,
             int totalRow,
             int pageSize)
@@ -213,9 +212,9 @@ namespace Booking.Service.Services.KhachSans
             // Nếu danh sách rỗng, trả về response trống lập tức
             if (khachSans == null || !khachSans.Any())
             {
-                return new FilterHotelResponseDto
+                return new HotelFilterResponse
                 {
-                    Data = new List<FilterHotelItemDto>(),
+                    Data = new List<HotelFilterItem>(),
                     TotalRow = 0,
                     TotalPage = 0
                 };
@@ -230,7 +229,7 @@ namespace Booking.Service.Services.KhachSans
                 .ToDictionary(g => g.Key, g => g.Select(img => img.Url).ToList());
 
             // Map dữ liệu từ Entity sang DTO
-            var hotelDtos = khachSans.Select(hotel => new FilterHotelItemDto
+            var hotelDtos = khachSans.Select(hotel => new HotelFilterItem
             {
                 Id = hotel.Id,
                 TenKhachSan = hotel.TenKhachSan,
@@ -245,7 +244,7 @@ namespace Booking.Service.Services.KhachSans
             // Tính tổng số trang
             int totalPage = Paginations.GetTotalPages(totalRow, pageSize);
 
-            return new FilterHotelResponseDto
+            return new HotelFilterResponse
             {
                 Data = hotelDtos,
                 TotalRow = totalRow,
@@ -253,7 +252,7 @@ namespace Booking.Service.Services.KhachSans
             };
         }
 
-        public async Task<KhachSanCreateResponse> TaoKhachSan(KhachSanCreateRequest ks, Guid nguoiTao)
+        public async Task<CreateHotelResponse> CreateHotel(CreateHotelRequest ks, Guid nguoiTao)
         {
             await _unitOfWork.BeginTransactionAsync();
             try
@@ -261,10 +260,10 @@ namespace Booking.Service.Services.KhachSans
                 if (!TimeSpan.TryParse(ks.GioNhanPhong, out var gioNhan) ||
                     !TimeSpan.TryParse(ks.GioTraPhong, out var gioTra))
                 {
-                    return new KhachSanCreateResponse
+                    return new CreateHotelResponse
                     {
-                        status = false,
-                        message = "Giờ nhận phòng hoặc giờ trả phòng không hợp lệ",
+                        Status = false,
+                        Message = "Giờ nhận phòng hoặc giờ trả phòng không hợp lệ",
                         Data = null
                     };
                 }    
@@ -292,13 +291,13 @@ namespace Booking.Service.Services.KhachSans
                     NguoiTao = nguoiTao,
                     NgayTao = DateTime.Now
                 };
-                await _khachSanRepository.TaoKhachSan(KhachSan);
+                await _khachSanRepository.CreateHotel(KhachSan);
                 await _khachSanImageRepository.InsertKhachSanImage(khachSanId, images);
                 await _unitOfWork.CommitAsync();
-                return new KhachSanCreateResponse
+                return new CreateHotelResponse
                 {
-                    status = true,
-                    message = "Tạo khách sạn thành công",
+                    Status = true,
+                    Message = "Tạo khách sạn thành công",
                     Data = KhachSan
                 };
             }

@@ -9,7 +9,7 @@ namespace Booking.Data.Repository.Phongs
 {
     public interface IPhongRepository
     {
-        Task<Phong> TaoPhong(Phong p);
+        Task<Phong> CreateRoom(Phong p);
         Task<List<Phong>> LayDanhSachPhongTrong(Guid loaiPhongId, DateTime? ngayNhan, DateTime? ngayTra);
     }
 }

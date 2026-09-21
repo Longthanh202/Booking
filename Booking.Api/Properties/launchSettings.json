@@ -1,4 +1,13 @@
 {
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:5925",
+      "sslPort": 5925
+    }
+  },
+  "$schema": "https://json.schemastore.org/launchsettings.json",
   "profiles": {
     "Container_App": {
       "commandName": "Project",
@@ -33,19 +42,10 @@
       "launchBrowser": true,
       "launchUrl": "https://localhost:7251/swagger",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "ASPNETCORE_URLS": "https://localhost:7251;http://localhost:5295"
+        "ASPNETCORE_URLS": "https://localhost:7251;http://localhost:5295",
+        "ASPNETCORE_ENVIRONMENT": "Development"
       },
       "distributionName": ""
-    }
-  },
-  "$schema": "https://json.schemastore.org/launchsettings.json",
-  "iisSettings": {
-    "windowsAuthentication": false,
-    "anonymousAuthentication": true,
-    "iisExpress": {
-      "applicationUrl": "http://localhost:5925",
-      "sslPort": 5925
     }
   }
 }

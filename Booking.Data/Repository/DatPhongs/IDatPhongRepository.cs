@@ -10,18 +10,22 @@ namespace Booking.Data.Repository.DatPhongs
 {
     public interface IDatPhongRepository
     {
-        Task<DatPhong> DatPhong(DatPhong dp, List<ChiTietDatPhong> ctdp, List<PhongDat> phongDats);
-        Task<DatPhong?> LayTheoId(Guid id);
-        Task CapNhatTrangThai(DatPhong d);
+        Task<DatPhong> CreateBooking(DatPhong dp, List<ChiTietDatPhong> ctdp, List<PhongDat> phongDats);
+        Task<DatPhong?> GetBookingById(Guid id);
+        Task UpdateBookingStatus(DatPhong d);
 
-        Task<(List<DatPhong> Items, int TotalCount)> GetListBookingOwner(
+        Task<(List<DatPhong> Items, int TotalCount)> GetOwnerBookings(
             Guid ownerId,
             Guid khachSanId,
             int pageIndex,
             int pageSize);
+        Task<(List<DatPhong> Items, int TotalCount)> GetBookingsByOwner(Guid ownerId,
+            int pageIndex,
+            int pageSize);
 
-        Task<(List<DatPhong> Items, int TotalCount)> BookingHistory(Guid userId, int pageIndex, int pageSize);
+        Task<(List<DatPhong> Items, int TotalCount)> GetBookingHistory(Guid userId, int pageIndex, int pageSize);
         Task<DatPhong> CheckIn(Guid id);
-        Task<DatPhong> XacNhan(Guid id);
+        Task<DatPhong> ConfirmBooking(Guid id);
+        Task<(int datPhong, double tongTien)> GetOwnerBookingStatistics(Guid hotelId, DateTime batDau, DateTime ketThuc, string trangThai);
     }
 }

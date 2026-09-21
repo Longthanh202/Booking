@@ -1,12 +1,13 @@
 ﻿using Booking.Core.Model.Phongs;
 using Booking.Data.Repository.Phongs;
-using Booking.Service.Dtos.Phongs;
+using Booking.Service.Dtos.Rooms;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Booking.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/rooms")]
     [ApiController]
     public class PhongController : ControllerBase
     {
@@ -17,10 +18,11 @@ namespace Booking.Api.Controllers
             _phongService = phongService;
         }
 
-        [HttpPost("tao")]
-        public async Task<IActionResult> ThemPhong([FromBody] PhongRequest dto)
+        [Authorize(Roles = "Owner")]
+        [HttpPost]
+        public async Task<IActionResult> ThemPhong([FromBody] CreateRoomRequest dto)
         {
-            var result = await _phongService.TaoPhong(dto);
+            var result = await _phongService.CreateRoom(dto);
 
             if (result != null)
             {

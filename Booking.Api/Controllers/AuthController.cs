@@ -1,11 +1,11 @@
-﻿using Booking.Service.Dtos.GoogleLogin;
+﻿using Booking.Service.Dtos.Authentication;
 using Booking.Service.Services.Auths;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Booking.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthController : ControllerBase
     {
@@ -19,7 +19,7 @@ namespace Booking.Api.Controllers
         }
 
         [HttpPost("google-login")]
-        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequestDto request)
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginRequest request)
         {
             if (string.IsNullOrEmpty(request.IdToken))
             {

@@ -1,13 +1,14 @@
 ﻿using Booking.Core.Model.LoaiPhongs;
 using Booking.Data.Repository.LoaiPhongs;
-using Booking.Service.Dtos.LoaiPhongs;
+using Booking.Service.Dtos.RoomTypes;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Booking.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/room-types")]
     [ApiController]
     public class LoaiPhongController : ControllerBase
     {
@@ -18,10 +19,11 @@ namespace Booking.Api.Controllers
             _loaiPhongService = loaiPhongService;
         }
 
-        [HttpPost("tao")]
-        public async Task<IActionResult> ThemLoaiPhong([FromBody] List<LoaiPhongRequest> dto)
+        [Authorize(Roles = "Owner")]
+        [HttpPost]
+        public async Task<IActionResult> ThemLoaiPhong([FromBody] List<CreateRoomTypeRequest> dto)
         {
-            var result = await _loaiPhongService.TaoLoaiPhong(dto);
+            var result = await _loaiPhongService.CreateRoomTypes(dto);
 
             if (result != 0)
             {
@@ -37,10 +39,10 @@ namespace Booking.Api.Controllers
             });
         }
         
-        [HttpPost("get/hotelId")]
-        public async Task<IActionResult> GetLoaiPhongByKSID([FromBody] GetLoaiPhongDto dto)
+        [HttpPost("by-hotel")]
+        public async Task<IActionResult> GetLoaiPhongByKSID([FromBody] RoomTypeSearchRequest dto)
         {
-            var result = await _loaiPhongService.GetLoaiPhongByKhachSanId(dto);
+            var result = await _loaiPhongService.GetRoomTypesByHotelId(dto);
             if (result.IsNullOrEmpty())
             {
                 return BadRequest();
@@ -48,10 +50,11 @@ namespace Booking.Api.Controllers
             return Ok(result);
         }
 
-        [HttpPost("owner/loai-phong")]
-        public async Task<IActionResult> GetLoaiPhongOwner([FromBody] Guid khachSanId)
+        [Authorize(Roles = "Owner")]
+        [HttpGet("owner")]
+        public async Task<IActionResult> GetOwnerRoomTypes([FromBody] Guid khachSanId)
         {
-            var result = await _loaiPhongService.GetLoaiPhongOwner(khachSanId);
+            var result = await _loaiPhongService.GetOwnerRoomTypes(khachSanId);
             return Ok(result);
         }
     }

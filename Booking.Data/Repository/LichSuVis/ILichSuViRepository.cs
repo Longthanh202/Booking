@@ -15,7 +15,7 @@ namespace Booking.Data.Repository.LichSuVis
 
         Task<IEnumerable<LichSuVi>> LayTheoDatPhong(Guid datPhongId);
         
-        Task<IEnumerable<LichSuVi>> LayTheoOwnerId(Guid ownerId);
+        Task<IEnumerable<LichSuVi>> GetWalletHistoryByOwnerId(Guid ownerId);
 
         Task<IEnumerable<LichSuVi>> LayTheoKhoangThoiGian(
             long viKhachSanId,

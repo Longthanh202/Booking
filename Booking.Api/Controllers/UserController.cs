@@ -9,9 +9,9 @@ using Booking.Data.Repository.RabbitMQ;
 using Booking.Data.Repository.RefreshTokens;
 using Booking.Data.Repository.RolePermissions;
 using Booking.Data.Repository.Users;
-using Booking.Service.Dtos.Login;
-using Booking.Service.Dtos.RolePermission;
-using Booking.Service.Dtos.UserProfile;
+using Booking.Service.Dtos.Authentication;
+using Booking.Service.Dtos.RolePermissions;
+using Booking.Service.Dtos.Users;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Rewrite;
@@ -27,7 +27,7 @@ using System.Text.Json;
 
 namespace Booking.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/users")]
     [ApiController]
     public class UserController : ControllerBase
     {
@@ -46,11 +46,11 @@ namespace Booking.Api.Controllers
 
         [HttpPost]
         [Route("login")]
-        public async Task<IActionResult> Login([FromBody] LoginResquest dto)
+        public async Task<IActionResult> Login([FromBody] LoginRequest dto)
         {
             var result = await _userServices.Login(dto);
 
-            if (!result.status)
+            if (!result.Status)
                 return BadRequest(result);
 
             return Ok(result);
@@ -58,6 +58,7 @@ namespace Booking.Api.Controllers
 
         [HttpGet]
         [Route("me")]
+        [Authorize]
         public async Task<IActionResult> GetProfile()
         {
 
@@ -69,7 +70,7 @@ namespace Booking.Api.Controllers
                 return Unauthorized();
             }
 
-            var result = await _userServices.GetById(Guid.Parse(userId), Guid.Parse(roleId));
+            var result = await _userServices.GetUserProfileById(Guid.Parse(userId), Guid.Parse(roleId));
 
             return Ok(result);
         }
@@ -86,16 +87,17 @@ namespace Booking.Api.Controllers
         }
 
         [HttpPost]
-        [Route("insert-role-permission")]
-        public async Task<IActionResult> InsertRolePermission([FromBody] RolePermissionRequset dto)
+        [Route("role-permissions")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> AddRolePermissions([FromBody] RolePermissionRequest dto)
         {
-            await _rolePermissionService.Insert(dto);
+            await _rolePermissionService.AddRolePermissions(dto);
             return Ok();
         }       
 
         [HttpPost]
         [Route("register")]
-        public async Task<IActionResult> Register([FromBody] UserRequset u)
+        public async Task<IActionResult> Register([FromBody] RegisterUserRequest u)
         {
             var result =  await _userServices.Register(u);
             if(result != null)
@@ -116,7 +118,7 @@ namespace Booking.Api.Controllers
                 });
             }
 
-            await _userServices.QuenMatKhau(username);
+            await _userServices.RequestPasswordReset(username);
 
             return Ok(new
             {

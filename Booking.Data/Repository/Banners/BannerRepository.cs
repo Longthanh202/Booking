@@ -1,6 +1,8 @@
 ﻿using Booking.Core.Model.Banners;
 using Booking.Data.DBContext;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Booking.Data.Repository.Banners
 {
@@ -13,7 +15,7 @@ namespace Booking.Data.Repository.Banners
             _context = context;
         }
 
-        public async Task<List<Banner>> GetAllBanner(string keyword, int isActive, int startRow, int endRow)
+        public async Task<List<Banner>> GetBanners(string keyword, int isActive, int startRow, int endRow)
         {
             IQueryable<Banner> query = _context.Banners.AsQueryable();
             if (!string.IsNullOrEmpty(keyword))
@@ -32,14 +34,14 @@ namespace Booking.Data.Repository.Banners
         }
 
 
-        public async Task<List<Banner>> GetBannerIsActive()
+        public async Task<List<Banner>> GetActiveBanners()
         {
             return await _context.Banners.Where(x => x.IsActive == 1)
                     .OrderByDescending(x => x.CreatedDate)
                     .ToListAsync();
         }
 
-        public async Task<Banner> InsertBanner(Banner banner)
+        public async Task<Banner> CreateBanner(Banner banner)
         {
             await _context.Banners.AddAsync(banner);
             await _context.SaveChangesAsync();

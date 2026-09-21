@@ -3,7 +3,7 @@ using Booking.Core.Model.RolePermissions;
 using Booking.Data;
 using Booking.Data.Connection;
 using Booking.Data.Repository.RolePermissions;
-using Booking.Service.Dtos.RolePermission;
+using Booking.Service.Dtos.RolePermissions;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -24,7 +24,7 @@ namespace Booking.Service.Services.RolePermissions
             _unitOfWork = unitOfWork;
         }
 
-        public async Task Insert(RolePermissionRequset input)
+        public async Task AddRolePermissions(RolePermissionRequest input)
         {
             await _unitOfWork.BeginTransactionAsync();
             try
@@ -37,7 +37,7 @@ namespace Booking.Service.Services.RolePermissions
                     PermissionId = p.PermissionId,
                     
                 }).ToList();
-                await _rolePermissionRepository.Insert(input.RoleId, rolePermissions);
+                await _rolePermissionRepository.AddRolePermissions(input.RoleId, rolePermissions);
                 await _unitOfWork.CommitAsync();
             }
             catch (Exception ex)

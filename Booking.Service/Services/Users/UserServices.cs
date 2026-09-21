@@ -9,8 +9,8 @@ using Booking.Data.Repository.Redis;
 using Booking.Data.Repository.RefreshTokens;
 using Booking.Data.Repository.Users;
 using Booking.Service.Dtos.Email;
-using Booking.Service.Dtos.Login;
-using Booking.Service.Dtos.UserProfile;
+using Booking.Service.Dtos.Authentication;
+using Booking.Service.Dtos.Users;
 using Booking.Service.Services.Tokens;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Caching.Distributed;
@@ -64,7 +64,7 @@ namespace Booking.Service.Services.Users
             _emailService = emailService;
             _roleRepository = roleRepository;
         }
-        public async Task<UserProfileResponse> GetById(Guid id, Guid roleId)
+        public async Task<UserProfileResponse> GetUserProfileById(Guid id, Guid roleId)
         {
             var cacheKey = $"Permission_Role_{roleId}";
             List<string>? permissionKeys;
@@ -77,7 +77,7 @@ namespace Booking.Service.Services.Users
             }
             else
             {
-                var permissions = await _permissionRepository.GetListPermissionByUser(id);
+                var permissions = await _permissionRepository.GetPermissionsByUserId(id);
 
                 permissionKeys = permissions
                     .Select(x => $"{x.ResourceName.ToLower()}_{x.Action.ToLower()}")
@@ -89,7 +89,12 @@ namespace Booking.Service.Services.Users
                     TimeSpan.FromMinutes(20));
             }
 
-            var user = await _userRepository.GetById(id);
+            var user = await _userRepository.GetUserProfileById(id);
+
+            if (user == null)
+            {
+                throw new KeyNotFoundException("Không tìm thấy thông tin người dùng.");
+            }
 
             return new UserProfileResponse
             {
@@ -103,26 +108,26 @@ namespace Booking.Service.Services.Users
             return _userRepository.IsAuthenticated();
         }
 
-        public async Task<LoginReponse> Login(LoginResquest input)
+        public async Task<LoginResponse> Login(LoginRequest input)
         {
-            if (string.IsNullOrEmpty(input.username) || string.IsNullOrEmpty(input.password))
+            if (string.IsNullOrEmpty(input.Username) || string.IsNullOrEmpty(input.Password))
             {
-                return new LoginReponse
+                return new LoginResponse
                 {
-                    status = false,
-                    token = null,
-                    message = "Username hoặc Password không được để trống"
+                    Status = false,
+                    Token = null,
+                    Message = "Username hoặc Password không được để trống"
                 };
             }
-            string passwordHash = Hash.HashPassword(input.password);
-            var user = await _userRepository.Login(input.username, passwordHash);
+            string passwordHash = Hash.HashPassword(input.Password);
+            var user = await _userRepository.Login(input.Username, passwordHash);
             if (user == null)
             {
-                return new LoginReponse
+                return new LoginResponse
                 {
-                    status = false,
-                    token = null,
-                    message = "Username hoặc Password không đúng"
+                    Status = false,
+                    Token = null,
+                    Message = "Username hoặc Password không đúng"
                 };
             }
 
@@ -164,22 +169,22 @@ namespace Booking.Service.Services.Users
                     Expires = DateTime.UtcNow.AddDays(30)
                 });
 
-            return new LoginReponse
+            return new LoginResponse
             {
-                status = true,
-                token = token,
-                message = "Đăng nhập thành công"
+                Status = true,
+                Token = token,
+                Message = "Đăng nhập thành công"
             };
         }
 
-        public async Task<UserProfile> Register(UserRequset user)
+        public async Task<UserProfile> Register(RegisterUserRequest user)
         {
             await _unitOfWork.BeginTransactionAsync();
             try
             {
                 var userLoginId = Guid.NewGuid();
                 var roleCustomer = await _roleRepository.GetRoleCustomer();
-                await _userRepository.InsertUserLogin(new UserLogin
+                await _userRepository.AddUserLogin(new UserLogin
                 {
                     Id = userLoginId,
                     Username = user.Username,
@@ -199,7 +204,7 @@ namespace Booking.Service.Services.Users
                     UserLoginId = userLoginId,
                 };
 
-                await _userRepository.Insert(profile);
+                await _userRepository.AddUserProfile(profile);
                 await _unitOfWork.CommitAsync();
                 await _rabbitMQPublisher.PublishAsync(
                 "register_email_queue",
@@ -221,9 +226,9 @@ namespace Booking.Service.Services.Users
             }
         }
 
-        public async Task QuenMatKhau(string username)
+        public async Task RequestPasswordReset(string username)
         {
-            var user = await _userRepository.QuenMatKhau(username);
+            var user = await _userRepository.FindUserByUsernameForPasswordReset(username);
 
             if (user == null)
             {
@@ -262,7 +267,7 @@ namespace Booking.Service.Services.Users
             );
         }
 
-        public async Task ComfirmQuenMatKhau(string username, string code)
+        public async Task ConfirmPasswordReset(string username, string code)
         {
             var redisCode = await _redisService.GetObject<string>(
                 $"forgot-password:{username}");

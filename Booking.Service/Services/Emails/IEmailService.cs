@@ -1,4 +1,4 @@
-﻿using Booking.Core.Model.Email;
+﻿using Booking.Service.Dtos.Email;
 using System;
 using System.Collections.Generic;
 using System.Linq;
