@@ -14,5 +14,6 @@ namespace Booking.Data.Repository.LoaiPhongs
             int soKhach, DateTime? ngayNhan, DateTime? ngayTra);
 
         Task<List<LoaiPhong>> GetOwnerRoomTypes(Guid khachSanId);
+        Task<LoaiPhong?> GetRoomTypeForOwner(Guid roomTypeId, Guid ownerId);
     }
 }

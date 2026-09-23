@@ -52,7 +52,7 @@ namespace Booking.Api.Controllers
 
         [Authorize(Roles = "Owner")]
         [HttpGet("owner")]
-        public async Task<IActionResult> GetOwnerRoomTypes([FromBody] Guid khachSanId)
+        public async Task<IActionResult> GetOwnerRoomTypes([FromQuery] Guid khachSanId)
         {
             var result = await _loaiPhongService.GetOwnerRoomTypes(khachSanId);
             return Ok(result);

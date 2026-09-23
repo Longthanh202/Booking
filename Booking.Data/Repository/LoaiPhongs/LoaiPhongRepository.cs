@@ -33,6 +33,14 @@ namespace Booking.Data.Repository.LoaiPhongs
                 .ToListAsync();
         }
 
+        public async Task<LoaiPhong?> GetRoomTypeForOwner(Guid roomTypeId, Guid ownerId)
+        {
+            return await _context.LoaiPhongs
+                .Include(x => x.KhachSan)
+                .FirstOrDefaultAsync(x => x.Id == roomTypeId &&
+                    x.KhachSan != null && x.KhachSan.NguoiTao == ownerId);
+        }
+
         public async Task<List<LoaiPhongHienThi>> GetRoomTypesByHotelId(
             Guid khachSanId,
             int soKhach,

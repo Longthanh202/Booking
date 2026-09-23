@@ -2,6 +2,7 @@
 using Booking.Core.Model.Phongs;
 using Booking.Data.Connection;
 using Booking.Data.Repository.Phongs;
+using Booking.Data.Repository.LoaiPhongs;
 using Booking.Service.Dtos.Rooms;
 using System;
 using System.Collections.Generic;
@@ -15,21 +16,51 @@ namespace Booking.Service.Services.Phongs
     public class PhongService : IPhongService
     {
         private readonly IPhongRepository _phongRepository;
-        public PhongService(IPhongRepository phongRepository)
+        private readonly ILoaiPhongRepository _loaiPhongRepository;
+        public PhongService(IPhongRepository phongRepository, ILoaiPhongRepository loaiPhongRepository)
         {
            _phongRepository = phongRepository;
+           _loaiPhongRepository = loaiPhongRepository;
         }
-        public async Task<Phong> CreateRoom(CreateRoomRequest p)
+        public async Task<Phong?> CreateRoom(CreateRoomRequest p, Guid ownerId)
         {
+            if (p.LoaiPhongId == Guid.Empty ||
+                await _loaiPhongRepository.GetRoomTypeForOwner(p.LoaiPhongId, ownerId) == null)
+            {
+                return null;
+            }
+
             Phong phong = new Phong
             {
                 Id = Guid.NewGuid(),
                 LoaiPhongId = p.LoaiPhongId,
                 SoPhong = p.SoPhong,
                 Tang = p.Tang,
-                TrangThai = TrangThaiPhong.DANG_SU_DUNG.ToString(),
+                TrangThai = string.IsNullOrWhiteSpace(p.TrangThai)
+                    ? TrangThaiPhong.SAN_SANG.ToString()
+                    : p.TrangThai,
             };
             return await _phongRepository.CreateRoom(phong);
         }
+
+        public Task<List<Phong>> GetRooms(Guid roomTypeId, Guid ownerId) =>
+            _phongRepository.GetRoomsByRoomType(roomTypeId, ownerId);
+
+        public async Task<Phong?> UpdateRoom(Guid roomId, UpdateRoomRequest request, Guid ownerId)
+        {
+            var room = await _phongRepository.GetRoomForOwner(roomId, ownerId);
+            if (room == null || string.IsNullOrWhiteSpace(request.SoPhong))
+            {
+                return null;
+            }
+
+            room.SoPhong = request.SoPhong.Trim();
+            room.Tang = request.Tang;
+            room.TrangThai = request.TrangThai;
+            return await _phongRepository.UpdateRoom(room);
+        }
+
+        public Task<bool> DeleteRoom(Guid roomId, Guid ownerId) =>
+            _phongRepository.DeleteRoom(roomId, ownerId);
     }
 }

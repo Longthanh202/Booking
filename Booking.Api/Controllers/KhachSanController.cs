@@ -52,9 +52,9 @@ namespace Booking.Api.Controllers
         }
         
         [Authorize(Roles = "Admin")]
-        [HttpPost("admin/search")]
+        [HttpGet("admin/search")]
         public async Task<IActionResult> AdminGetKhachSans(
-            [FromBody] AdminHotelFilterRequest dto)
+            [FromQuery] AdminHotelFilterRequest dto)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -89,9 +89,9 @@ namespace Booking.Api.Controllers
         }
         
         [Authorize(Roles = "Owner")]
-        [HttpPost("owner/search")]
+        [HttpGet("owner/search")]
         public async Task<IActionResult> OwnerGetKhachSans(
-            [FromBody] OwnerHotelFilterRequest dto)
+            [FromQuery] OwnerHotelFilterRequest dto)
         {
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
@@ -125,8 +125,8 @@ namespace Booking.Api.Controllers
             var khachSan = await _khachSanService.GetHotelDetails(id);
             return Ok(khachSan);
         }
-        [HttpPost("search")]
-        public async Task<IActionResult> FilterHotels([FromBody] HotelFilterRequest dto)
+        [HttpGet("search")]
+        public async Task<IActionResult> FilterHotels([FromQuery] HotelFilterRequest dto)
         {
             if (dto.Page <= 0 || dto.PageSize <= 0)
             {
@@ -135,6 +135,19 @@ namespace Booking.Api.Controllers
             // Gọi Service xử lý logic; exception được xử lý bởi global middleware.
             var result = await _khachSanService.FilterHotelsAsync(dto);
             return Ok(result);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("admin/{id:guid}/status")]
+        public async Task<IActionResult> UpdateHotelStatus(Guid id, [FromBody] UpdateHotelStatusRequest dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.TrangThai))
+            {
+                return BadRequest(new { message = "Trạng thái không được để trống." });
+            }
+
+            var updated = await _khachSanService.UpdateStatus(id, dto.TrangThai);
+            return updated ? Ok(new { message = "Cập nhật trạng thái property thành công." }) : BadRequest(new { message = "Property không tồn tại hoặc trạng thái không hợp lệ." });
         }
     }
 }

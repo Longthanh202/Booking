@@ -15,5 +15,6 @@ namespace Booking.Data.Repository.KhachSans
         Task<HotelFilterResponse> LayDanhSachKhachSanOwnerAsync(OwnerHotelFilterRequest dto, Guid ownerId);
         Task<HotelFilterResponse> FilterHotelsAsync(HotelFilterRequest dto);
         Task<HotelDetailsResponse?> GetHotelDetails(Guid id);
+        Task<bool> UpdateStatus(Guid hotelId, string status);
     }
 }

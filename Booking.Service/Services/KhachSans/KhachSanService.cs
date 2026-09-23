@@ -78,6 +78,16 @@ namespace Booking.Service.Services.KhachSans
             };
         }
 
+        public async Task<bool> UpdateStatus(Guid hotelId, string status)
+        {
+            if (!Enum.TryParse<TrangThaiKhachSan>(status, true, out var parsedStatus))
+            {
+                return false;
+            }
+
+            return await _khachSanRepository.UpdateStatus(hotelId, parsedStatus.ToString());
+        }
+
         public async Task<HotelFilterResponse> FilterHotelsAsync(HotelFilterRequest dto)
         {
             var stopwatch = Stopwatch.StartNew();

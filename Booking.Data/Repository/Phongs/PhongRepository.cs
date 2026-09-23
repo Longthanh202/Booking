@@ -45,5 +45,47 @@ namespace Booking.Data.Repository.Phongs
             await _context.SaveChangesAsync();
             return p;
         }
+
+        public async Task<Phong?> GetRoomForOwner(Guid roomId, Guid ownerId)
+        {
+            return await _context.Phongs
+                .Include(x => x.LoaiPhong)
+                    .ThenInclude(x => x!.KhachSan)
+                .FirstOrDefaultAsync(x => x.Id == roomId &&
+                    x.LoaiPhong != null &&
+                    x.LoaiPhong.KhachSan != null &&
+                    x.LoaiPhong.KhachSan.NguoiTao == ownerId);
+        }
+
+        public async Task<List<Phong>> GetRoomsByRoomType(Guid roomTypeId, Guid ownerId)
+        {
+            return await _context.Phongs
+                .Include(x => x.LoaiPhong)
+                .Where(x => x.LoaiPhongId == roomTypeId &&
+                    x.LoaiPhong != null &&
+                    x.LoaiPhong.KhachSan != null &&
+                    x.LoaiPhong.KhachSan.NguoiTao == ownerId)
+                .OrderBy(x => x.SoPhong)
+                .ToListAsync();
+        }
+
+        public async Task<Phong?> UpdateRoom(Phong p)
+        {
+            _context.Phongs.Update(p);
+            await _context.SaveChangesAsync();
+            return p;
+        }
+
+        public async Task<bool> DeleteRoom(Guid roomId, Guid ownerId)
+        {
+            var room = await GetRoomForOwner(roomId, ownerId);
+            if (room == null || await _context.phongDats.AnyAsync(x => x.PhongId == roomId))
+            {
+                return false;
+            }
+
+            _context.Phongs.Remove(room);
+            return await _context.SaveChangesAsync() > 0;
+        }
     }
 }

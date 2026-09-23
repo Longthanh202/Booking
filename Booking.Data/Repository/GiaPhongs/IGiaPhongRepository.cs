@@ -11,5 +11,7 @@ namespace Booking.Data.Repository.GiaPhongs
     {
         Task<List<GiaPhong>> LayGiaPhongTheoDSKhachSanId(List<Guid> ids);
         Task<GiaPhong?> LayGiaPhongHienTai(Guid loaiPhongId);
+        Task<List<GiaPhong>> GetPricesByRoomType(Guid roomTypeId, Guid ownerId);
+        Task<GiaPhong?> CreatePrice(GiaPhong price, Guid ownerId);
     }
 }

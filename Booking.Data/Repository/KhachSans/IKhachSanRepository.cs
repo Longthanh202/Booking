@@ -11,5 +11,6 @@ namespace Booking.Data.Repository.KhachSans
         Task<(List<KhachSan> Items, int TotalCount)> GetHotelsForOwner(Guid ownerId, int pageIndex, int pageSize);
         Task<(List<KhachSan> Items, int TotalCount)> FilterHotels(string? keyword, int? soKhach, DateTime? ngayNhanPhong, DateTime? ngayTraPhong, int pageIndex, int pageSize);
         Task<KhachSan?> GetHotelDetails(Guid id);
+        Task<bool> UpdateStatus(Guid hotelId, string status);
     }
 }
