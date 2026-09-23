@@ -12,5 +12,6 @@ namespace Booking.Service.Services.HoaHongs
     {
         Task CalculateCommission(Guid datPhongId);
         Task<List<CommissionDto>> GetCommissionsByOwnerId(Guid ownerId);
+        Task<List<CommissionDto>> GetPendingCommissions();
     }
 }

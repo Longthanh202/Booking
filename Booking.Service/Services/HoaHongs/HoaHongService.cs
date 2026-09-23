@@ -152,6 +152,17 @@ namespace Booking.Service.Services.HoaHongs
         {
             var result = await _hoaHongRepository.GetCommissionsByOwnerId(ownerId);
 
+            return MapCommissions(result);
+        }
+
+        public async Task<List<CommissionDto>> GetPendingCommissions()
+        {
+            var result = await _hoaHongRepository.LayChuaThu();
+            return MapCommissions(result);
+        }
+
+        private static List<CommissionDto> MapCommissions(IEnumerable<HoaHong> result)
+        {
             return result.Select(x => new CommissionDto
             {
                 MaHoaHong = x.MaHoaHong,

@@ -28,9 +28,14 @@ namespace Booking.Data.Repository.HoaHongs
                 .ToListAsync();
         }
 
-        public Task<IEnumerable<HoaHong>> LayChuaThu()
+        public async Task<IEnumerable<HoaHong>> LayChuaThu()
         {
-            throw new NotImplementedException();
+            return await _context.HoaHongs
+                .Include(x => x.KhachSan)
+                .Include(x => x.DatPhong)
+                .Where(x => x.TrangThai == TrangThaiHoaHong.CHO_THU.ToString())
+                .OrderBy(x => x.NgayTao)
+                .ToListAsync();
         }
 
         public async Task<HoaHong?> LayTheoDatPhong(Guid datPhongId)

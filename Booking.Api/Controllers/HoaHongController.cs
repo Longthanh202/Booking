@@ -38,5 +38,12 @@ namespace Booking.Api.Controllers
 
             return Ok(result);
         }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("admin/pending")]
+        public async Task<IActionResult> GetPendingCommissions()
+        {
+            return Ok(await _hoaHongService.GetPendingCommissions());
+        }
     }
 }

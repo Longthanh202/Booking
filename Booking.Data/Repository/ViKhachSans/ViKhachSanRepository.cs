@@ -32,6 +32,23 @@ namespace Booking.Data.Repository.ViKhachSans
                 .FirstOrDefaultAsync(x => x.MaKhachSan == khachSanId);
         }
 
+        public Task<List<ViKhachSan>> LayTheoOwner(Guid ownerId)
+        {
+            return _context.ViKhachSans
+                .Include(x => x.KhachSan)
+                .Where(x => x.KhachSan != null && x.KhachSan.NguoiTao == ownerId)
+                .OrderBy(x => x.MaKhachSan)
+                .ToListAsync();
+        }
+
+        public Task<ViKhachSan?> LayTheoKhachSanCuaOwner(Guid khachSanId, Guid ownerId)
+        {
+            return _context.ViKhachSans
+                .Include(x => x.KhachSan)
+                .FirstOrDefaultAsync(x => x.MaKhachSan == khachSanId &&
+                    x.KhachSan != null && x.KhachSan.NguoiTao == ownerId);
+        }
+
         public async Task Tao(ViKhachSan viKhachSan)
         {
             await _context.ViKhachSans.AddAsync(viKhachSan);

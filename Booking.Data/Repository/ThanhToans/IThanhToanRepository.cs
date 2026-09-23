@@ -11,5 +11,8 @@ namespace Booking.Data.Repository.ThanhToans
     {
         Task<ThanhToan> CreatePayment(ThanhToan t);
         Task<ThanhToan?> LayTheoDatPhong(Guid datPhongId);
+        Task<ThanhToan?> GetForCustomer(Guid paymentId, Guid customerId);
+        Task<List<ThanhToan>> GetAll();
+        Task<ThanhToan?> UpdateStatus(Guid paymentId, string status);
     }
 }

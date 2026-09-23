@@ -12,6 +12,8 @@ namespace Booking.Data.Repository.ViKhachSans
         Task<ViKhachSan?> LayTheoId(long id);
 
         Task<ViKhachSan?> LayTheoKhachSan(Guid khachSanId);
+        Task<List<ViKhachSan>> LayTheoOwner(Guid ownerId);
+        Task<ViKhachSan?> LayTheoKhachSanCuaOwner(Guid khachSanId, Guid ownerId);
 
         Task Tao(ViKhachSan viKhachSan);
 
