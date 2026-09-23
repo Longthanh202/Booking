@@ -261,14 +261,19 @@ namespace Booking.Service.Services.Users
             await _emailService.SendEmailAsync(mailRequest);
 
             await _redisService.SetObject(
-                username,
+                $"forgot-password:{username}",
                 code,
                 TimeSpan.FromMinutes(5)
             );
         }
 
-        public async Task ConfirmPasswordReset(string username, string code)
+        public async Task ConfirmPasswordReset(string username, string code, string newPassword)
         {
+            if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 8)
+            {
+                throw new ArgumentException("Mật khẩu mới phải có ít nhất 8 ký tự.");
+            }
+
             var redisCode = await _redisService.GetObject<string>(
                 $"forgot-password:{username}");
             if (redisCode == null)
@@ -280,8 +285,8 @@ namespace Booking.Service.Services.Users
             {
                 throw new Exception("Mã xác nhận không chính xác");
             }
-            
-            
+            await _userRepository.UpdatePassword(username, newPassword);
+            await _redisService.Delete($"forgot-password:{username}");
         }
     }
 }

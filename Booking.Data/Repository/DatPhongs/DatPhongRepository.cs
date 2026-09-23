@@ -20,6 +20,12 @@ namespace Booking.Data.Repository.DatPhongs
             return Task.CompletedTask;
         }
 
+        public Task<bool> IsBookingOwnedBy(Guid bookingId, Guid ownerId)
+        {
+            return _context.DatPhongs.AnyAsync(x => x.Id == bookingId &&
+                x.KhachSan != null && x.KhachSan.NguoiTao == ownerId);
+        }
+
         public async Task<(List<DatPhong> Items, int TotalCount)> GetOwnerBookings(
             Guid ownerId,
             Guid khachSanId,
@@ -152,6 +158,31 @@ namespace Booking.Data.Repository.DatPhongs
                 .FirstOrDefaultAsync(x => x.Id == id);
         }
 
+        public async Task<DatPhong?> GetCustomerBookingById(Guid id, Guid customerId)
+        {
+            return await _context.DatPhongs
+                .Include(x => x.KhachSan)
+                .Include(x => x.ThanhToans)
+                .Include(x => x.ChiTietDatPhongs)
+                    .ThenInclude(x => x.LoaiPhong)
+                .FirstOrDefaultAsync(x => x.Id == id && x.KhachHangId == customerId);
+        }
+
+        public async Task<bool> CancelBooking(Guid id, Guid customerId)
+        {
+            var booking = await _context.DatPhongs
+                .FirstOrDefaultAsync(x => x.Id == id && x.KhachHangId == customerId);
+            if (booking == null ||
+                (booking.TrangThai != TrangThaiDatPhong.CHO_XAC_NHAN.ToString() &&
+                 booking.TrangThai != TrangThaiDatPhong.DA_XAC_NHAN.ToString()))
+            {
+                return false;
+            }
+
+            booking.TrangThai = TrangThaiDatPhong.DA_HUY.ToString();
+            return await _context.SaveChangesAsync() > 0;
+        }
+
         public async Task<(int datPhong, double tongTien)> GetOwnerBookingStatistics(Guid hotelId, DateTime batDau, DateTime ketThuc, string trangThai)
         {
             var query = _context.DatPhongs
@@ -177,7 +208,14 @@ namespace Booking.Data.Repository.DatPhongs
             return (datPhong, tongTien);
         }
 
-        public async Task<(List<DatPhong> Items, int TotalCount)> GetBookingsByOwner(Guid ownerId, int pageIndex, int pageSize)
+        public async Task<(List<DatPhong> Items, int TotalCount)> GetBookingsByOwner(
+            Guid ownerId, 
+            Guid? hotelId, 
+            Guid? customerId,
+            string? trangThai, 
+            DateTime? ngayTao,
+            int pageIndex,
+            int pageSize)
         {
             var query = _context.DatPhongs
                 .AsNoTracking()
@@ -194,8 +232,32 @@ namespace Booking.Data.Repository.DatPhongs
                 .ThenInclude(x => x.Phong)
 
                 .Where(x => x.KhachSan != null &&
-                            x.KhachSan.NguoiTao == ownerId
-                );
+                    (ownerId == Guid.Empty || x.KhachSan.NguoiTao == ownerId));
+            // Lọc theo khách sạn (nếu có chọn)
+            if (hotelId.HasValue && hotelId.Value != Guid.Empty)
+            {
+                query = query.Where(x => x.KhachSanId == hotelId.Value);
+            }
+
+            // Lọc theo khách hàng (nếu có chọn)
+            if (customerId.HasValue && customerId.Value != Guid.Empty)
+            {
+                query = query.Where(x => x.KhachHangId == customerId.Value);
+            }
+
+            // Lọc theo trạng thái đặt phòng
+            if (!string.IsNullOrWhiteSpace(trangThai))
+            {
+                query = query.Where(x => x.TrangThai == trangThai);
+            }
+
+            // Lọc theo ngày tạo (so sánh theo ngày, bỏ qua giờ/phút/giây)
+            if (ngayTao.HasValue)
+            {
+                var tuNgay = ngayTao.Value.Date;
+                var denNgay = tuNgay.AddDays(1);
+                query = query.Where(x => x.NgayTao >= tuNgay && x.NgayTao < denNgay);
+            }
 
             var totalCount = await query.CountAsync();
 

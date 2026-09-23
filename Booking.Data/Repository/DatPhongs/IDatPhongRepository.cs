@@ -12,6 +12,9 @@ namespace Booking.Data.Repository.DatPhongs
     {
         Task<DatPhong> CreateBooking(DatPhong dp, List<ChiTietDatPhong> ctdp, List<PhongDat> phongDats);
         Task<DatPhong?> GetBookingById(Guid id);
+        Task<DatPhong?> GetCustomerBookingById(Guid id, Guid customerId);
+        Task<bool> CancelBooking(Guid id, Guid customerId);
+        Task<bool> IsBookingOwnedBy(Guid bookingId, Guid ownerId);
         Task UpdateBookingStatus(DatPhong d);
 
         Task<(List<DatPhong> Items, int TotalCount)> GetOwnerBookings(
@@ -19,7 +22,12 @@ namespace Booking.Data.Repository.DatPhongs
             Guid khachSanId,
             int pageIndex,
             int pageSize);
-        Task<(List<DatPhong> Items, int TotalCount)> GetBookingsByOwner(Guid ownerId,
+        Task<(List<DatPhong> Items, int TotalCount)> GetBookingsByOwner(
+            Guid ownerId, 
+            Guid? hotelId, 
+            Guid? customerId,
+            string? trangThai, 
+            DateTime? ngayTao,
             int pageIndex,
             int pageSize);
 

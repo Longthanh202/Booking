@@ -56,8 +56,11 @@ namespace Booking.Service.Services.DatPhongs
             _notificationService = notificationService;
         }
 
-        public async Task<DatPhong> UpdateBookingStatus(Guid id)
+        public async Task<DatPhong> UpdateBookingStatus(Guid id, Guid ownerId)
         {
+            if (!await _datPhongRepository.IsBookingOwnedBy(id, ownerId))
+                throw new UnauthorizedAccessException("Booking không thuộc property của owner.");
+
             var datPhong = await _datPhongRepository.GetBookingById(id);
 
             if (datPhong == null)
@@ -247,8 +250,17 @@ namespace Booking.Service.Services.DatPhongs
             };
         }
 
-        public async Task CheckIn(Guid id)
+        public Task<DatPhong?> GetCustomerBookingById(Guid id, Guid customerId) =>
+            _datPhongRepository.GetCustomerBookingById(id, customerId);
+
+        public Task<bool> CancelBooking(Guid id, Guid customerId) =>
+            _datPhongRepository.CancelBooking(id, customerId);
+
+        public async Task CheckIn(Guid id, Guid ownerId)
         {
+            if (!await _datPhongRepository.IsBookingOwnedBy(id, ownerId))
+                throw new UnauthorizedAccessException("Booking không thuộc property của owner.");
+
             var datPhong = await _datPhongRepository.GetBookingById(id);
 
             if (datPhong == null)
@@ -279,8 +291,11 @@ namespace Booking.Service.Services.DatPhongs
             await _datPhongRepository.CheckIn(id);
         }
 
-        public async Task ConfirmBooking(Guid id)
+        public async Task ConfirmBooking(Guid id, Guid ownerId)
         {
+            if (!await _datPhongRepository.IsBookingOwnedBy(id, ownerId))
+                throw new UnauthorizedAccessException("Booking không thuộc property của owner.");
+
             var datPhong = await _datPhongRepository.GetBookingById(id);
 
             if (datPhong == null)
@@ -487,6 +502,10 @@ namespace Booking.Service.Services.DatPhongs
 
             var result = await _datPhongRepository.GetBookingsByOwner(
                 ownerId,
+                dto.hotelId,
+                dto.customerId,
+                dto.trangThai,
+                dto.ngayTao,
                 page,
                 pageSize);
 
@@ -555,5 +574,8 @@ namespace Booking.Service.Services.DatPhongs
                 TotalPage = totalPage
             };
         }
+
+        public Task<OwnerBookingResponse> GetAdminBookings(OwnerBookingListRequest dto) =>
+            GetBookingsByOwner(dto, Guid.Empty);
     }
 }

@@ -1,4 +1,5 @@
 ﻿
+using Booking.Api.Middleware.RateLimit;
 using Booking.Core.Model.Email;
 using Booking.Core.Model.Permissions;
 using Booking.Core.Model.RefreshTokens;
@@ -34,13 +35,16 @@ namespace Booking.Api.Controllers
         private readonly IUserServices _userServices;
         private readonly IRolePermissionService _rolePermissionService;
         private readonly IRefreshTokenService _refreshTokenService;
+        private readonly IRateLimiter _rateLimiter;
         public UserController(IUserServices userServices,
             IRolePermissionService rolePermissionService,
-            IRefreshTokenService refreshTokenService)
+            IRefreshTokenService refreshTokenService,
+            IRateLimiter rateLimiter)
         {
             _userServices = userServices;                
             _rolePermissionService = rolePermissionService;
             _refreshTokenService = refreshTokenService;
+            _rateLimiter = rateLimiter;
            
         }
 
@@ -48,6 +52,16 @@ namespace Booking.Api.Controllers
         [Route("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest dto)
         {
+            var rate = _rateLimiter.CheckAsync(
+                    key: $"login:{dto.Username}",
+                    limit: 5,
+                    window: TimeSpan.FromMinutes(15),
+                    algorithm: RateLimitAlgorithm.FixedWindow
+                );
+            if (rate.IsCompleted)
+            {
+                return StatusCode(429, $"Thử lại sau vài giây.");
+            }
             var result = await _userServices.Login(dto);
 
             if (!result.Status)
@@ -108,8 +122,9 @@ namespace Booking.Api.Controllers
         }
         
         [HttpPost("forgot-password")]
-        public async Task<IActionResult> ForgotPassword(string username)
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
         {
+            var username = request?.Username;
             if (string.IsNullOrWhiteSpace(username))
             {
                 return BadRequest(new
@@ -124,6 +139,19 @@ namespace Booking.Api.Controllers
             {
                 message = "Nếu tài khoản tồn tại, mã xác nhận đã được gửi đến email."
             });
+        }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest request)
+        {
+            if (request == null || string.IsNullOrWhiteSpace(request.Username) ||
+                string.IsNullOrWhiteSpace(request.Code) || string.IsNullOrWhiteSpace(request.NewPassword))
+            {
+                return BadRequest(new { message = "Username, mã xác nhận và mật khẩu mới là bắt buộc." });
+            }
+
+            await _userServices.ConfirmPasswordReset(request.Username, request.Code, request.NewPassword);
+            return Ok(new { message = "Đặt lại mật khẩu thành công." });
         }
     }
 }

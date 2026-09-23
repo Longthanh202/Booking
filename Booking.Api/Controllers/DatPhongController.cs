@@ -48,7 +48,12 @@ namespace Booking.Api.Controllers
         [Route("{id}/check-out")]
         public async Task<IActionResult> CheckOut(Guid id)
         {
-            var datPhong = await _datPhongService.UpdateBookingStatus(id);
+            if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var ownerId))
+            {
+                return Unauthorized();
+            }
+
+            var datPhong = await _datPhongService.UpdateBookingStatus(id, ownerId);
             if (datPhong != null)
             {
                 return Ok();
@@ -85,11 +90,44 @@ namespace Booking.Api.Controllers
             return Ok(data);
         }
 
+        [Authorize(Roles = "Customer")]
+        [HttpGet("{id:guid}")]
+        public async Task<IActionResult> GetBookingDetail(Guid id)
+        {
+            if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var customerId))
+            {
+                return Unauthorized();
+            }
+
+            var booking = await _datPhongService.GetCustomerBookingById(id, customerId);
+            return booking == null ? NotFound() : Ok(booking);
+        }
+
+        [Authorize(Roles = "Customer")]
+        [HttpPut("{id:guid}/cancel")]
+        public async Task<IActionResult> CancelBooking(Guid id)
+        {
+            if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var customerId))
+            {
+                return Unauthorized();
+            }
+
+            var cancelled = await _datPhongService.CancelBooking(id, customerId);
+            return cancelled
+                ? Ok(new { message = "Hủy booking thành công." })
+                : BadRequest(new { message = "Booking không tồn tại hoặc không thể hủy ở trạng thái hiện tại." });
+        }
+
         [Authorize(Roles = "Owner")]
         [HttpPut("{id}/check-in")]
         public async Task<IActionResult> CheckIn(Guid id)
         {
-            await _datPhongService.CheckIn(id);
+            if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var ownerId))
+            {
+                return Unauthorized();
+            }
+
+            await _datPhongService.CheckIn(id, ownerId);
 
             return Ok(new
             {
@@ -101,7 +139,12 @@ namespace Booking.Api.Controllers
         [HttpPut("{id}/confirm")]
         public async Task<IActionResult> ConfirmBooking(Guid id)
         {
-            await _datPhongService.ConfirmBooking(id);
+            if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var ownerId))
+            {
+                return Unauthorized();
+            }
+
+            await _datPhongService.ConfirmBooking(id, ownerId);
 
             return Ok(new
             {
@@ -114,6 +157,10 @@ namespace Booking.Api.Controllers
         [HttpPost("owner/statistics")]
         public async Task<IActionResult> GetOwnerBookingStatistics([FromBody]OwnerBookingStatisticsRequest input)
         {
+            if (!_userServices.IsAuthenticated())
+            {
+                return Unauthorized(new { Message = "Vui lòng đăng nhập" });
+            }
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -148,6 +195,13 @@ namespace Booking.Api.Controllers
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var data = await _datPhongService.GetBookingsByOwner(dto, Guid.Parse(userId));
             return Ok(data);
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost("admin/search")]
+        public async Task<IActionResult> GetAdminBookings([FromBody] OwnerBookingListRequest dto)
+        {
+            return Ok(await _datPhongService.GetAdminBookings(dto));
         }
     }
 }

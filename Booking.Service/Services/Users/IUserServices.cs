@@ -16,6 +16,6 @@ namespace Booking.Data.Repository.Users
         bool IsAuthenticated();
         Task<UserProfile> Register(RegisterUserRequest user);
         Task RequestPasswordReset(string username);
-        Task ConfirmPasswordReset(string username, string code);
+        Task ConfirmPasswordReset(string username, string code, string newPassword);
     }
 }

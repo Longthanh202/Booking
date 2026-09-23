@@ -81,6 +81,7 @@ namespace Booking.Data.Repository.Users
                 throw new Exception("User không tồn tại");
             }
 
+            user.Password = Booking.Common.Shared.Hash.HashPassword(password);
             _context.UserLogins.Update(user);
 
             await _context.SaveChangesAsync();
@@ -90,7 +91,7 @@ namespace Booking.Data.Repository.Users
 
         public async Task<UserProfile?> Login(string userName, string passWord)
         {
-            return await (
+            var result =  await (
                  from ul in _context.UserLogins
                  join up in _context.UserProfiles on ul.Id equals up.UserLoginId
                  join ur in _context.UserRoles on ul.Id equals ur.UserId
@@ -108,6 +109,7 @@ namespace Booking.Data.Repository.Users
                  RoleName = r.RoleName
 
              }).FirstOrDefaultAsync();
+            return result;
         }
     }
 }

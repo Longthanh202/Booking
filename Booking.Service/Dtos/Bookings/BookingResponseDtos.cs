@@ -61,6 +61,10 @@ namespace Booking.Service.Dtos.Bookings
 
     public class OwnerBookingListRequest
     {
+        public Guid hotelId { get; set; }
+        public Guid customerId { get; set; }
+        public string trangThai { get; set; }
+        public DateTime ngayTao { get; set; }
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 10;
     }
