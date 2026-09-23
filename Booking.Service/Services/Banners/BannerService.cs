@@ -38,5 +38,24 @@ namespace Booking.Service.Services.Banners
             };
             return await _bannerRepository.CreateBanner(input);
         }
+
+        public Task<Banner?> UpdateBanner(long id, UpdateBannerRequest request)
+        {
+            if (request.IsActive is not (0 or 1))
+            {
+                return Task.FromResult<Banner?>(null);
+            }
+
+            return _bannerRepository.UpdateBanner(new Banner
+            {
+                Id = id,
+                Title = request.Title,
+                Subtitle = request.Subtitle,
+                Url = request.Url,
+                IsActive = request.IsActive
+            });
+        }
+
+        public Task<bool> DeleteBanner(long id) => _bannerRepository.DeleteBanner(id);
     }
 }

@@ -9,5 +9,7 @@ namespace Booking.Data.Repository.Banners
         Task<List<Banner>> GetBanners(string keyword, int isActive, int startRow, int endRow);
 
         Task<List<Banner>> GetActiveBanners();
+        Task<Banner?> UpdateBanner(long id, UpdateBannerRequest request);
+        Task<bool> DeleteBanner(long id);
     }
 }

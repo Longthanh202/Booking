@@ -48,5 +48,33 @@ namespace Booking.Data.Repository.Banners
 
             return banner;
         }
+
+        public async Task<Banner?> UpdateBanner(Banner banner)
+        {
+            var current = await _context.Banners.FirstOrDefaultAsync(x => x.Id == banner.Id);
+            if (current == null)
+            {
+                return null;
+            }
+
+            current.Title = banner.Title;
+            current.Subtitle = banner.Subtitle;
+            current.Url = banner.Url ?? current.Url;
+            current.IsActive = banner.IsActive;
+            await _context.SaveChangesAsync();
+            return current;
+        }
+
+        public async Task<bool> DeleteBanner(long id)
+        {
+            var banner = await _context.Banners.FirstOrDefaultAsync(x => x.Id == id);
+            if (banner == null)
+            {
+                return false;
+            }
+
+            _context.Banners.Remove(banner);
+            return await _context.SaveChangesAsync() > 0;
+        }
     }
 }

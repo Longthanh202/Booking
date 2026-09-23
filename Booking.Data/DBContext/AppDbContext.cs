@@ -2,6 +2,7 @@
 using Booking.Core.Model.ChiTietChiTraKhachSans;
 using Booking.Core.Model.ChiTietHoaDonHoaHongs;
 using Booking.Core.Model.ChiTraKhachSans;
+using Booking.Core.Model.DanhGias;
 using Booking.Core.Model.DatPhongs;
 using Booking.Core.Model.GiaPhongs;
 using Booking.Core.Model.HoaDonHoaHongs;
@@ -41,6 +42,7 @@ namespace Booking.Data.DBContext
             // --- 1. ÁNH XẠ TÊN BẢNG (Đã lọc bỏ trùng lặp) ---
             modelBuilder.Entity<Banner>().ToTable("Banner");
             modelBuilder.Entity<DatPhong>().ToTable("DatPhong");
+            modelBuilder.Entity<DanhGia>().ToTable("DanhGia");
             modelBuilder.Entity<KhachSan>().ToTable("KhachSan");
             modelBuilder.Entity<LoaiPhong>().ToTable("LoaiPhong");
             modelBuilder.Entity<Phong>().ToTable("Phong");
@@ -71,7 +73,7 @@ namespace Booking.Data.DBContext
             modelBuilder.Entity<GoiQuangCao>().ToTable("GoiQuangCao");
             modelBuilder.Entity<KhachSanQuangCao>().ToTable("KhachSanQuangCao");
 
-            modelBuilder.Entity<Province>().ToTable("provinces");
+            modelBuilder.Entity<Province>().ToTable("provinces");          
 
 
             // --- 2. CẤU HÌNH KHÓA CHÍNH RIÊNG BIỆT TRƯỚC ---
@@ -112,6 +114,23 @@ namespace Booking.Data.DBContext
                     .WithMany(x => x.KhachSanImages)
                     .HasForeignKey(x => x.KhachSanId);
             });
+
+                    // Quan hệ 1 - Nhiều: KhachSan -> DanhGia
+                    modelBuilder.Entity<DanhGia>(entity =>
+                    {
+                    entity.HasKey(x => x.Id);
+                    entity.Property(x => x.Id).HasColumnName("Id");
+                    entity.Property(x => x.KhachSanId).HasColumnName("KhachSanId");
+                    entity.Property(x => x.KhachHangId).HasColumnName("KhachHangId");
+                    entity.Property(x => x.SoSao).HasColumnName("SoSao");
+                    entity.Property(x => x.NoiDung).HasColumnName("NoiDung").HasColumnType("nvarchar(max)");
+                    entity.Property(x => x.NgayTao).HasColumnName("NgayTao");
+
+                    entity.HasOne(x => x.KhachSan)
+                        .WithMany(x => x.DanhGias)
+                        .HasForeignKey(x => x.KhachSanId)
+                        .OnDelete(DeleteBehavior.Restrict);
+                    });
 
             modelBuilder.Entity<UserRole>()
                 .HasOne(ur => ur.UserLogin)
@@ -241,6 +260,7 @@ namespace Booking.Data.DBContext
         public DbSet<UserLogin> UserLogins { get; set; } = null!;
         public DbSet<Banner> Banners { get; set; } = null!;
         public DbSet<DatPhong> DatPhongs { get; set; } = null!;
+        public DbSet<DanhGia> DanhGias { get; set; } = null!;
         public DbSet<KhachSan> KhachSans { get; set; } = null!;
         public DbSet<LoaiPhong> LoaiPhongs { get; set; } = null!;
         public DbSet<Phong> Phongs { get; set; } = null!;
