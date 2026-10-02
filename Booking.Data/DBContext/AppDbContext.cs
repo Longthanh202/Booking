@@ -25,6 +25,7 @@ using Booking.Core.Model.TienIchs;
 using Booking.Core.Model.UserRoles;
 using Booking.Core.Model.Users;
 using Booking.Core.Model.ViKhachSans;
+using Booking.Core.Model.Tags;
 using Microsoft.EntityFrameworkCore;
 
 namespace Booking.Data.DBContext
@@ -72,6 +73,10 @@ namespace Booking.Data.DBContext
             modelBuilder.Entity<ChiTietHoaDonHoaHong>().ToTable("ChiTietHoaDonHoaHong");
             modelBuilder.Entity<GoiQuangCao>().ToTable("GoiQuangCao");
             modelBuilder.Entity<KhachSanQuangCao>().ToTable("KhachSanQuangCao");
+            modelBuilder.Entity<Tag>().ToTable("Tags");
+            modelBuilder.Entity<HotelTag>().ToTable("HotelTags");
+            modelBuilder.Entity<RoomAvailabilityBlock>().ToTable("RoomAvailabilityBlocks");
+            modelBuilder.Entity<HotelPromotion>().ToTable("HotelPromotions");
 
             modelBuilder.Entity<Province>().ToTable("provinces");          
 
@@ -97,6 +102,50 @@ namespace Booking.Data.DBContext
                 entity.HasOne(x => x.TienIch)
                     .WithMany(x => x.KhachSan_TienIches)
                     .HasForeignKey(x => x.TienIchId);
+            });
+
+            modelBuilder.Entity<Tag>(entity =>
+            {
+                entity.HasKey(x => x.Id);
+                entity.HasIndex(x => x.Slug).IsUnique();
+            });
+
+            modelBuilder.Entity<HotelTag>(entity =>
+            {
+                entity.HasKey(x => new { x.HotelId, x.TagId });
+
+                entity.HasOne(x => x.Hotel)
+                    .WithMany(x => x.HotelTags)
+                    .HasForeignKey(x => x.HotelId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(x => x.Tag)
+                    .WithMany(x => x.HotelTags)
+                    .HasForeignKey(x => x.TagId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<RoomAvailabilityBlock>(entity =>
+            {
+                entity.HasKey(x => x.Id);
+                entity.HasIndex(x => new { x.RoomId, x.StartAt, x.EndAt });
+                entity.HasOne(x => x.Room)
+                    .WithMany()
+                    .HasForeignKey(x => x.RoomId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<HotelPromotion>(entity =>
+            {
+                entity.HasKey(x => x.Id);
+                entity.HasIndex(x => new { x.HotelId, x.Code }).IsUnique();
+                entity.Property(x => x.DiscountValue).HasColumnType("decimal(18,2)");
+                entity.Property(x => x.MinBookingAmount).HasColumnType("decimal(18,2)");
+                entity.Property(x => x.MaxDiscountAmount).HasColumnType("decimal(18,2)");
+                entity.HasOne(x => x.Hotel)
+                    .WithMany()
+                    .HasForeignKey(x => x.HotelId)
+                    .OnDelete(DeleteBehavior.Cascade);
             });
 
             // Quan hệ 1 - Nhiều: KhachSan -> LoaiPhong
@@ -262,6 +311,10 @@ namespace Booking.Data.DBContext
         public DbSet<DatPhong> DatPhongs { get; set; } = null!;
         public DbSet<DanhGia> DanhGias { get; set; } = null!;
         public DbSet<KhachSan> KhachSans { get; set; } = null!;
+        public DbSet<Tag> Tags { get; set; } = null!;
+        public DbSet<HotelTag> HotelTags { get; set; } = null!;
+        public DbSet<RoomAvailabilityBlock> RoomAvailabilityBlocks { get; set; } = null!;
+        public DbSet<HotelPromotion> HotelPromotions { get; set; } = null!;
         public DbSet<LoaiPhong> LoaiPhongs { get; set; } = null!;
         public DbSet<Phong> Phongs { get; set; } = null!;
         public DbSet<ChiTietDatPhong> ChiTietDatPhongs { get; set; } = null!;

@@ -16,5 +16,7 @@ namespace Booking.Data.Repository.Users
         bool IsAuthenticated();
         Task<UserProfile?> FindUserByUsernameForPasswordReset(string username);
         Task<UserLogin> UpdatePassword(string username, string passage);
+        Task<(List<UserProfile> Users, int TotalCount)> GetAdminUsers(string? keyword, int? status, int page, int pageSize);
+        Task<bool> SetAccountStatus(Guid userId, int status);
     }
 }

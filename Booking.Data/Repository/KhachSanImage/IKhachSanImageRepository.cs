@@ -12,5 +12,7 @@ namespace Booking.Data.Repository.KhachSanImage
         Task<List<KhachSanImages>> GetHotelImages(List<Guid> ids);
         Task<List<KhachSanImages>> GetListImageByKhachSanId(Guid khachSanId);
         Task InsertKhachSanImage(Guid khachSanId, List<string> Url);
+        Task<KhachSanImages?> GetImageForOwner(long imageId, Guid hotelId, Guid ownerId);
+        Task<bool> DeleteImageForOwner(long imageId, Guid hotelId, Guid ownerId);
     }
 }

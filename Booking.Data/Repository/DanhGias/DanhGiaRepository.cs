@@ -52,6 +52,36 @@ namespace Booking.Data.Repository.DanhGias
             return _context.KhachSans.AnyAsync(x => x.Id == hotelId && x.NguoiTao == ownerId);
         }
 
+        public async Task<bool> RespondByOwner(Guid reviewId, Guid ownerId, string response)
+        {
+            var review = await _context.DanhGias.FirstOrDefaultAsync(item =>
+                item.Id == reviewId && item.KhachSan != null && item.KhachSan.NguoiTao == ownerId);
+            if (review == null)
+            {
+                return false;
+            }
+
+            review.OwnerResponse = response;
+            review.OwnerResponseAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<bool> ReportByOwner(Guid reviewId, Guid ownerId, string reason)
+        {
+            var review = await _context.DanhGias.FirstOrDefaultAsync(item =>
+                item.Id == reviewId && item.KhachSan != null && item.KhachSan.NguoiTao == ownerId);
+            if (review == null)
+            {
+                return false;
+            }
+
+            review.OwnerReportReason = reason;
+            review.OwnerReportedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<bool> Delete(Guid reviewId)
         {
             var review = await _context.DanhGias.FirstOrDefaultAsync(x => x.Id == reviewId);

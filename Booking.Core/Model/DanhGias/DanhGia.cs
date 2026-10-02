@@ -15,6 +15,10 @@ namespace Booking.Core.Model.DanhGias
         public int? SoSao { get; set; }
         public string? NoiDung { get; set; }
         public DateTime? NgayTao { get; set; }
+        public string? OwnerResponse { get; set; }
+        public DateTime? OwnerResponseAt { get; set; }
+        public string? OwnerReportReason { get; set; }
+        public DateTime? OwnerReportedAt { get; set; }
 
         // Navigation
         public virtual KhachSan? KhachSan { get; set; }

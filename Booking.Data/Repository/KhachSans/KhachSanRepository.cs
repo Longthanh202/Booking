@@ -27,6 +27,18 @@ namespace Booking.Data.Repository.KhachSans
                 .FirstOrDefaultAsync(ks => ks.Id == id) ?? null;
         }
 
+        public Task<KhachSan?> GetHotelForOwner(Guid hotelId, Guid ownerId)
+        {
+            return _context.KhachSans.FirstOrDefaultAsync(hotel =>
+                hotel.Id == hotelId && hotel.NguoiTao == ownerId);
+        }
+
+        public async Task<bool> SaveHotelChanges(KhachSan hotel)
+        {
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<(List<KhachSan> Items, int TotalCount)> FilterHotels(
             string? keyword,
             int? soKhach,
@@ -70,12 +82,14 @@ namespace Booking.Data.Repository.KhachSans
             if (ngayNhanPhong.HasValue && ngayTraPhong.HasValue)
             {
                 string trangThaiDaHuy = TrangThaiDatPhong.DA_HUY.ToString();
+                string trangThaiTuChoi = TrangThaiDatPhong.TU_CHOI.ToString();
                 query = query.Where(x => x.LoaiPhongs.Any(lp =>
                     !lp.ChiTietDatPhongs.Any(ct =>
                         ct.DatPhong != null &&
                         ct.DatPhong.NgayNhanPhong < ngayTraPhong.Value &&
                         ct.DatPhong.NgayTraPhong > ngayNhanPhong.Value &&
-                        ct.DatPhong.TrangThai != trangThaiDaHuy)));
+                        ct.DatPhong.TrangThai != trangThaiDaHuy &&
+                        ct.DatPhong.TrangThai != trangThaiTuChoi)));
             }
 
             var advertisingScores =
@@ -188,6 +202,20 @@ namespace Booking.Data.Repository.KhachSans
                 .ToListAsync();
 
             return (items, totalCount);
+        }
+
+        public Task<List<KhachSan>> GetHotelOptionsByOwnerId(Guid ownerId)
+        {
+            if (ownerId == Guid.Empty)
+            {
+                throw new ArgumentException("OwnerId không hợp lệ", nameof(ownerId));
+            }
+
+            return _context.KhachSans
+                .AsNoTracking()
+                .Where(x => x.NguoiTao == ownerId)
+                .OrderBy(x => x.TenKhachSan)
+                .ToListAsync();
         }
 
         // Private helper dùng chung cho cả Admin và Owner

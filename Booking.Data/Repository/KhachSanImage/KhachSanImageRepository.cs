@@ -48,5 +48,21 @@ namespace Booking.Data.Repository.KhachSanImage
 
             await _context.KhachSanImages.AddRangeAsync(images);
         }
+
+        public Task<KhachSanImages?> GetImageForOwner(long imageId, Guid hotelId, Guid ownerId)
+        {
+            return _context.KhachSanImages.FirstOrDefaultAsync(image =>
+                image.Id == imageId && image.KhachSanId == hotelId &&
+                image.KhachSan != null && image.KhachSan.NguoiTao == ownerId);
+        }
+
+        public async Task<bool> DeleteImageForOwner(long imageId, Guid hotelId, Guid ownerId)
+        {
+            var image = await GetImageForOwner(imageId, hotelId, ownerId);
+            if (image == null) return false;
+            _context.KhachSanImages.Remove(image);
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

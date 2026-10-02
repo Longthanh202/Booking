@@ -27,15 +27,20 @@ namespace Booking.Data.Repository.Phongs
             }
 
             return await _context.Phongs
-                .Where(p => p.LoaiPhongId == loaiPhongId && p.TrangThai == TrangThaiPhong.DANG_SU_DUNG.ToString())
+                .Where(p => p.LoaiPhongId == loaiPhongId &&
+                    (p.TrangThai == TrangThaiPhong.DANG_SU_DUNG.ToString() ||
+                     p.TrangThai == TrangThaiPhong.SAN_SANG.ToString()))
                 .Where(p => !_context.phongDats.Any(pd =>
                     pd.PhongId == p.Id &&
                     pd.ChiTietDatPhong != null &&
                     pd.ChiTietDatPhong.DatPhong != null &&
                     pd.ChiTietDatPhong.DatPhong.TrangThai != TrangThaiDatPhong.DA_HUY.ToString() &&
+                    pd.ChiTietDatPhong.DatPhong.TrangThai != TrangThaiDatPhong.TU_CHOI.ToString() &&
                     pd.ChiTietDatPhong.DatPhong.NgayNhanPhong < ngayTra.Value &&
                     pd.ChiTietDatPhong.DatPhong.NgayTraPhong > ngayNhan.Value
                 ))
+                .Where(p => !_context.RoomAvailabilityBlocks.Any(block =>
+                    block.RoomId == p.Id && block.StartAt < ngayTra.Value && block.EndAt > ngayNhan.Value))
                 .ToListAsync();
         }
 

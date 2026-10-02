@@ -27,6 +27,7 @@ using Booking.Data.Repository.TienIchs;
 using Booking.Data.Repository.TaiKhoanNganHangs;
 using Booking.Data.Repository.QuangCaos;
 using Booking.Data.Repository.Users;
+using Booking.Data.Repository.Tags;
 using Booking.Data.Repository.ViKhachSans;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -75,6 +76,7 @@ namespace Booking.Data
             services.AddScoped<IChiTietHoaDonHoaHongRepository, ChiTietHoaDonHoaHongRepository>();
             services.AddScoped<ITaiKhoanNganHangRepository, TaiKhoanNganHangRepository>();
             services.AddScoped<IQuangCaoRepository, QuangCaoRepository>();
+                        services.AddScoped<ITagRepository, TagRepository>();
             return services;
         }
     }

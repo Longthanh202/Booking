@@ -36,6 +36,15 @@ namespace Booking.Data.Repository.ThanhToans
                     x.DatPhong != null && x.DatPhong.KhachHangId == customerId);
         }
 
+        public Task<ThanhToan?> GetForCustomerBooking(Guid bookingId, Guid customerId)
+        {
+            return _context.ThanhToans
+                .Include(x => x.DatPhong)
+                .ThenInclude(x => x!.KhachSan)
+                .FirstOrDefaultAsync(x => x.DatPhongId == bookingId &&
+                    x.DatPhong != null && x.DatPhong.KhachHangId == customerId);
+        }
+
         public Task<List<ThanhToan>> GetAll()
         {
             return _context.ThanhToans

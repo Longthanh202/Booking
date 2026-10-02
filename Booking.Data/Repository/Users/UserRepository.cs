@@ -111,5 +111,71 @@ namespace Booking.Data.Repository.Users
              }).FirstOrDefaultAsync();
             return result;
         }
+
+        public async Task<(List<UserProfile> Users, int TotalCount)> GetAdminUsers(
+            string? keyword,
+            int? status,
+            int page,
+            int pageSize)
+        {
+            var query =
+                from profile in _context.UserProfiles.AsNoTracking()
+                join login in _context.UserLogins on profile.UserLoginId equals login.Id
+                join userRole in _context.UserRoles on login.Id equals userRole.UserId into userRoleGroup
+                from userRole in userRoleGroup.DefaultIfEmpty()
+                join role in _context.Roles on userRole.RoleId equals role.Id into roleGroup
+                from role in roleGroup.DefaultIfEmpty()
+                select new UserProfile
+                {
+                    Id = profile.Id,
+                    UserLoginId = login.Id,
+                    Username = login.Username,
+                    FullName = profile.FullName,
+                    Phone = profile.Phone,
+                    Email = profile.Email,
+                    Address = profile.Address,
+                    IsDel = profile.IsDel,
+                    CreateAt = profile.CreateAt,
+                    RoleId = userRole == null ? Guid.Empty : userRole.RoleId,
+                    RoleName = role == null ? null : role.RoleName
+                };
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                var search = keyword.Trim();
+                query = query.Where(user =>
+                    (user.Username != null && user.Username.Contains(search)) ||
+                    (user.FullName != null && user.FullName.Contains(search)) ||
+                    (user.Email != null && user.Email.Contains(search)));
+            }
+
+            if (status.HasValue)
+            {
+                query = query.Where(user => user.IsDel == status.Value);
+            }
+
+            var totalCount = await query.CountAsync();
+            var users = await query
+                .OrderByDescending(user => user.CreateAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (users, totalCount);
+        }
+
+        public async Task<bool> SetAccountStatus(Guid userId, int status)
+        {
+            var profile = await _context.UserProfiles
+                .FirstOrDefaultAsync(user => user.UserLoginId == userId);
+            if (profile == null)
+            {
+                return false;
+            }
+
+            profile.IsDel = status;
+            await _context.SaveChangesAsync();
+            return true;
+        }
     }
 }

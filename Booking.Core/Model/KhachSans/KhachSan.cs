@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 
 namespace Booking.Core.Model.KhachSans
 {
+    using Booking.Core.Model.Tags;
     public class KhachSan
     {
         [Key]
@@ -27,6 +28,7 @@ namespace Booking.Core.Model.KhachSans
         public string? TenKhachSan { get; set; }
         public string? MoTa { get; set; }
         public string? DiaChi { get; set; }
+        public string? ChinhSachHuy { get; set; }
         public string? ThanhPho { get; set; }
         public double? ViDo { get; set; }
         public double? KinhDo { get; set; }
@@ -41,6 +43,7 @@ namespace Booking.Core.Model.KhachSans
         public virtual ICollection<DatPhong> DatPhongs { get; set; } = new List<DatPhong>();
         public virtual ICollection<DanhGia> DanhGias { get; set; } = new List<DanhGia>();
         public virtual ICollection<KhachSanQuangCao> KhachSanQuangCaos { get; set; } = new List<KhachSanQuangCao>();
+        public virtual ICollection<HotelTag> HotelTags { get; set; } = new List<HotelTag>();
 
         // Mối quan hệ Nhiều - Nhiều qua bảng trung gian
         public virtual ICollection<KhachSan_TienIch> KhachSan_TienIches { get; set; } = new List<KhachSan_TienIch>();

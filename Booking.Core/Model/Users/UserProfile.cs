@@ -27,6 +27,8 @@ namespace Booking.Core.Model.Users
         public Guid RoleId { get; set; }
         [NotMapped]
         public string? RoleName { get; set; }
+        [NotMapped]
+        public string? Username { get; set; }
 
         public virtual UserLogin? UserLogin { get; set; }
         public virtual UserRole? UserRole { get; set; }
