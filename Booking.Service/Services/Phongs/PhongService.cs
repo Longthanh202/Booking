@@ -54,9 +54,18 @@ namespace Booking.Service.Services.Phongs
                 return null;
             }
 
+            if (!string.IsNullOrWhiteSpace(request.TrangThai) &&
+                !Enum.TryParse<TrangThaiPhong>(request.TrangThai, true, out _))
+            {
+                return null;
+            }
+
             room.SoPhong = request.SoPhong.Trim();
             room.Tang = request.Tang;
-            room.TrangThai = request.TrangThai;
+            if (!string.IsNullOrWhiteSpace(request.TrangThai))
+            {
+                room.TrangThai = request.TrangThai.Trim().ToUpperInvariant();
+            }
             return await _phongRepository.UpdateRoom(room);
         }
 

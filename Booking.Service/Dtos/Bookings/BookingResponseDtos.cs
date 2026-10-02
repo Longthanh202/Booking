@@ -22,6 +22,9 @@ namespace Booking.Service.Dtos.Bookings
         public Guid? KhachSanId { get; set; }
 
         public string? TenKhachSan { get; set; }
+        public decimal? TongTien { get; set; }
+        public decimal SoTienGiam { get; set; }
+        public string? MaKhuyenMai { get; set; }
 
         public DateTime? NgayTao { get; set; }
         public DateTime? NgayNhan { get; set; }
@@ -61,9 +64,9 @@ namespace Booking.Service.Dtos.Bookings
 
     public class OwnerBookingListRequest
     {
-        public Guid hotelId { get; set; }
-        public Guid customerId { get; set; }
-        public string trangThai { get; set; }
+        public Guid? hotelId { get; set; }
+        public Guid? customerId { get; set; }
+        public string? trangThai { get; set; }
         public DateTime ngayTao { get; set; }
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 10;

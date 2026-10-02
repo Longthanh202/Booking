@@ -13,6 +13,7 @@ namespace Booking.Service.Dtos.Hotels
         public string TenKhachSan { get; set; }
         public string MoTa { get; set; }
         public string DiaChi { get; set; }
+        public string? ChinhSachHuy { get; set; }
         public string ThanhPho { get; set; }
         public double? ViDo { get; set; }
         public double? KinhDo { get; set; }

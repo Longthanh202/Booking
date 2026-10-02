@@ -17,5 +17,7 @@ namespace Booking.Data.Repository.Users
         Task<UserProfile> Register(RegisterUserRequest user);
         Task RequestPasswordReset(string username);
         Task ConfirmPasswordReset(string username, string code, string newPassword);
+        Task<AdminUserPageResponse> GetAdminUsers(string? keyword, int? status, int page, int pageSize);
+        Task<bool> SetAccountStatus(Guid userId, int status);
     }
 }

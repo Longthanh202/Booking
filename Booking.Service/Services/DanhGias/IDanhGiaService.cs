@@ -9,6 +9,8 @@ namespace Booking.Service.Services.DanhGias
         Task<List<DanhGia>> GetByHotel(Guid hotelId);
         Task<List<DanhGia>> GetByCustomer(Guid customerId);
         Task<List<DanhGia>?> GetByHotelForOwner(Guid hotelId, Guid ownerId);
+        Task<bool> RespondByOwner(Guid reviewId, Guid ownerId, string response);
+        Task<bool> ReportByOwner(Guid reviewId, Guid ownerId, string reason);
         Task<bool> Delete(Guid reviewId);
     }
 }

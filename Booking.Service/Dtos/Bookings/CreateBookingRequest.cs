@@ -12,6 +12,7 @@ namespace Booking.Service.Dtos.Bookings
         public DateTime? NgayNhanPhong { get; set; }
         public DateTime? NgayTraPhong { get; set; }
         public string? PhuongThucThanhToan { get; set; }
+        public string? MaKhuyenMai { get; set; }
         public List<RoomQuantityRequest>? DanhSachPhong { get; set; }
     }
 

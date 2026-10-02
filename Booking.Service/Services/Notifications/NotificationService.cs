@@ -29,5 +29,30 @@ namespace Booking.Service.Services.Notifications
                     Message = "Đặt phòng thành công"
                 });
         }
+
+        public Task BookingCreatedForOwner(Guid ownerId, DatPhong booking)
+        {
+            return _hubContext.Clients.User(ownerId.ToString()).SendAsync("OwnerBookingCreated", new
+            {
+                booking.Id,
+                booking.KhachSanId,
+                booking.NgayNhanPhong,
+                booking.NgayTraPhong,
+                booking.TongTien,
+                booking.TrangThai,
+                Message = "Có booking mới cần xử lý"
+            });
+        }
+
+        public Task BookingStatusChanged(Guid recipientId, DatPhong booking, string message)
+        {
+            return _hubContext.Clients.User(recipientId.ToString()).SendAsync("BookingStatusChanged", new
+            {
+                booking.Id,
+                booking.KhachSanId,
+                booking.TrangThai,
+                Message = message
+            });
+        }
     }
 }

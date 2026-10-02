@@ -44,6 +44,16 @@ namespace Booking.Service.Services.DanhGias
                 : null;
         }
 
+        public Task<bool> RespondByOwner(Guid reviewId, Guid ownerId, string response) =>
+            string.IsNullOrWhiteSpace(response)
+                ? Task.FromResult(false)
+                : _repository.RespondByOwner(reviewId, ownerId, response.Trim());
+
+        public Task<bool> ReportByOwner(Guid reviewId, Guid ownerId, string reason) =>
+            string.IsNullOrWhiteSpace(reason)
+                ? Task.FromResult(false)
+                : _repository.ReportByOwner(reviewId, ownerId, reason.Trim());
+
         public Task<bool> Delete(Guid reviewId) => _repository.Delete(reviewId);
     }
 }

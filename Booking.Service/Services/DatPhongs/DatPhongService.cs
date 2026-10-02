@@ -14,6 +14,7 @@ using Booking.Data.Repository.RabbitMQ;
 using Booking.Data.Repository.ThanhToans;
 using Booking.Data.Repository.Users;
 using Booking.Service.Dtos.Bookings;
+using Booking.Service.Dtos.Common;
 using Booking.Service.Dtos.Email;
 using System;
 using System.Collections.Generic;
@@ -23,6 +24,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Booking.Service.Services.Notifications;
+using Booking.Service.Services.Promotions;
 
 namespace Booking.Service.Services.DatPhongs
 {
@@ -36,6 +38,7 @@ namespace Booking.Service.Services.DatPhongs
         private readonly IRabbitMQPublisher _rabbitMQPublisher;
         private readonly IUserRepository _userRepository;
         private readonly INotificationService _notificationService;
+        private readonly IHotelPromotionService _hotelPromotionService;
 
         public DatPhongService(IDatPhongRepository datPhongRepository,
             IThanhToanRepository thanhToanRepository,
@@ -44,7 +47,8 @@ namespace Booking.Service.Services.DatPhongs
             IPhongRepository phongRepository, 
             IRabbitMQPublisher rabbitMQPublisher,
             IUserRepository userRepository,
-            INotificationService notificationService)
+            INotificationService notificationService,
+            IHotelPromotionService hotelPromotionService)
         {
             _datPhongRepository = datPhongRepository;
             _thanhToanRepository = thanhToanRepository;
@@ -54,6 +58,7 @@ namespace Booking.Service.Services.DatPhongs
             _rabbitMQPublisher = rabbitMQPublisher;
             _userRepository = userRepository;
             _notificationService = notificationService;
+            _hotelPromotionService = hotelPromotionService;
         }
 
         public async Task<DatPhong> UpdateBookingStatus(Guid id, Guid ownerId)
@@ -78,6 +83,12 @@ namespace Booking.Service.Services.DatPhongs
                 await _datPhongRepository.UpdateBookingStatus(datPhong);
 
                 await _unitOfWork.CommitAsync();
+
+                if (datPhong.KhachHangId.HasValue)
+                {
+                    await _notificationService.BookingStatusChanged(
+                        datPhong.KhachHangId.Value, datPhong, "Booking đã check-out.");
+                }
 
                 var check = await _datPhongRepository.GetBookingById(id);
                         
@@ -161,7 +172,10 @@ namespace Booking.Service.Services.DatPhongs
                             })
                             .ToList()
                     })
-                    .ToList()
+                    .ToList(),
+                TongTien = x.TongTien,
+                SoTienGiam = x.SoTienGiam,
+                MaKhuyenMai = x.MaKhuyenMai
 
             }).ToList();
 
@@ -235,7 +249,10 @@ namespace Booking.Service.Services.DatPhongs
                             })
                             .ToList()
                     })
-                    .ToList()
+                    .ToList(),
+                TongTien = x.TongTien,
+                SoTienGiam = x.SoTienGiam,
+                MaKhuyenMai = x.MaKhuyenMai
 
             }).ToList();
 
@@ -250,11 +267,57 @@ namespace Booking.Service.Services.DatPhongs
             };
         }
 
+        public async Task<List<OptionDto>> GetCustomerOptionsByHotelId(Guid hotelId, Guid ownerId)
+        {
+            var customers = await _datPhongRepository.GetCustomerOptionsByHotelId(hotelId, ownerId);
+
+            return customers.Select(customer => new OptionDto
+            {
+                Id = customer.Id,
+                Name = customer.FullName ?? string.Empty
+            }).ToList();
+        }
+
         public Task<DatPhong?> GetCustomerBookingById(Guid id, Guid customerId) =>
             _datPhongRepository.GetCustomerBookingById(id, customerId);
 
-        public Task<bool> CancelBooking(Guid id, Guid customerId) =>
-            _datPhongRepository.CancelBooking(id, customerId);
+        public async Task<bool> CancelBooking(Guid id, Guid customerId)
+        {
+            var changed = await _datPhongRepository.CancelBooking(id, customerId);
+            var booking = changed ? await _datPhongRepository.GetBookingById(id) : null;
+            if (booking?.KhachSan != null)
+            {
+                await _notificationService.BookingStatusChanged(
+                    booking.KhachSan.NguoiTao, booking, "Khách đã hủy booking.");
+            }
+            return changed;
+        }
+
+        public async Task<bool> RejectBooking(Guid id, Guid ownerId)
+        {
+            var changed = await _datPhongRepository.ChangeOwnerBookingStatus(
+                id, ownerId, TrangThaiDatPhong.TU_CHOI.ToString());
+            var booking = changed ? await _datPhongRepository.GetBookingById(id) : null;
+            if (booking?.KhachHangId.HasValue == true)
+            {
+                await _notificationService.BookingStatusChanged(
+                    booking.KhachHangId.Value, booking, "Booking đã bị từ chối.");
+            }
+            return changed;
+        }
+
+        public async Task<bool> CancelBookingByOwner(Guid id, Guid ownerId)
+        {
+            var changed = await _datPhongRepository.ChangeOwnerBookingStatus(
+                id, ownerId, TrangThaiDatPhong.DA_HUY.ToString());
+            var booking = changed ? await _datPhongRepository.GetBookingById(id) : null;
+            if (booking?.KhachHangId.HasValue == true)
+            {
+                await _notificationService.BookingStatusChanged(
+                    booking.KhachHangId.Value, booking, "Booking đã bị hủy bởi khách sạn.");
+            }
+            return changed;
+        }
 
         public async Task CheckIn(Guid id, Guid ownerId)
         {
@@ -278,17 +341,17 @@ namespace Booking.Service.Services.DatPhongs
                 throw new Exception("Chưa đến ngày check-in");
             }
 
-            if (datPhong.TrangThai == TrangThaiDatPhong.DA_CHECK_IN.ToString())
+            if (datPhong.TrangThai != TrangThaiDatPhong.DA_XAC_NHAN.ToString())
             {
-                throw new Exception("Booking đã check-in");
+                throw new Exception("Chỉ có thể check-in booking đã xác nhận.");
             }
 
-            if (datPhong.TrangThai == TrangThaiDatPhong.DA_CHECK_OUT.ToString())
+            var checkedInBooking = await _datPhongRepository.CheckIn(id);
+            if (checkedInBooking.KhachHangId.HasValue)
             {
-                throw new Exception("Booking đã check-out");
+                await _notificationService.BookingStatusChanged(
+                    checkedInBooking.KhachHangId.Value, checkedInBooking, "Booking đã check-in.");
             }
-
-            await _datPhongRepository.CheckIn(id);
         }
 
         public async Task ConfirmBooking(Guid id, Guid ownerId)
@@ -303,24 +366,25 @@ namespace Booking.Service.Services.DatPhongs
                 throw new Exception("Booking không tồn tại");
             }
 
-            if (datPhong.TrangThai == TrangThaiDatPhong.DA_CHECK_IN.ToString())
+            if (datPhong.TrangThai != TrangThaiDatPhong.CHO_XAC_NHAN.ToString())
             {
-                throw new Exception("Booking đã check-in");
+                throw new Exception("Chỉ có thể xác nhận booking đang chờ xác nhận.");
             }
 
-            if (datPhong.TrangThai == TrangThaiDatPhong.DA_CHECK_OUT.ToString())
+            var confirmedBooking = await _datPhongRepository.ConfirmBooking(id);
+            if (confirmedBooking.KhachHangId.HasValue)
             {
-                throw new Exception("Booking đã check-out");
+                await _notificationService.BookingStatusChanged(
+                    confirmedBooking.KhachHangId.Value, confirmedBooking, "Booking đã được xác nhận.");
             }
-
-            await _datPhongRepository.ConfirmBooking(id);
         }
 
         public async Task<DatPhong> CreateBooking(CreateBookingRequest dp, Guid userId)
         {
-            if (!dp.NgayNhanPhong.HasValue || !dp.NgayTraPhong.HasValue)
+            if (!dp.NgayNhanPhong.HasValue || !dp.NgayTraPhong.HasValue ||
+                dp.NgayNhanPhong >= dp.NgayTraPhong || dp.DanhSachPhong == null || dp.DanhSachPhong.Count == 0)
             {
-                throw new Exception("Ngày nhận phòng và ngày trả phòng không được để trống.");
+                throw new ArgumentException("Ngày nhận/trả phòng và danh sách phòng phải hợp lệ.");
             }
 
             // Dùng .Value để ép về kiểu TimeSpan không null
@@ -336,6 +400,12 @@ namespace Booking.Service.Services.DatPhongs
 
                 foreach (var item in dp.DanhSachPhong)
                 {
+                    if (item.SoLuong <= 0 ||
+                        !await _datPhongRepository.IsRoomTypeForHotel(item.LoaiPhongId, dp.KhachSanId))
+                    {
+                        throw new ArgumentException("Loại phòng không thuộc khách sạn hoặc số lượng phòng không hợp lệ.");
+                    }
+
                     // 2. Kiểm tra & lấy danh sách phòng còn trống trong khoảng thời gian dp.NgayNhanPhong -> dp.NgayTraPhong
                     var phongTrongs = await _phongRepository.LayDanhSachPhongTrong(
                         item.LoaiPhongId,
@@ -382,6 +452,22 @@ namespace Booking.Service.Services.DatPhongs
                     }
                 }
 
+                decimal soTienGiam = 0;
+                string? maKhuyenMai = null;
+                if (!string.IsNullOrWhiteSpace(dp.MaKhuyenMai))
+                {
+                    var promotion = await _hotelPromotionService.ApplyForBooking(
+                        dp.KhachSanId, dp.MaKhuyenMai, tongTien);
+                    if (promotion == null)
+                    {
+                        throw new PromotionNotApplicableException();
+                    }
+
+                    soTienGiam = promotion.DiscountAmount;
+                    maKhuyenMai = promotion.Code;
+                    tongTien -= soTienGiam;
+                }
+
                 var datPhong = new DatPhong
                 {
                     Id = datPhongId,
@@ -390,6 +476,8 @@ namespace Booking.Service.Services.DatPhongs
                     NgayNhanPhong = dp.NgayNhanPhong,
                     NgayTraPhong = dp.NgayTraPhong,
                     TongTien = tongTien,
+                    SoTienGiam = soTienGiam,
+                    MaKhuyenMai = maKhuyenMai,
                     TrangThai = TrangThaiDatPhong.CHO_XAC_NHAN.ToString(),
                     NgayTao = DateTime.Now
                 };
@@ -407,6 +495,12 @@ namespace Booking.Service.Services.DatPhongs
 
                 await _unitOfWork.CommitAsync();
                 await _notificationService.BookingSuccess(userId, datPhong);
+                var createdBooking = await _datPhongRepository.GetBookingById(datPhong.Id);
+                if (createdBooking?.KhachSan != null)
+                {
+                    await _notificationService.BookingCreatedForOwner(
+                        createdBooking.KhachSan.NguoiTao, createdBooking);
+                }
 
                 var user = await _userRepository.GetUserProfileById(userId);
 

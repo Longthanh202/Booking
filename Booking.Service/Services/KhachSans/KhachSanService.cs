@@ -12,11 +12,13 @@ using Booking.Data.Repository.KhachSanImage;
 using Booking.Data.Repository.KhachSans;
 using Booking.Data.Repository.Redis;
 using Booking.Service.Dtos.Hotels;
+using Booking.Service.Dtos.Common;
 using Booking.Service.Dtos.HotelImages;
 using Booking.Service.Dtos.Amenities;
 using Booking.Service.Services.Cloudinarys;
 using System.Data;
 using System.Diagnostics;
+using Microsoft.AspNetCore.Http;
 
 namespace Booking.Service.Services.KhachSans
 {
@@ -58,6 +60,7 @@ namespace Booking.Service.Services.KhachSans
                 TenKhachSan = khachSan.TenKhachSan,
                 MoTa = khachSan.MoTa,
                 DiaChi = khachSan.DiaChi,
+                ChinhSachHuy = khachSan.ChinhSachHuy,
                 SoSao = khachSan.SoSao,
                 GioNhanPhong = khachSan.GioNhanPhong,
                 GioTraPhong = khachSan.GioTraPhong,
@@ -86,6 +89,77 @@ namespace Booking.Service.Services.KhachSans
             }
 
             return await _khachSanRepository.UpdateStatus(hotelId, parsedStatus.ToString());
+        }
+
+        public async Task<bool> UpdateHotel(Guid hotelId, Guid ownerId, UpdateHotelRequest request)
+        {
+            if (!TimeSpan.TryParse(request.GioNhanPhong, out var checkInTime) ||
+                !TimeSpan.TryParse(request.GioTraPhong, out var checkOutTime) ||
+                string.IsNullOrWhiteSpace(request.TenKhachSan) ||
+                string.IsNullOrWhiteSpace(request.DiaChi) ||
+                string.IsNullOrWhiteSpace(request.ThanhPho) ||
+                request.SoSao < 1 || request.SoSao > 5 ||
+                (request.ViDo.HasValue && (request.ViDo < -90 || request.ViDo > 90)) ||
+                (request.KinhDo.HasValue && (request.KinhDo < -180 || request.KinhDo > 180)))
+            {
+                return false;
+            }
+
+            var hotel = await _khachSanRepository.GetHotelForOwner(hotelId, ownerId);
+            if (hotel == null)
+            {
+                return false;
+            }
+
+            hotel.TenKhachSan = request.TenKhachSan.Trim();
+            hotel.MoTa = request.MoTa?.Trim();
+            hotel.ChinhSachHuy = request.ChinhSachHuy?.Trim();
+            hotel.DiaChi = request.DiaChi.Trim();
+            hotel.ThanhPho = request.ThanhPho.Trim();
+            hotel.ViDo = request.ViDo;
+            hotel.KinhDo = request.KinhDo;
+            hotel.SoSao = request.SoSao;
+            hotel.GioNhanPhong = checkInTime;
+            hotel.GioTraPhong = checkOutTime;
+            hotel.TrangThai = TrangThaiKhachSan.CHO_DUYET.ToString();
+
+            return await _khachSanRepository.SaveHotelChanges(hotel);
+        }
+
+        public async Task<bool> AddHotelImages(Guid hotelId, Guid ownerId, List<IFormFile> files)
+        {
+            if (files == null || files.Count == 0 || files.Count > 20 ||
+                files.Any(file => file == null || file.Length == 0) ||
+                await _khachSanRepository.GetHotelForOwner(hotelId, ownerId) == null)
+            {
+                return false;
+            }
+
+            var urls = new List<string>();
+            foreach (var file in files)
+            {
+                urls.Add(await _cloudinaryService.UploadImageAsync(file));
+            }
+
+            await _khachSanImageRepository.InsertKhachSanImage(hotelId, urls);
+            await _unitOfWork.CommitAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteHotelImage(Guid hotelId, long imageId, Guid ownerId)
+        {
+            var image = await _khachSanImageRepository.GetImageForOwner(imageId, hotelId, ownerId);
+            if (image == null || !await _khachSanImageRepository.DeleteImageForOwner(imageId, hotelId, ownerId))
+            {
+                return false;
+            }
+
+            if (!string.IsNullOrWhiteSpace(image.Url))
+            {
+                await _cloudinaryService.DeleteImageAsync(image.Url);
+            }
+
+            return true;
         }
 
         public async Task<HotelFilterResponse> FilterHotelsAsync(HotelFilterRequest dto)
@@ -213,6 +287,17 @@ namespace Booking.Service.Services.KhachSans
             return await MapToHotelFilterResponseAsync(khachSans, totalRow, dto.PageSize);
         }
 
+        public async Task<List<OptionDto>> GetHotelOptionsByOwnerId(Guid ownerId)
+        {
+            var hotels = await _khachSanRepository.GetHotelOptionsByOwnerId(ownerId);
+
+            return hotels.Select(hotel => new OptionDto
+            {
+                Id = hotel.Id,
+                Name = hotel.TenKhachSan ?? string.Empty
+            }).ToList();
+        }
+
         // Private Helper: Xử lý gom nhóm Ảnh, Mapping DTO và Phân trang để dùng chung
         private async Task<HotelFilterResponse> MapToHotelFilterResponseAsync(
             List<KhachSan> khachSans,
@@ -291,6 +376,7 @@ namespace Booking.Service.Services.KhachSans
                     TenKhachSan = ks.TenKhachSan,
                     MoTa = ks.MoTa,
                     DiaChi = ks.DiaChi,
+                    ChinhSachHuy = ks.ChinhSachHuy,
                     ThanhPho = ks.ThanhPho,
                     ViDo = ks.ViDo,
                     KinhDo = ks.KinhDo,

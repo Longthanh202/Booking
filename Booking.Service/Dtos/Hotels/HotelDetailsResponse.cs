@@ -18,6 +18,7 @@ namespace Booking.Service.Dtos.Hotels
         public string? TenKhachSan { get; set; } = string.Empty;
         public string? MoTa { get; set; } = string.Empty;
         public string? DiaChi { get; set; } = string.Empty;
+        public string? ChinhSachHuy { get; set; }
         public int? SoSao { get; set; }
         public TimeSpan? GioNhanPhong { get; set; }
         public TimeSpan? GioTraPhong { get; set; }

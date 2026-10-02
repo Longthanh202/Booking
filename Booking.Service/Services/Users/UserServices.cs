@@ -108,6 +108,32 @@ namespace Booking.Service.Services.Users
             return _userRepository.IsAuthenticated();
         }
 
+        public async Task<AdminUserPageResponse> GetAdminUsers(string? keyword, int? status, int page, int pageSize)
+        {
+            var (users, totalCount) = await _userRepository.GetAdminUsers(keyword, status, page, pageSize);
+            return new AdminUserPageResponse
+            {
+                Data = users.Select(user => new AdminUserItemResponse
+                {
+                    UserId = user.UserLoginId.GetValueOrDefault(),
+                    Username = user.Username,
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    Phone = user.Phone,
+                    RoleName = user.RoleName,
+                    IsDel = user.IsDel,
+                    CreateAt = user.CreateAt
+                }).ToList(),
+                TotalRow = totalCount,
+                TotalPage = (int)Math.Ceiling(totalCount / (double)pageSize),
+                Page = page,
+                PageSize = pageSize
+            };
+        }
+
+        public Task<bool> SetAccountStatus(Guid userId, int status) =>
+            _userRepository.SetAccountStatus(userId, status);
+
         public async Task<LoginResponse> Login(LoginRequest input)
         {
             if (string.IsNullOrEmpty(input.Username) || string.IsNullOrEmpty(input.Password))

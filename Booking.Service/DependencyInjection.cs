@@ -41,6 +41,9 @@ using Booking.Service.Services.Finance;
 using Booking.Service.Services.Advertising;
 using Booking.Service.Services.Tokens;
 using Booking.Service.Services.Users;
+using Booking.Service.Services.Tags;
+using Booking.Service.Services.Owners;
+using Booking.Service.Services.Promotions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
@@ -79,6 +82,9 @@ namespace Booking.Service
             services.AddScoped<IThanhToanService, ThanhToanService>();
             services.AddScoped<IFinanceService, FinanceService>();
             services.AddScoped<IAdvertisingService, AdvertisingService>();
+                        services.AddScoped<ITagService, TagService>();
+                        services.AddScoped<IOwnerPortalService, OwnerPortalService>();
+                        services.AddScoped<IHotelPromotionService, HotelPromotionService>();
             
             var redisEnabled = configuration.GetValue<bool>("Redis:Enabled");
             if (redisEnabled)
