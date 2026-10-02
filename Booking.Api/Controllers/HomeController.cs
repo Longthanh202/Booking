@@ -15,7 +15,7 @@ using System.Text;
 
 namespace Booking.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/home")]
     [ApiController]
     public class HomeController : ControllerBase
     {
@@ -25,7 +25,7 @@ namespace Booking.Api.Controllers
             
         }
         [HttpGet]
-        [Route("view")]
+        [Route("health")]
         public IActionResult Home()
         {
             return Ok();

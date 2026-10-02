@@ -1,4 +1,6 @@
+using System;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Booking.Common.Shared
 {

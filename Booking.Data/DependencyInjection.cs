@@ -6,6 +6,7 @@ using Booking.Data.Repository.ChiTietChiTraKhachSans;
 using Booking.Data.Repository.ChiTietHoaDonHoaHongs;
 using Booking.Data.Repository.ChiTraKhachSans;
 using Booking.Data.Repository.DatPhongs;
+using Booking.Data.Repository.DanhGias;
 using Booking.Data.Repository.GiaPhongs;
 using Booking.Data.Repository.HoaDonHoaHongs;
 using Booking.Data.Repository.HoaHongs;
@@ -23,7 +24,10 @@ using Booking.Data.Repository.RolePermissions;
 using Booking.Data.Repository.Roles;
 using Booking.Data.Repository.ThanhToans;
 using Booking.Data.Repository.TienIchs;
+using Booking.Data.Repository.TaiKhoanNganHangs;
+using Booking.Data.Repository.QuangCaos;
 using Booking.Data.Repository.Users;
+using Booking.Data.Repository.Tags;
 using Booking.Data.Repository.ViKhachSans;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -46,6 +50,7 @@ namespace Booking.Data
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IBannerRepository, BannerRepository>();
             services.AddScoped<IDatPhongRepository, DatPhongRepository>();
+            services.AddScoped<IDanhGiaRepository, DanhGiaRepository>();
             services.AddScoped<IKhachSanImageRepository, KhachSanImageRepository>();
             services.AddScoped<IKhachSanRepository, KhachSanRepository>();
             services.AddScoped<ILoaiPhongRepository, LoaiPhongRepository>();
@@ -69,6 +74,9 @@ namespace Booking.Data
             services.AddScoped<IChiTietChiTraKhachSanRepository, ChiTietChiTraKhachSanRepository>();
             services.AddScoped<IHoaDonHoaHongRepository, HoaDonHoaHongRepository>();
             services.AddScoped<IChiTietHoaDonHoaHongRepository, ChiTietHoaDonHoaHongRepository>();
+            services.AddScoped<ITaiKhoanNganHangRepository, TaiKhoanNganHangRepository>();
+            services.AddScoped<IQuangCaoRepository, QuangCaoRepository>();
+                        services.AddScoped<ITagRepository, TagRepository>();
             return services;
         }
     }

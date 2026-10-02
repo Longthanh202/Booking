@@ -16,7 +16,7 @@ namespace Booking.Data.Repository.RolePermissions
         {
             _context = context;
         }
-        public async Task Insert(Guid roleId, List<RolePermission> lst)
+        public async Task AddRolePermissions(Guid roleId, List<RolePermission> lst)
         {
             var oldPermissions = await _context.RolePermissions
                 .Where(x => x.RoleId == roleId).ToListAsync();

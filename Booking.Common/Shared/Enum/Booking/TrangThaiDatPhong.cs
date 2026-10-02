@@ -18,6 +18,8 @@ namespace Booking.Common.Shared.Enum.Booking
 
         DA_HUY,
 
+        TU_CHOI,
+
         KHONG_DEN
     }
 }

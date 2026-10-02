@@ -16,7 +16,7 @@ namespace Booking.Data.Repository.Permissions
         {
             _context = context;
         }
-        public async Task<List<PermissionInfo>> GetListPermissionByUser(Guid userId)
+        public async Task<List<PermissionInfo>> GetPermissionsByUserId(Guid userId)
         {
             return await (
                 from ur in _context.UserRoles

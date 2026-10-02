@@ -17,6 +17,8 @@ namespace Booking.Core.Model.DatPhongs
         public DateTime? NgayNhanPhong { get; set; } // DATE -> DateTime trong C# (hoặc DateOnly)
         public DateTime? NgayTraPhong { get; set; }
         public decimal? TongTien { get; set; }
+        public decimal SoTienGiam { get; set; }
+        public string? MaKhuyenMai { get; set; }
         public string? TrangThai { get; set; }
         public DateTime? NgayTao { get; set; }
         public KhachSan? KhachSan { get; set; }

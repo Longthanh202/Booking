@@ -18,10 +18,12 @@ using Booking.Service.Services.Auths;
 using Booking.Service.Services.Banners;
 using Booking.Service.Services.Cloudinarys;
 using Booking.Service.Services.DatPhongs;
+using Booking.Service.Services.DanhGias;
 using Booking.Service.Services.Emails;
 using Booking.Service.Services.HoaHongs;
 using Booking.Service.Services.KhachSanImage;
 using Booking.Service.Services.KhachSans;
+using Booking.Service.Services.GiaPhongs;
 using Booking.Service.Services.LichSuVis;
 using Booking.Service.Services.LoaiPhongs;
 using Booking.Service.Services.Notifications;
@@ -34,8 +36,14 @@ using Booking.Service.Services.RefreshTokens;
 using Booking.Service.Services.RolePermissions;
 using Booking.Service.Services.Roles;
 using Booking.Service.Services.TienIchs;
+using Booking.Service.Services.ThanhToans;
+using Booking.Service.Services.Finance;
+using Booking.Service.Services.Advertising;
 using Booking.Service.Services.Tokens;
 using Booking.Service.Services.Users;
+using Booking.Service.Services.Tags;
+using Booking.Service.Services.Owners;
+using Booking.Service.Services.Promotions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
@@ -52,6 +60,7 @@ namespace Booking.Service
             services.AddScoped<IPermissionService, PermissionService>();
             services.AddScoped<IRolePermissionService, RolePermissionService>();
             services.AddScoped<IKhachSanService, KhachSanService>();
+            services.AddScoped<IGiaPhongService, GiaPhongService>();
             services.AddScoped<ITienIchService, TienIchService>();
             services.AddScoped<ILoaiPhongService, LoaiPhongService>();
             services.AddScoped<IPhongService, PhongService>();
@@ -61,6 +70,7 @@ namespace Booking.Service
             services.AddScoped<IBannerService, BannerService>();
             services.AddScoped<IKhachSanImageService, KhachSanImageService>();
             services.AddScoped<IDatPhongService, DatPhongService>();
+            services.AddScoped<IDanhGiaService, DanhGiaService>();
             services.AddScoped<IProvinceService, ProvinceService>();
             services.AddScoped<IEmailService, EmailService>();
             services.AddScoped<IRabbitMQPublisher, RabbitMQPublisher>();
@@ -69,6 +79,12 @@ namespace Booking.Service
             services.AddScoped<IHoaHongService, HoaHongService>();
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<ILichSuViService, LichSuViService>();
+            services.AddScoped<IThanhToanService, ThanhToanService>();
+            services.AddScoped<IFinanceService, FinanceService>();
+            services.AddScoped<IAdvertisingService, AdvertisingService>();
+                        services.AddScoped<ITagService, TagService>();
+                        services.AddScoped<IOwnerPortalService, OwnerPortalService>();
+                        services.AddScoped<IHotelPromotionService, HotelPromotionService>();
             
             var redisEnabled = configuration.GetValue<bool>("Redis:Enabled");
             if (redisEnabled)

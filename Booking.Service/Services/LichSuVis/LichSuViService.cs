@@ -1,6 +1,5 @@
 ﻿using Booking.Data.Repository.LichSuVis;
-using Booking.Service.Dtos.HoaHong;
-using Booking.Service.Dtos.LichSuVi;
+using Booking.Service.Dtos.Wallet;
 
 namespace Booking.Service.Services.LichSuVis
 {
@@ -12,11 +11,11 @@ namespace Booking.Service.Services.LichSuVis
         {
             _lichSuViRepository = lichSuViRepository;
         }
-        public async Task<List<LichSuViDto>> LayLichSuViOwner(Guid ownerId)
+        public async Task<List<WalletHistoryDto>> GetOwnerWalletHistory(Guid ownerId)
         {
-            var result = await _lichSuViRepository.LayTheoOwnerId(ownerId);
+            var result = await _lichSuViRepository.GetWalletHistoryByOwnerId(ownerId);
 
-            return result.Select(x => new LichSuViDto
+            return result.Select(x => new WalletHistoryDto
             {
                 MaLichSu = x.MaLichSu,
                 MaDatPhong = x.MaDatPhong,

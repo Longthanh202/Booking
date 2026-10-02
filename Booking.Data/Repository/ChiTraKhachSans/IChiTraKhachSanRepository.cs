@@ -12,6 +12,8 @@ namespace Booking.Data.Repository.ChiTraKhachSans
         Task<ChiTraKhachSan?> LayTheoId(long id);
 
         Task<IEnumerable<ChiTraKhachSan>> LayTheoKhachSan(Guid khachSanId);
+        Task<IEnumerable<ChiTraKhachSan>> LayTheoOwner(Guid ownerId);
+        Task<ChiTraKhachSan?> LayTheoIdCuaOwner(long id, Guid ownerId);
 
         Task<IEnumerable<ChiTraKhachSan>> LayTheoTrangThai(string trangThai);
 

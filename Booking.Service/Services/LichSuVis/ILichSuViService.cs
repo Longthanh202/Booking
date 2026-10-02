@@ -1,8 +1,10 @@
-﻿using Booking.Service.Dtos.LichSuVi;
+﻿using Booking.Service.Dtos.Wallet;
 
-namespace Booking.Service.Services.LichSuVis;
-
-public interface ILichSuViService
+namespace Booking.Service.Services.LichSuVis
 {
-    Task<List<LichSuViDto>> LayLichSuViOwner(Guid ownerId);
+    public interface ILichSuViService
+    {
+        Task<List<WalletHistoryDto>> GetOwnerWalletHistory(Guid ownerId);
+    }
 }
+

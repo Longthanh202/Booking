@@ -36,6 +36,24 @@ namespace Booking.Data.Repository.ChiTraKhachSans
                 .ToListAsync();
         }
 
+        public async Task<IEnumerable<ChiTraKhachSan>> LayTheoOwner(Guid ownerId)
+        {
+            return await _context.ChiTraKhachSans
+                .Include(x => x.KhachSan)
+                .Include(x => x.TaiKhoanNganHang)
+                .Where(x => x.KhachSan != null && x.KhachSan.NguoiTao == ownerId)
+                .OrderByDescending(x => x.NgayTao)
+                .ToListAsync();
+        }
+
+        public Task<ChiTraKhachSan?> LayTheoIdCuaOwner(long id, Guid ownerId)
+        {
+            return _context.ChiTraKhachSans
+                .Include(x => x.KhachSan)
+                .FirstOrDefaultAsync(x => x.MaChiTra == id &&
+                    x.KhachSan != null && x.KhachSan.NguoiTao == ownerId);
+        }
+
         public async Task<IEnumerable<ChiTraKhachSan>> LayTheoTrangThai(string trangThai)
         {
             return await _context.ChiTraKhachSans

@@ -3,8 +3,9 @@ using Booking.Core.Model.TienIchs;
 using Booking.Data;
 using Booking.Data.Connection;
 using Booking.Data.Repository.KhachSanTienIch;
+using Booking.Data.Repository.KhachSans;
 using Booking.Data.Repository.TienIchs;
-using Booking.Service.Dtos.TienIchs;
+using Booking.Service.Dtos.Amenities;
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
@@ -19,24 +20,35 @@ namespace Booking.Service.Services.TienIchs
         private readonly ITienIchRepository _tienIchRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IKhachSanTienIchRepository _khachSanTienIchRepository;
+        private readonly IKhachSanRepository _khachSanRepository;
         public TienIchService(ITienIchRepository tienIchRepository,
             IUnitOfWork unitOfWork, 
-            IKhachSanTienIchRepository khachSanTienIchRepository)
+            IKhachSanTienIchRepository khachSanTienIchRepository,
+            IKhachSanRepository khachSanRepository)
         {
             _tienIchRepository = tienIchRepository;
             _unitOfWork = unitOfWork;
             _khachSanTienIchRepository = khachSanTienIchRepository ;
+            _khachSanRepository = khachSanRepository;
         }
 
-        public async Task<List<TienIch>> GetTienIchKhachSanByKhachSanId(Guid khachSanId)
+        public async Task<List<TienIch>> GetAmenitiesByHotelId(Guid khachSanId)
         {
-            return await _tienIchRepository.GetTienIchKhachSanByKhachSanId(khachSanId);
+            return await _tienIchRepository.GetAmenitiesByHotelId(khachSanId);
         }
 
-        public async Task<int> ThemTienIch(List<TienIchRequest> tienIch)
+        public async Task<int> CreateAmenities(List<CreateAmenityRequest> tienIch, Guid ownerId)
         {
             if (tienIch == null || tienIch.Count == 0)
                 return 0;
+
+            foreach (var hotelId in tienIch.Select(item => item.KhachSanId).Distinct())
+            {
+                if (await _khachSanRepository.GetHotelForOwner(hotelId, ownerId) == null)
+                {
+                    return 0;
+                }
+            }
 
             try
             {
@@ -53,7 +65,7 @@ namespace Booking.Service.Services.TienIchs
                         Icon = item.Icon
                     };
 
-                    await _tienIchRepository.ThemTienIch(input);
+                    await _tienIchRepository.CreateAmenity(input);
 
                     var ksti = new KhachSan_TienIch
                     {

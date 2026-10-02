@@ -2,6 +2,7 @@
 using Booking.Core.Model.ChiTietChiTraKhachSans;
 using Booking.Core.Model.ChiTietHoaDonHoaHongs;
 using Booking.Core.Model.ChiTraKhachSans;
+using Booking.Core.Model.DanhGias;
 using Booking.Core.Model.DatPhongs;
 using Booking.Core.Model.GiaPhongs;
 using Booking.Core.Model.HoaDonHoaHongs;
@@ -24,6 +25,7 @@ using Booking.Core.Model.TienIchs;
 using Booking.Core.Model.UserRoles;
 using Booking.Core.Model.Users;
 using Booking.Core.Model.ViKhachSans;
+using Booking.Core.Model.Tags;
 using Microsoft.EntityFrameworkCore;
 
 namespace Booking.Data.DBContext
@@ -41,13 +43,13 @@ namespace Booking.Data.DBContext
             // --- 1. ÁNH XẠ TÊN BẢNG (Đã lọc bỏ trùng lặp) ---
             modelBuilder.Entity<Banner>().ToTable("Banner");
             modelBuilder.Entity<DatPhong>().ToTable("DatPhong");
+            modelBuilder.Entity<DanhGia>().ToTable("DanhGia");
             modelBuilder.Entity<KhachSan>().ToTable("KhachSan");
             modelBuilder.Entity<LoaiPhong>().ToTable("LoaiPhong");
             modelBuilder.Entity<Phong>().ToTable("Phong");
             modelBuilder.Entity<ChiTietDatPhong>().ToTable("ChiTietDatPhong");
             modelBuilder.Entity<ThanhToan>().ToTable("ThanhToan");
             modelBuilder.Entity<Permission>().ToTable("Permissions"); // Khớp chữ 's' với SQL của bạn
-            modelBuilder.Entity<Province>().ToTable("UserProfile"); // Lưu ý check lại tên bảng thực tế dưới DB (provinces hay province)
             modelBuilder.Entity<RefreshToken>().ToTable("RefreshToken");
             modelBuilder.Entity<Resources>().ToTable("Resources");
             modelBuilder.Entity<Role>().ToTable("Roles");
@@ -71,9 +73,12 @@ namespace Booking.Data.DBContext
             modelBuilder.Entity<ChiTietHoaDonHoaHong>().ToTable("ChiTietHoaDonHoaHong");
             modelBuilder.Entity<GoiQuangCao>().ToTable("GoiQuangCao");
             modelBuilder.Entity<KhachSanQuangCao>().ToTable("KhachSanQuangCao");
+            modelBuilder.Entity<Tag>().ToTable("Tags");
+            modelBuilder.Entity<HotelTag>().ToTable("HotelTags");
+            modelBuilder.Entity<RoomAvailabilityBlock>().ToTable("RoomAvailabilityBlocks");
+            modelBuilder.Entity<HotelPromotion>().ToTable("HotelPromotions");
 
-            // Nếu muốn dùng bảng tỉnh thành, hãy đồng nhất 1 dòng ToTable duy nhất:
-            modelBuilder.Entity<Province>().ToTable("provinces");
+            modelBuilder.Entity<Province>().ToTable("provinces");          
 
 
             // --- 2. CẤU HÌNH KHÓA CHÍNH RIÊNG BIỆT TRƯỚC ---
@@ -99,6 +104,50 @@ namespace Booking.Data.DBContext
                     .HasForeignKey(x => x.TienIchId);
             });
 
+            modelBuilder.Entity<Tag>(entity =>
+            {
+                entity.HasKey(x => x.Id);
+                entity.HasIndex(x => x.Slug).IsUnique();
+            });
+
+            modelBuilder.Entity<HotelTag>(entity =>
+            {
+                entity.HasKey(x => new { x.HotelId, x.TagId });
+
+                entity.HasOne(x => x.Hotel)
+                    .WithMany(x => x.HotelTags)
+                    .HasForeignKey(x => x.HotelId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(x => x.Tag)
+                    .WithMany(x => x.HotelTags)
+                    .HasForeignKey(x => x.TagId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<RoomAvailabilityBlock>(entity =>
+            {
+                entity.HasKey(x => x.Id);
+                entity.HasIndex(x => new { x.RoomId, x.StartAt, x.EndAt });
+                entity.HasOne(x => x.Room)
+                    .WithMany()
+                    .HasForeignKey(x => x.RoomId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
+            modelBuilder.Entity<HotelPromotion>(entity =>
+            {
+                entity.HasKey(x => x.Id);
+                entity.HasIndex(x => new { x.HotelId, x.Code }).IsUnique();
+                entity.Property(x => x.DiscountValue).HasColumnType("decimal(18,2)");
+                entity.Property(x => x.MinBookingAmount).HasColumnType("decimal(18,2)");
+                entity.Property(x => x.MaxDiscountAmount).HasColumnType("decimal(18,2)");
+                entity.HasOne(x => x.Hotel)
+                    .WithMany()
+                    .HasForeignKey(x => x.HotelId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
+
             // Quan hệ 1 - Nhiều: KhachSan -> LoaiPhong
             modelBuilder.Entity<LoaiPhong>(entity =>
             {
@@ -114,6 +163,23 @@ namespace Booking.Data.DBContext
                     .WithMany(x => x.KhachSanImages)
                     .HasForeignKey(x => x.KhachSanId);
             });
+
+                    // Quan hệ 1 - Nhiều: KhachSan -> DanhGia
+                    modelBuilder.Entity<DanhGia>(entity =>
+                    {
+                    entity.HasKey(x => x.Id);
+                    entity.Property(x => x.Id).HasColumnName("Id");
+                    entity.Property(x => x.KhachSanId).HasColumnName("KhachSanId");
+                    entity.Property(x => x.KhachHangId).HasColumnName("KhachHangId");
+                    entity.Property(x => x.SoSao).HasColumnName("SoSao");
+                    entity.Property(x => x.NoiDung).HasColumnName("NoiDung").HasColumnType("nvarchar(max)");
+                    entity.Property(x => x.NgayTao).HasColumnName("NgayTao");
+
+                    entity.HasOne(x => x.KhachSan)
+                        .WithMany(x => x.DanhGias)
+                        .HasForeignKey(x => x.KhachSanId)
+                        .OnDelete(DeleteBehavior.Restrict);
+                    });
 
             modelBuilder.Entity<UserRole>()
                 .HasOne(ur => ur.UserLogin)
@@ -243,7 +309,12 @@ namespace Booking.Data.DBContext
         public DbSet<UserLogin> UserLogins { get; set; } = null!;
         public DbSet<Banner> Banners { get; set; } = null!;
         public DbSet<DatPhong> DatPhongs { get; set; } = null!;
+        public DbSet<DanhGia> DanhGias { get; set; } = null!;
         public DbSet<KhachSan> KhachSans { get; set; } = null!;
+        public DbSet<Tag> Tags { get; set; } = null!;
+        public DbSet<HotelTag> HotelTags { get; set; } = null!;
+        public DbSet<RoomAvailabilityBlock> RoomAvailabilityBlocks { get; set; } = null!;
+        public DbSet<HotelPromotion> HotelPromotions { get; set; } = null!;
         public DbSet<LoaiPhong> LoaiPhongs { get; set; } = null!;
         public DbSet<Phong> Phongs { get; set; } = null!;
         public DbSet<ChiTietDatPhong> ChiTietDatPhongs { get; set; } = null!;

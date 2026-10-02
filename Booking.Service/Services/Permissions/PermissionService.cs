@@ -20,9 +20,9 @@ namespace Booking.Service.Services.Permissions
             _permissionRepository = permissionRepository;
         }
 
-        public async Task<List<PermissionInfo>> GetListPermissionByUser(Guid userId)
+        public async Task<List<PermissionInfo>> GetPermissionsByUserId(Guid userId)
         {
-            return await _permissionRepository.GetListPermissionByUser(userId);
+            return await _permissionRepository.GetPermissionsByUserId(userId);
         }
 
         public bool HasPermission(List<PermissionInfo> userPermissions, string resource, string action)

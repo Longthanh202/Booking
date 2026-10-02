@@ -16,7 +16,7 @@ namespace Booking.Data.Repository.ThanhToans
         {
             _context = context;
         }
-        public async Task<ThanhToan> Tao(ThanhToan t)
+        public async Task<ThanhToan> CreatePayment(ThanhToan t)
         {
             await _context.AddAsync(t);
             return t;
@@ -26,6 +26,50 @@ namespace Booking.Data.Repository.ThanhToans
         {
             return await _context.ThanhToans
                 .FirstOrDefaultAsync(x => x.DatPhongId == datPhongId);
+        }
+
+        public Task<ThanhToan?> GetForCustomer(Guid paymentId, Guid customerId)
+        {
+            return _context.ThanhToans
+                .Include(x => x.DatPhong)
+                .FirstOrDefaultAsync(x => x.Id == paymentId &&
+                    x.DatPhong != null && x.DatPhong.KhachHangId == customerId);
+        }
+
+        public Task<ThanhToan?> GetForCustomerBooking(Guid bookingId, Guid customerId)
+        {
+            return _context.ThanhToans
+                .Include(x => x.DatPhong)
+                .ThenInclude(x => x!.KhachSan)
+                .FirstOrDefaultAsync(x => x.DatPhongId == bookingId &&
+                    x.DatPhong != null && x.DatPhong.KhachHangId == customerId);
+        }
+
+        public Task<List<ThanhToan>> GetAll()
+        {
+            return _context.ThanhToans
+                .Include(x => x.DatPhong)
+                .OrderByDescending(x => x.ThoiGianThanhToan)
+                .ToListAsync();
+        }
+
+        public async Task<ThanhToan?> UpdateStatus(Guid paymentId, string status)
+        {
+            var payment = await _context.ThanhToans.FirstOrDefaultAsync(x => x.Id == paymentId);
+            if (payment == null)
+            {
+                return null;
+            }
+
+            payment.TrangThai = status;
+            if (status == Booking.Common.Shared.Enum.Payment.TrangThaiThanhToan.DA_THANH_TOAN.ToString() ||
+                status == Booking.Common.Shared.Enum.Payment.TrangThaiThanhToan.DA_HOAN_TIEN.ToString())
+            {
+                payment.ThoiGianThanhToan = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+            return payment;
         }
     }
 }

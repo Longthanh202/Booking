@@ -18,7 +18,7 @@ namespace Booking.Data.Repository.LoaiPhongs
         {
             _context = context;
         }
-        public async Task<List<LoaiPhong>> GetLoaiPhongOwner(Guid khachSanId)
+        public async Task<List<LoaiPhong>> GetOwnerRoomTypes(Guid khachSanId)
         {
             return await _context.LoaiPhongs
                 .Where(x => x.KhachSanId == khachSanId)
@@ -33,7 +33,15 @@ namespace Booking.Data.Repository.LoaiPhongs
                 .ToListAsync();
         }
 
-        public async Task<List<LoaiPhongHienThi>> GetLoaiPhongByKhachSanId(
+        public async Task<LoaiPhong?> GetRoomTypeForOwner(Guid roomTypeId, Guid ownerId)
+        {
+            return await _context.LoaiPhongs
+                .Include(x => x.KhachSan)
+                .FirstOrDefaultAsync(x => x.Id == roomTypeId &&
+                    x.KhachSan != null && x.KhachSan.NguoiTao == ownerId);
+        }
+
+        public async Task<List<LoaiPhongHienThi>> GetRoomTypesByHotelId(
             Guid khachSanId,
             int soKhach,
             DateTime? ngayNhan,
@@ -59,24 +67,32 @@ namespace Booking.Data.Repository.LoaiPhongs
             {
                 int tongPhong = await _context.Phongs
                     .CountAsync(x => x.LoaiPhongId == loaiPhong.Id &&
-                    x.TrangThai == TrangThaiPhong.DANG_SU_DUNG.ToString());
+                    (x.TrangThai == TrangThaiPhong.DANG_SU_DUNG.ToString() ||
+                     x.TrangThai == TrangThaiPhong.SAN_SANG.ToString()));
 
-                int phongDangDat = 0;
+                var busyRoomIds = new List<Guid>();
 
                 if (ngayNhan.HasValue && ngayTra.HasValue)
                 {
-                    phongDangDat = await _context.phongDats
+                    var bookedRoomIds = await _context.phongDats
                         .Where(pd =>
                             pd.ChiTietDatPhong.LoaiPhongId == loaiPhong.Id &&
                             pd.ChiTietDatPhong.DatPhong.TrangThai != TrangThaiDatPhong.DA_HUY.ToString() &&
+                            pd.ChiTietDatPhong.DatPhong.TrangThai != TrangThaiDatPhong.TU_CHOI.ToString() &&
                             pd.ChiTietDatPhong.DatPhong.NgayNhanPhong < ngayTra &&
                             pd.ChiTietDatPhong.DatPhong.NgayTraPhong > ngayNhan)
                         .Select(pd => pd.PhongId)
                         .Distinct()
-                        .CountAsync();
+                        .ToListAsync();
+                    var blockedRoomIds = await _context.RoomAvailabilityBlocks
+                        .Where(block => block.Room.LoaiPhongId == loaiPhong.Id &&
+                            block.StartAt < ngayTra && block.EndAt > ngayNhan)
+                        .Select(block => block.RoomId)
+                        .ToListAsync();
+                    busyRoomIds = bookedRoomIds.Union(blockedRoomIds).ToList();
                 }
 
-                int soPhongTrong = tongPhong - phongDangDat;
+                int soPhongTrong = tongPhong - busyRoomIds.Count;
 
                 decimal giaMoiDem = 0;
 
@@ -111,7 +127,7 @@ namespace Booking.Data.Repository.LoaiPhongs
             return result;
         }
 
-        public async Task<bool> TaoLoaiPhong(LoaiPhong lp)
+        public async Task<bool> CreateRoomType(LoaiPhong lp)
         {
             try
             {

@@ -38,5 +38,23 @@ namespace Booking.Service.Services.Cloudinarys
 
             return uploadResult.SecureUrl.ToString();
         }
+
+        public async Task<bool> DeleteImageAsync(string url)
+        {
+            if (!Uri.TryCreate(url, UriKind.Absolute, out var imageUri)) return false;
+            var segments = imageUri.AbsolutePath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            var folderIndex = Array.IndexOf(segments, "hotel-images");
+            if (folderIndex < 0 || folderIndex == segments.Length - 1) return false;
+
+            var publicId = string.Join("/", segments.Skip(folderIndex));
+            var extensionIndex = publicId.LastIndexOf('.');
+            if (extensionIndex > publicId.LastIndexOf('/'))
+            {
+                publicId = publicId[..extensionIndex];
+            }
+
+            var result = await _cloudinary.DestroyAsync(new DeletionParams(publicId));
+            return result.Result == "ok" || result.Result == "not found";
+        }
     }
 }

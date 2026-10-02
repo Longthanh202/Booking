@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Booking.Api.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/wallet")]
     [ApiController]
     public class LichSuViController : Controller
     {
@@ -21,7 +21,7 @@ namespace Booking.Api.Controllers
 
         [Authorize(Roles = "Owner")]
         [HttpGet("owner")]
-        public async Task<IActionResult> LayLichSuViOwner()
+        public async Task<IActionResult> GetOwnerWalletHistory()
         {
             if (!_userServices.IsAuthenticated())
             {
@@ -33,7 +33,7 @@ namespace Booking.Api.Controllers
                 return BadRequest("OwnerId không hợp lệ.");
             }
 
-            var result = await _lichSuViService.LayLichSuViOwner(Guid.Parse(userId));
+            var result = await _lichSuViService.GetOwnerWalletHistory(Guid.Parse(userId));
 
             return Ok(result);
         }

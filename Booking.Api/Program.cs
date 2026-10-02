@@ -8,6 +8,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using Booking.Service.Services.Hubs;
+using Booking.Api.Middleware.RateLimit;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +25,8 @@ builder.Services.Configure<MailSettings>(
 builder.Services.AddDIData(builder.Configuration);//DI Data
 builder.Services.AddDIService(builder.Configuration);//DI Service
 builder.Services.AddHttpContextAccessor();//DI HttpContextAccessor
+
+builder.Services.AddRedisRateLimiter("localhost:6379");
 
 builder.Services.Configure<HostOptions>(options =>
 {

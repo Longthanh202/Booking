@@ -1,5 +1,5 @@
 ﻿using Booking.Core.Model.RolePermissions;
-using Booking.Service.Dtos.RolePermission;
+using Booking.Service.Dtos.RolePermissions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +10,6 @@ namespace Booking.Data.Repository.RolePermissions
 {
     public interface IRolePermissionService
     {
-        Task Insert(RolePermissionRequset input);
+        Task AddRolePermissions(RolePermissionRequest input);
     }
 }

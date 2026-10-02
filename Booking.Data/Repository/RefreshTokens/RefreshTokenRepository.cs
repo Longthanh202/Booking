@@ -16,7 +16,7 @@ namespace Booking.Data.Repository.RefreshTokens
         {
             _context = context;
         }
-        public async Task<RefreshToken?> CheckStatusefreshToken(string token)
+        public async Task<RefreshToken?> GetValidRefreshToken(string token)
         {
             return await _context.RefreshTokens
                 .AsNoTracking()

@@ -16,7 +16,7 @@ namespace Booking.Data.Repository.TienIchs
         {
             _context = context;
         }
-        public async Task<List<TienIch>> GetTienIchKhachSanByKhachSanId(Guid khachSanId)
+        public async Task<List<TienIch>> GetAmenitiesByHotelId(Guid khachSanId)
         {
             return await _context.KhachSan_TienIches
                 .Where(kst => kst.KhachSanId == khachSanId)
@@ -29,7 +29,7 @@ namespace Booking.Data.Repository.TienIchs
                 .ToListAsync();
         }
 
-        public async Task<TienIch> ThemTienIch(TienIch tienIch)
+        public async Task<TienIch> CreateAmenity(TienIch tienIch)
         {
             await _context.TienIches.AddAsync(tienIch);       
             return tienIch;

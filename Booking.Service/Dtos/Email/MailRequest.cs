@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Booking.Core.Model.Email
+namespace Booking.Service.Dtos.Email
 {
     public class MailRequest
     {

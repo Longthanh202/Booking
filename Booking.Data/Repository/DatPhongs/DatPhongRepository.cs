@@ -14,13 +14,25 @@ namespace Booking.Data.Repository.DatPhongs
             _context = context;
         }
 
-        public Task CapNhatTrangThai(DatPhong d)
+        public Task UpdateBookingStatus(DatPhong d)
         {
              _context.DatPhongs.Update(d);
             return Task.CompletedTask;
         }
 
-        public async Task<(List<DatPhong> Items, int TotalCount)> GetListBookingOwner(
+        public Task<bool> IsBookingOwnedBy(Guid bookingId, Guid ownerId)
+        {
+            return _context.DatPhongs.AnyAsync(x => x.Id == bookingId &&
+                x.KhachSan != null && x.KhachSan.NguoiTao == ownerId);
+        }
+
+            public Task<bool> IsRoomTypeForHotel(Guid roomTypeId, Guid hotelId)
+            {
+                return _context.LoaiPhongs.AnyAsync(roomType =>
+                roomType.Id == roomTypeId && roomType.KhachSanId == hotelId);
+            }
+
+        public async Task<(List<DatPhong> Items, int TotalCount)> GetOwnerBookings(
             Guid ownerId,
             Guid khachSanId,
             int pageIndex,
@@ -42,6 +54,7 @@ namespace Booking.Data.Repository.DatPhongs
 
                 .Where(x =>
                     x.KhachSanId == khachSanId &&
+                    x.KhachSan != null &&
                     x.KhachSan.NguoiTao == ownerId
                 );
 
@@ -56,7 +69,7 @@ namespace Booking.Data.Repository.DatPhongs
             return (items, totalCount);
         }
 
-        public async Task<(List<DatPhong> Items, int TotalCount)> BookingHistory(Guid userId, int pageIndex, int pageSize)
+        public async Task<(List<DatPhong> Items, int TotalCount)> GetBookingHistory(Guid userId, int pageIndex, int pageSize)
         {
             var query = _context.DatPhongs
                 .AsNoTracking()
@@ -87,6 +100,29 @@ namespace Booking.Data.Repository.DatPhongs
             return (items, totalCount);
         }
 
+        public async Task<List<Booking.Core.Model.Users.UserProfile>> GetCustomerOptionsByHotelId(
+            Guid hotelId,
+            Guid ownerId)
+        {
+            return await (
+                from booking in _context.DatPhongs.AsNoTracking()
+                join profile in _context.UserProfiles.AsNoTracking()
+                    on booking.KhachHangId equals profile.UserLoginId
+                where booking.KhachSanId == hotelId
+                    && booking.KhachHangId.HasValue
+                    && booking.KhachSan != null
+                    && booking.KhachSan.NguoiTao == ownerId
+                select new Booking.Core.Model.Users.UserProfile
+                {
+                    Id = profile.UserLoginId!.Value,
+                    FullName = profile.FullName
+                })
+                .GroupBy(x => x.Id)
+                .Select(group => group.First())
+                .OrderBy(x => x.FullName)
+                .ToListAsync();
+        }
+
         public async Task<DatPhong> CheckIn(Guid id)
         {
             var datPhong = await _context.DatPhongs
@@ -104,7 +140,7 @@ namespace Booking.Data.Repository.DatPhongs
             return datPhong;
         }
 
-        public async Task<DatPhong> XacNhan(Guid id)
+        public async Task<DatPhong> ConfirmBooking(Guid id)
         {
             var datPhong = await _context.DatPhongs
                 .FirstOrDefaultAsync(x => x.Id == id);
@@ -121,7 +157,7 @@ namespace Booking.Data.Repository.DatPhongs
             return datPhong;
         }
 
-        public async Task<DatPhong> DatPhong(DatPhong dp, List<ChiTietDatPhong> ctdp, List<PhongDat> phongDats)
+        public async Task<DatPhong> CreateBooking(DatPhong dp, List<ChiTietDatPhong> ctdp, List<PhongDat> phongDats)
         {
             // 1. Thêm Đặt phòng chính
             await _context.DatPhongs.AddAsync(dp);
@@ -143,12 +179,160 @@ namespace Booking.Data.Repository.DatPhongs
 
             return dp;
         }
-        public async Task<DatPhong?> LayTheoId(Guid id)
+        public async Task<DatPhong?> GetBookingById(Guid id)
         {
             return await _context.DatPhongs
                 .Include(x => x.KhachSan)
                 .Include(x => x.ThanhToans)
                 .FirstOrDefaultAsync(x => x.Id == id);
+        }
+
+        public async Task<DatPhong?> GetCustomerBookingById(Guid id, Guid customerId)
+        {
+            return await _context.DatPhongs
+                .Include(x => x.KhachSan)
+                .Include(x => x.ThanhToans)
+                .Include(x => x.ChiTietDatPhongs)
+                    .ThenInclude(x => x.LoaiPhong)
+                .FirstOrDefaultAsync(x => x.Id == id && x.KhachHangId == customerId);
+        }
+
+        public async Task<bool> CancelBooking(Guid id, Guid customerId)
+        {
+            var booking = await _context.DatPhongs
+                .FirstOrDefaultAsync(x => x.Id == id && x.KhachHangId == customerId);
+            if (booking == null ||
+                (booking.TrangThai != TrangThaiDatPhong.CHO_XAC_NHAN.ToString() &&
+                 booking.TrangThai != TrangThaiDatPhong.DA_XAC_NHAN.ToString()))
+            {
+                return false;
+            }
+
+            booking.TrangThai = TrangThaiDatPhong.DA_HUY.ToString();
+            return await _context.SaveChangesAsync() > 0;
+        }
+
+        public async Task<bool> ChangeOwnerBookingStatus(Guid id, Guid ownerId, string status)
+        {
+            var booking = await _context.DatPhongs.FirstOrDefaultAsync(item =>
+                item.Id == id && item.KhachSan != null && item.KhachSan.NguoiTao == ownerId);
+            if (booking == null)
+            {
+                return false;
+            }
+
+            var canReject = status == TrangThaiDatPhong.TU_CHOI.ToString() &&
+                booking.TrangThai == TrangThaiDatPhong.CHO_XAC_NHAN.ToString();
+            var canCancel = status == TrangThaiDatPhong.DA_HUY.ToString() &&
+                booking.TrangThai == TrangThaiDatPhong.DA_XAC_NHAN.ToString();
+            if (!canReject && !canCancel)
+            {
+                return false;
+            }
+
+            booking.TrangThai = status;
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        public async Task<(int datPhong, double tongTien)> GetOwnerBookingStatistics(Guid hotelId, DateTime batDau, DateTime ketThuc, string trangThai)
+        {
+            var query = _context.DatPhongs
+                .AsNoTracking()
+                .Where(x =>
+                    x.KhachSanId == hotelId &&
+                    x.NgayTao >= batDau &&
+                    x.NgayTao <= ketThuc
+                );
+
+            // Nếu truyền trạng thái thì lọc theo trạng thái
+            if (!string.IsNullOrWhiteSpace(trangThai))
+            {
+                query = query.Where(x => x.TrangThai == trangThai);
+            }
+
+            var datPhong = await query.CountAsync();
+
+            var tongTien = await query
+                .Select(x => (double?)x.TongTien)
+                .SumAsync() ?? 0;
+
+            return (datPhong, tongTien);
+        }
+
+        public async Task<(List<DatPhong> Items, int TotalCount)> GetBookingsByOwner(
+            Guid ownerId, 
+            Guid? hotelId, 
+            Guid? customerId,
+            string? trangThai, 
+            DateTime? ngayTao,
+            int pageIndex,
+            int pageSize)
+        {
+            var query = _context.DatPhongs
+                .AsNoTracking()
+
+                .Include(x => x.KhachSan)
+
+                .Include(x => x.ThanhToans)
+
+                .Include(x => x.ChiTietDatPhongs)
+                .ThenInclude(x => x.LoaiPhong)
+
+                .Include(x => x.ChiTietDatPhongs)
+                .ThenInclude(x => x.PhongDats)
+                .ThenInclude(x => x.Phong)
+
+                .Where(x => x.KhachSan != null &&
+                    (ownerId == Guid.Empty || x.KhachSan.NguoiTao == ownerId));
+            // Lọc theo khách sạn (nếu có chọn)
+            if (hotelId.HasValue && hotelId.Value != Guid.Empty)
+            {
+                query = query.Where(x => x.KhachSanId == hotelId.Value);
+            }
+
+            // Lọc theo khách hàng (nếu có chọn)
+            if (customerId.HasValue && customerId.Value != Guid.Empty)
+            {
+                query = query.Where(x => x.KhachHangId == customerId.Value);
+            }
+
+            // Lọc theo trạng thái đặt phòng
+            if (!string.IsNullOrWhiteSpace(trangThai))
+            {
+                query = query.Where(x => x.TrangThai == trangThai);
+            }
+
+            // Lọc theo ngày tạo (so sánh theo ngày, bỏ qua giờ/phút/giây)
+            if (ngayTao.HasValue)
+            {
+                if (ngayTao.Value == DateTime.MinValue)
+                {
+                    // Không truyền ngày cụ thể -> lấy theo năm hiện tại
+                    var tuNgay = new DateTime(DateTime.Today.Year, 1, 1);
+                    var denNgay = tuNgay.AddYears(1);
+
+                    query = query.Where(x => x.NgayTao >= tuNgay && x.NgayTao < denNgay);
+                }
+                else
+                {
+                    // Có truyền ngày cụ thể -> lấy đúng ngày đó
+                    var tuNgay = ngayTao.Value.Date;
+                    var denNgay = tuNgay.AddDays(1);
+
+                    query = query.Where(x => x.NgayTao >= tuNgay && x.NgayTao < denNgay);
+                }
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .OrderByDescending(x => x.NgayTao)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
         }
     }
 }

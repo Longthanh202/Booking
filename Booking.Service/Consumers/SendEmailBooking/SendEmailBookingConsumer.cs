@@ -1,6 +1,6 @@
 ﻿using Booking.Core.Model.Email;
 using Booking.Data.Repository.Emails;
-using Booking.Service.Dtos.DatPhongs;
+using Booking.Service.Dtos.Bookings;
 using MailKit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -82,7 +82,7 @@ public class SendEmailBookingConsumer : BackgroundService
             try
             {
                 var json = Encoding.UTF8.GetString(ea.Body.ToArray());
-                var message = JsonSerializer.Deserialize<DatPhongEvent>(json);
+                var message = JsonSerializer.Deserialize<BookingCreatedEvent>(json);
 
                 if (message == null)
                 {
@@ -144,7 +144,7 @@ public override async Task StopAsync(CancellationToken cancellationToken)
     await base.StopAsync(cancellationToken);
 }
 
-    private async Task SendEmail(DatPhongEvent message)
+    private async Task SendEmail(BookingCreatedEvent message)
     {
         var body = $@"
         <h2>Đặt phòng thành công</h2>

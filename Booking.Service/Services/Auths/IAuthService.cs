@@ -1,4 +1,4 @@
-﻿using Booking.Service.Dtos.Auths;
+﻿using Booking.Service.Dtos.Authentication;
 using System;
 using System.Collections.Generic;
 using System.Linq;

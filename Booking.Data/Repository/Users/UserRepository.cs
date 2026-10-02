@@ -20,7 +20,7 @@ namespace Booking.Data.Repository.Users
             _context = context;
             _httpContextAccessor = httpContextAccessor;
         }
-        public async Task<UserProfile?> GetById(Guid id)
+        public async Task<UserProfile?> GetUserProfileById(Guid id)
         {
             var user = await _context.UserProfiles
                 .Where(u => u.UserLoginId == id)
@@ -36,13 +36,13 @@ namespace Booking.Data.Repository.Users
             return user;
         }
 
-        public async Task<UserProfile> Insert(UserProfile user)
+        public async Task<UserProfile> AddUserProfile(UserProfile user)
         {
             await _context.UserProfiles.AddAsync(user);        
             return user;
         }
 
-        public async Task<UserLogin> InsertUserLogin(UserLogin userLogin)
+        public async Task<UserLogin> AddUserLogin(UserLogin userLogin)
         {
             await _context.UserLogins.AddAsync(userLogin);
             return userLogin;
@@ -53,7 +53,7 @@ namespace Booking.Data.Repository.Users
             return _httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false;
         }
 
-        public async Task<UserProfile> QuenMatKhau(string username)
+        public async Task<UserProfile> FindUserByUsernameForPasswordReset(string username)
         {
             return await (
                     from ul in _context.UserLogins
@@ -81,6 +81,7 @@ namespace Booking.Data.Repository.Users
                 throw new Exception("User không tồn tại");
             }
 
+            user.Password = Booking.Common.Shared.Hash.HashPassword(password);
             _context.UserLogins.Update(user);
 
             await _context.SaveChangesAsync();
@@ -90,7 +91,7 @@ namespace Booking.Data.Repository.Users
 
         public async Task<UserProfile?> Login(string userName, string passWord)
         {
-            return await (
+            var result =  await (
                  from ul in _context.UserLogins
                  join up in _context.UserProfiles on ul.Id equals up.UserLoginId
                  join ur in _context.UserRoles on ul.Id equals ur.UserId
@@ -108,6 +109,73 @@ namespace Booking.Data.Repository.Users
                  RoleName = r.RoleName
 
              }).FirstOrDefaultAsync();
+            return result;
+        }
+
+        public async Task<(List<UserProfile> Users, int TotalCount)> GetAdminUsers(
+            string? keyword,
+            int? status,
+            int page,
+            int pageSize)
+        {
+            var query =
+                from profile in _context.UserProfiles.AsNoTracking()
+                join login in _context.UserLogins on profile.UserLoginId equals login.Id
+                join userRole in _context.UserRoles on login.Id equals userRole.UserId into userRoleGroup
+                from userRole in userRoleGroup.DefaultIfEmpty()
+                join role in _context.Roles on userRole.RoleId equals role.Id into roleGroup
+                from role in roleGroup.DefaultIfEmpty()
+                select new UserProfile
+                {
+                    Id = profile.Id,
+                    UserLoginId = login.Id,
+                    Username = login.Username,
+                    FullName = profile.FullName,
+                    Phone = profile.Phone,
+                    Email = profile.Email,
+                    Address = profile.Address,
+                    IsDel = profile.IsDel,
+                    CreateAt = profile.CreateAt,
+                    RoleId = userRole == null ? Guid.Empty : userRole.RoleId,
+                    RoleName = role == null ? null : role.RoleName
+                };
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                var search = keyword.Trim();
+                query = query.Where(user =>
+                    (user.Username != null && user.Username.Contains(search)) ||
+                    (user.FullName != null && user.FullName.Contains(search)) ||
+                    (user.Email != null && user.Email.Contains(search)));
+            }
+
+            if (status.HasValue)
+            {
+                query = query.Where(user => user.IsDel == status.Value);
+            }
+
+            var totalCount = await query.CountAsync();
+            var users = await query
+                .OrderByDescending(user => user.CreateAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (users, totalCount);
+        }
+
+        public async Task<bool> SetAccountStatus(Guid userId, int status)
+        {
+            var profile = await _context.UserProfiles
+                .FirstOrDefaultAsync(user => user.UserLoginId == userId);
+            if (profile == null)
+            {
+                return false;
+            }
+
+            profile.IsDel = status;
+            await _context.SaveChangesAsync();
+            return true;
         }
     }
 }

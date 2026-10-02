@@ -1,6 +1,6 @@
 ﻿using Booking.Core.Model.KhachSans;
 using Booking.Core.Model.LoaiPhongs;
-using Booking.Service.Dtos.LoaiPhongs;
+using Booking.Service.Dtos.RoomTypes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,8 +11,8 @@ namespace Booking.Data.Repository.LoaiPhongs
 {
     public interface ILoaiPhongService
     {
-        Task<int> TaoLoaiPhong(List<LoaiPhongRequest> lp);
-        Task<List<LoaiPhongHienThi>> GetLoaiPhongByKhachSanId(GetLoaiPhongDto input);
-        Task<List<LoaiPhong>> GetLoaiPhongOwner(Guid khachSanId);
+        Task<int> CreateRoomTypes(List<CreateRoomTypeRequest> lp);
+        Task<List<LoaiPhongHienThi>> GetRoomTypesByHotelId(RoomTypeSearchRequest input);
+        Task<List<LoaiPhong>> GetOwnerRoomTypes(Guid khachSanId);
     }
 }

@@ -1,0 +1,17 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Booking.Service.Dtos.RoomTypes
+{
+    public class CreateRoomTypeRequest
+    {   
+        public Guid KhachSanId { get; set; }
+        public string? TenLoaiPhong { get; set; }
+        public int? SoKhachToiDa { get; set; }
+        public string? KieuGiuong { get; set; }
+        public string? MoTa { get; set; }
+    }
+}

@@ -9,7 +9,11 @@ namespace Booking.Data.Repository.ThanhToans
 {
     public interface IThanhToanRepository
     {
-        Task<ThanhToan> Tao(ThanhToan t);
+        Task<ThanhToan> CreatePayment(ThanhToan t);
         Task<ThanhToan?> LayTheoDatPhong(Guid datPhongId);
+        Task<ThanhToan?> GetForCustomer(Guid paymentId, Guid customerId);
+        Task<ThanhToan?> GetForCustomerBooking(Guid bookingId, Guid customerId);
+        Task<List<ThanhToan>> GetAll();
+        Task<ThanhToan?> UpdateStatus(Guid paymentId, string status);
     }
 }

@@ -10,6 +10,6 @@ namespace Booking.Data.Repository.RefreshTokens
     public interface IRefreshTokenRepository
     {
         Task<RefreshToken> InsertRefreshToken(RefreshToken refreshToken);
-        Task<RefreshToken> CheckStatusefreshToken(string token);
+        Task<RefreshToken> GetValidRefreshToken(string token);
     }
 }
