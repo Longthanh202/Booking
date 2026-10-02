@@ -30,6 +30,21 @@ namespace Booking.Api.Controllers
             return payment == null ? NotFound() : Ok(payment);
         }
 
+        [Authorize(Roles = "Customer")]
+        [HttpGet("booking/{bookingId:guid}/qr")]
+        public async Task<IActionResult> GetBookingPaymentQr(Guid bookingId)
+        {
+            if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var customerId))
+            {
+                return Unauthorized();
+            }
+
+            var qr = await _service.GetQrForCustomerBooking(bookingId, customerId);
+            return qr == null
+                ? NotFound(new { message = "Không tìm thấy khoản thanh toán đang chờ hoặc tài khoản nhận tiền mặc định." })
+                : Ok(qr);
+        }
+
         [Authorize(Roles = "Admin")]
         [HttpGet("admin")]
         public async Task<IActionResult> GetAllPayments() => Ok(await _service.GetAll());

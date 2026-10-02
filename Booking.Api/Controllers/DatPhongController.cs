@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Booking.Common.Shared.Enum.Booking;
+using Booking.Service.Services.Promotions;
 
 namespace Booking.Api.Controllers
 {
@@ -32,10 +34,26 @@ namespace Booking.Api.Controllers
             }
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var result = await _datPhongService.CreateBooking(input, Guid.Parse(userId));
+            DatPhong result;
+            try
+            {
+                result = await _datPhongService.CreateBooking(input, Guid.Parse(userId));
+            }
+            catch (PromotionNotApplicableException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
             if (result != null)
             {
-                return Ok(new { Message = "Đặt phòng thành công" });
+                return Ok(new
+                {
+                    Message = "Đặt phòng thành công",
+                    result = new
+                    {
+                        id = result.Id,
+                        trangThai = result.TrangThai
+                    }
+                });
             }
             else
             {
@@ -74,6 +92,30 @@ namespace Booking.Api.Controllers
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var data = await _datPhongService.GetOwnerBookings(dto, Guid.Parse(userId));
             return Ok(data);
+        }
+
+        [Authorize(Roles = "Owner")]
+        [HttpGet("customer-options")]
+        public async Task<IActionResult> GetCustomerOptions([FromQuery] Guid hotelId)
+        {
+            if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var ownerId))
+            {
+                return Unauthorized();
+            }
+
+            return Ok(await _datPhongService.GetCustomerOptionsByHotelId(hotelId, ownerId));
+        }
+
+        [Authorize(Roles = "Owner")]
+        [HttpGet("status-options")]
+        public IActionResult GetBookingStatusOptions()
+        {
+            return Ok(Enum.GetValues<TrangThaiDatPhong>()
+                .Select(status => new
+                {
+                    id = status.ToString(),
+                    name = status.ToString()
+                }));
         }
 
         [Authorize(Roles = "Customer")]
@@ -151,6 +193,34 @@ namespace Booking.Api.Controllers
                 status = true,
                 message = "Xác nhận Booking thành công"
             });
+        }
+
+        [Authorize(Roles = "Owner")]
+        [HttpPut("{id:guid}/reject")]
+        public async Task<IActionResult> RejectBooking(Guid id)
+        {
+            if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var ownerId))
+            {
+                return Unauthorized();
+            }
+
+            return await _datPhongService.RejectBooking(id, ownerId)
+                ? Ok(new { message = "Đã từ chối booking đang chờ xác nhận." })
+                : BadRequest(new { message = "Booking không thuộc Owner hoặc không còn ở trạng thái chờ xác nhận." });
+        }
+
+        [Authorize(Roles = "Owner")]
+        [HttpPut("{id:guid}/owner-cancel")]
+        public async Task<IActionResult> CancelBookingByOwner(Guid id)
+        {
+            if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var ownerId))
+            {
+                return Unauthorized();
+            }
+
+            return await _datPhongService.CancelBookingByOwner(id, ownerId)
+                ? Ok(new { message = "Đã hủy booking đã xác nhận." })
+                : BadRequest(new { message = "Booking không thuộc Owner hoặc không thể hủy ở trạng thái hiện tại." });
         }
 
         [Authorize(Roles ="Owner")]

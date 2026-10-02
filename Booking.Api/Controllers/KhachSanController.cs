@@ -50,6 +50,49 @@ namespace Booking.Api.Controllers
             }
             return Ok(result);
         }
+
+        [Authorize(Roles = "Owner")]
+        [HttpPut("owner/{id:guid}")]
+        public async Task<IActionResult> UpdateOwnerHotel(Guid id, [FromBody] UpdateHotelRequest request)
+        {
+            if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var ownerId))
+            {
+                return Unauthorized();
+            }
+
+            var updated = await _khachSanService.UpdateHotel(id, ownerId, request);
+            return updated
+                ? Ok(new { message = "Cập nhật khách sạn thành công; khách sạn đang chờ Admin duyệt lại." })
+                : BadRequest(new { message = "Thông tin không hợp lệ hoặc khách sạn không thuộc Owner." });
+        }
+
+        [Authorize(Roles = "Owner")]
+        [HttpPost("owner/{id:guid}/images")]
+        public async Task<IActionResult> AddHotelImages(Guid id, [FromForm] List<IFormFile> images)
+        {
+            if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var ownerId))
+            {
+                return Unauthorized();
+            }
+
+            return await _khachSanService.AddHotelImages(id, ownerId, images)
+                ? Ok(new { message = "Đã thêm ảnh khách sạn." })
+                : BadRequest(new { message = "Khách sạn không thuộc Owner hoặc danh sách ảnh không hợp lệ." });
+        }
+
+        [Authorize(Roles = "Owner")]
+        [HttpDelete("owner/{hotelId:guid}/images/{imageId:long}")]
+        public async Task<IActionResult> DeleteHotelImage(Guid hotelId, long imageId)
+        {
+            if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var ownerId))
+            {
+                return Unauthorized();
+            }
+
+            return await _khachSanService.DeleteHotelImage(hotelId, imageId, ownerId)
+                ? NoContent()
+                : NotFound();
+        }
         
         [Authorize(Roles = "Admin")]
         [HttpGet("admin/search")]
@@ -117,6 +160,19 @@ namespace Booking.Api.Controllers
                 await _khachSanService.LayDanhSachKhachSanOwnerAsync(request, Guid.Parse(userIdClaim));
 
             return Ok(result);
+        }
+
+        [Authorize(Roles = "Owner")]
+        [HttpGet("options")]
+        public async Task<IActionResult> GetHotelOptions([FromQuery] Guid ownerId)
+        {
+            if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var currentOwnerId) ||
+                currentOwnerId != ownerId)
+            {
+                return Unauthorized();
+            }
+
+            return Ok(await _khachSanService.GetHotelOptionsByOwnerId(ownerId));
         }
         
         [HttpGet("{id:guid}")]

@@ -2,6 +2,7 @@
 using Booking.Service.Dtos.Amenities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Booking.Api.Controllers
 {
@@ -20,7 +21,12 @@ namespace Booking.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateAmenities([FromBody] List<CreateAmenityRequest> dto)
         {
-            var result = await _tienIchService.CreateAmenities(dto);
+            if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var ownerId))
+            {
+                return Unauthorized();
+            }
+
+            var result = await _tienIchService.CreateAmenities(dto, ownerId);
 
             if (result != 0)
             {

@@ -109,6 +109,41 @@ namespace Booking.Api.Controllers
             return Ok();
         }       
 
+        [HttpGet("admin")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> GetAdminUsers(
+            [FromQuery] string? keyword,
+            [FromQuery] int? status,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 20)
+        {
+            if (page <= 0 || pageSize <= 0 || pageSize > 100 || (status.HasValue && status is not (0 or 1)))
+            {
+                return BadRequest(new { message = "Tham số lọc hoặc phân trang không hợp lệ." });
+            }
+
+            return Ok(await _userServices.GetAdminUsers(keyword, status, page, pageSize));
+        }
+
+        [HttpPut("admin/{userId:guid}/status")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateAccountStatus(Guid userId, [FromBody] UpdateAccountStatusRequest request)
+        {
+            if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var currentUserId))
+            {
+                return Unauthorized();
+            }
+
+            if (userId == currentUserId && request.IsDel == 1)
+            {
+                return BadRequest(new { message = "Không thể khóa tài khoản Admin đang đăng nhập." });
+            }
+
+            return await _userServices.SetAccountStatus(userId, request.IsDel)
+                ? Ok(new { message = request.IsDel == 0 ? "Đã mở khóa tài khoản." : "Đã khóa tài khoản." })
+                : NotFound(new { message = "Không tìm thấy tài khoản." });
+        }
+
         [HttpPost]
         [Route("register")]
         public async Task<IActionResult> Register([FromBody] RegisterUserRequest u)

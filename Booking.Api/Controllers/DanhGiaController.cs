@@ -57,6 +57,34 @@ namespace Booking.Api.Controllers
             return reviews == null ? Forbid() : Ok(reviews);
         }
 
+        [Authorize(Roles = "Owner")]
+        [HttpPut("owner/{id:guid}/response")]
+        public async Task<IActionResult> RespondToReview(Guid id, [FromBody] OwnerReviewResponseRequest request)
+        {
+            if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var ownerId))
+            {
+                return Unauthorized();
+            }
+
+            return await _service.RespondByOwner(id, ownerId, request.Response)
+                ? Ok(new { message = "Đã lưu phản hồi review." })
+                : NotFound(new { message = "Review không tồn tại hoặc không thuộc khách sạn của Owner." });
+        }
+
+        [Authorize(Roles = "Owner")]
+        [HttpPost("owner/{id:guid}/report")]
+        public async Task<IActionResult> ReportReview(Guid id, [FromBody] OwnerReviewReportRequest request)
+        {
+            if (!Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out var ownerId))
+            {
+                return Unauthorized();
+            }
+
+            return await _service.ReportByOwner(id, ownerId, request.Reason)
+                ? Accepted(new { message = "Đã gửi báo cáo review tới bộ phận quản trị." })
+                : NotFound(new { message = "Review không tồn tại hoặc không thuộc khách sạn của Owner." });
+        }
+
         [Authorize(Roles = "Admin")]
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
