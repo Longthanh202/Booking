@@ -51,6 +51,7 @@ namespace Booking.Api.Controllers
                     result = new
                     {
                         id = result.Id,
+                        maDatPhong = result.MaDatPhong,
                         trangThai = result.TrangThai
                     }
                 });
@@ -120,7 +121,10 @@ namespace Booking.Api.Controllers
 
         [Authorize(Roles = "Customer")]
         [HttpGet("history")]
-        public async Task<IActionResult> GetBookingHistory(int pageIndex, int pageSize)
+        public async Task<IActionResult> GetBookingHistory(
+            int pageIndex,
+            int pageSize,
+            [FromQuery] string? maDatPhong = null)
         {
             if (!_userServices.IsAuthenticated())
             {

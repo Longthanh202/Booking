@@ -35,6 +35,7 @@ namespace Booking.Data.Repository.DatPhongs
         public async Task<(List<DatPhong> Items, int TotalCount)> GetOwnerBookings(
             Guid ownerId,
             Guid khachSanId,
+            string? maDatPhong,
             int pageIndex,
             int pageSize)
         {
@@ -58,6 +59,12 @@ namespace Booking.Data.Repository.DatPhongs
                     x.KhachSan.NguoiTao == ownerId
                 );
 
+            if (!string.IsNullOrWhiteSpace(maDatPhong))
+            {
+                var search = maDatPhong.Trim();
+                query = query.Where(x => x.MaDatPhong != null && x.MaDatPhong.Contains(search));
+            }
+
             var totalCount = await query.CountAsync();
 
             var items = await query
@@ -69,7 +76,11 @@ namespace Booking.Data.Repository.DatPhongs
             return (items, totalCount);
         }
 
-        public async Task<(List<DatPhong> Items, int TotalCount)> GetBookingHistory(Guid userId, int pageIndex, int pageSize)
+        public async Task<(List<DatPhong> Items, int TotalCount)> GetBookingHistory(
+            Guid userId,
+            string? maDatPhong,
+            int pageIndex,
+            int pageSize)
         {
             var query = _context.DatPhongs
                 .AsNoTracking()
@@ -88,6 +99,12 @@ namespace Booking.Data.Repository.DatPhongs
                 .Where(x =>
                     x.KhachHangId == userId
                 );
+
+            if (!string.IsNullOrWhiteSpace(maDatPhong))
+            {
+                var search = maDatPhong.Trim();
+                query = query.Where(x => x.MaDatPhong != null && x.MaDatPhong.Contains(search));
+            }
 
             var totalCount = await query.CountAsync();
 
@@ -266,6 +283,7 @@ namespace Booking.Data.Repository.DatPhongs
             Guid? customerId,
             string? trangThai, 
             DateTime? ngayTao,
+            string? maDatPhong,
             int pageIndex,
             int pageSize)
         {
@@ -301,6 +319,12 @@ namespace Booking.Data.Repository.DatPhongs
             if (!string.IsNullOrWhiteSpace(trangThai))
             {
                 query = query.Where(x => x.TrangThai == trangThai);
+            }
+
+            if (!string.IsNullOrWhiteSpace(maDatPhong))
+            {
+                var search = maDatPhong.Trim();
+                query = query.Where(x => x.MaDatPhong != null && x.MaDatPhong.Contains(search));
             }
 
             // Lọc theo ngày tạo (so sánh theo ngày, bỏ qua giờ/phút/giây)

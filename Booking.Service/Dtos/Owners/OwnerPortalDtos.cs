@@ -43,6 +43,7 @@ namespace Booking.Service.Dtos.Owners
     public class OwnerCalendarBooking
     {
         public Guid BookingId { get; set; }
+        public string? MaDatPhong { get; set; }
         public Guid? HotelId { get; set; }
         public string? HotelName { get; set; }
         public Guid? CustomerId { get; set; }

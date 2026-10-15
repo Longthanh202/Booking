@@ -118,6 +118,7 @@ namespace Booking.Service.Services.DatPhongs
             var result = await _datPhongRepository.GetOwnerBookings(
                 ownerId,
                 dto.KhachSanId,
+                dto.MaDatPhong,
                 page,
                 pageSize);
 
@@ -127,6 +128,7 @@ namespace Booking.Service.Services.DatPhongs
                 // Đặt phòng
                 // =========================
                 Id = x.Id,
+                MaDatPhong = x.MaDatPhong,
                 TrangThai = x.TrangThai,
                 NgayTao = x.NgayTao,
                 NgayNhan = x.NgayNhanPhong,
@@ -190,13 +192,18 @@ namespace Booking.Service.Services.DatPhongs
             };
         }
 
-        public async Task<BookingHistoryResponse> GetBookingHistory(Guid userId, int pageIndex, int pageSize)
+        public async Task<BookingHistoryResponse> GetBookingHistory(
+            Guid userId,
+            int pageIndex,
+            int pageSize,
+            string? maDatPhong = null)
         {
             var page = pageIndex <= 0 ? 1 : pageIndex;
             pageSize = pageSize <= 0 ? 10 : pageSize;
 
             var result = await _datPhongRepository.GetBookingHistory(
                 userId,
+                maDatPhong,
                 page,
                 pageSize);
 
@@ -206,6 +213,7 @@ namespace Booking.Service.Services.DatPhongs
                 // Đặt phòng
                 // =========================
                 Id = x.Id,
+                MaDatPhong = x.MaDatPhong,
                 TrangThai = x.TrangThai,
                 NgayTao = x.NgayTao,
 
@@ -600,6 +608,7 @@ namespace Booking.Service.Services.DatPhongs
                 dto.customerId,
                 dto.trangThai,
                 dto.ngayTao,
+                dto.maDatPhong,
                 page,
                 pageSize);
 
@@ -609,6 +618,7 @@ namespace Booking.Service.Services.DatPhongs
                 // Đặt phòng
                 // =========================
                 Id = x.Id,
+                MaDatPhong = x.MaDatPhong,
                 TrangThai = x.TrangThai,
                 NgayTao = x.NgayTao,
                 NgayNhan = x.NgayNhanPhong,

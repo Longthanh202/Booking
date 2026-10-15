@@ -14,6 +14,7 @@ namespace Booking.Service.Dtos.Bookings
     public class BookingDto
     {
         public Guid Id { get; set; }
+        public string? MaDatPhong { get; set; }
 
         public string? TrangThai { get; set; }
 
@@ -58,6 +59,7 @@ namespace Booking.Service.Dtos.Bookings
     public class OwnerBookingSearchRequest
     {
         public Guid KhachSanId { get; set; }
+        public string? MaDatPhong { get; set; }
         public int Page { get; set; } = 1;
         public int PageSize { get; set; } = 10;
     }

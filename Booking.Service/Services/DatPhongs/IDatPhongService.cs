@@ -17,7 +17,11 @@ namespace Booking.Data.Repository.DatPhongs
         Task<OwnerBookingResponse> GetBookingsByOwner(OwnerBookingListRequest dto, Guid ownerId);
         Task<OwnerBookingResponse> GetAdminBookings(OwnerBookingListRequest dto);
 
-        Task<BookingHistoryResponse> GetBookingHistory(Guid userId, int pageIndex, int pageSize);
+        Task<BookingHistoryResponse> GetBookingHistory(
+            Guid userId,
+            int pageIndex,
+            int pageSize,
+            string? maDatPhong = null);
         Task<List<OptionDto>> GetCustomerOptionsByHotelId(Guid hotelId, Guid ownerId);
         Task<DatPhong?> GetCustomerBookingById(Guid id, Guid customerId);
         Task<bool> CancelBooking(Guid id, Guid customerId);

@@ -193,6 +193,7 @@ namespace Booking.Service.Services.Owners
                 Bookings = bookings.Select(booking => new OwnerCalendarBooking
                 {
                     BookingId = booking.Id,
+                    MaDatPhong = booking.MaDatPhong,
                     HotelId = booking.KhachSanId,
                     HotelName = booking.KhachSan?.TenKhachSan,
                     CustomerId = booking.KhachHangId,

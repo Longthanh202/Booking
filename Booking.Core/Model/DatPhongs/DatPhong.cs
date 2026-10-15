@@ -12,6 +12,7 @@ namespace Booking.Core.Model.DatPhongs
     {
         [Key]
         public Guid Id { get; set; }
+        public string? MaDatPhong { get; set; }
         public Guid? KhachHangId { get; set; }
         public Guid? KhachSanId { get; set; }
         public DateTime? NgayNhanPhong { get; set; } // DATE -> DateTime trong C# (hoặc DateOnly)

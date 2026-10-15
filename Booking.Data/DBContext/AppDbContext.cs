@@ -43,6 +43,9 @@ namespace Booking.Data.DBContext
             // --- 1. ÁNH XẠ TÊN BẢNG (Đã lọc bỏ trùng lặp) ---
             modelBuilder.Entity<Banner>().ToTable("Banner");
             modelBuilder.Entity<DatPhong>().ToTable("DatPhong");
+            modelBuilder.Entity<DatPhong>()
+                .Property(x => x.MaDatPhong)
+                .ValueGeneratedOnAdd();
             modelBuilder.Entity<DanhGia>().ToTable("DanhGia");
             modelBuilder.Entity<KhachSan>().ToTable("KhachSan");
             modelBuilder.Entity<LoaiPhong>().ToTable("LoaiPhong");
