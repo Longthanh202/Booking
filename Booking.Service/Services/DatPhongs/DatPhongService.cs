@@ -25,6 +25,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Booking.Service.Services.Notifications;
 using Booking.Service.Services.Promotions;
+using StackExchange.Redis;
 
 namespace Booking.Service.Services.DatPhongs
 {
@@ -39,6 +40,7 @@ namespace Booking.Service.Services.DatPhongs
         private readonly IUserRepository _userRepository;
         private readonly INotificationService _notificationService;
         private readonly IHotelPromotionService _hotelPromotionService;
+        private readonly IConnectionMultiplexer _redis;
 
         public DatPhongService(IDatPhongRepository datPhongRepository,
             IThanhToanRepository thanhToanRepository,
@@ -48,7 +50,8 @@ namespace Booking.Service.Services.DatPhongs
             IRabbitMQPublisher rabbitMQPublisher,
             IUserRepository userRepository,
             INotificationService notificationService,
-            IHotelPromotionService hotelPromotionService)
+            IHotelPromotionService hotelPromotionService,
+            IConnectionMultiplexer redis)
         {
             _datPhongRepository = datPhongRepository;
             _thanhToanRepository = thanhToanRepository;
@@ -59,6 +62,7 @@ namespace Booking.Service.Services.DatPhongs
             _userRepository = userRepository;
             _notificationService = notificationService;
             _hotelPromotionService = hotelPromotionService;
+            _redis = redis;
         }
 
         public async Task<DatPhong> UpdateBookingStatus(Guid id, Guid ownerId)
@@ -398,9 +402,28 @@ namespace Booking.Service.Services.DatPhongs
             // Dùng .Value để ép về kiểu TimeSpan không null
             int soNgayO = (dp.NgayTraPhong.Value - dp.NgayNhanPhong.Value).Days;
 
-            await _unitOfWork.BeginTransactionAsync();
+            var redisDatabase = _redis.GetDatabase();
+            var acquiredLocks = new List<(RedisKey Key, RedisValue Token)>();
+            var transactionStarted = false;
             try
             {
+                foreach (var roomTypeId in dp.DanhSachPhong
+                    .Select(item => item.LoaiPhongId)
+                    .Distinct()
+                    .OrderBy(id => id))
+                {
+                    var lockKey = (RedisKey)$"booking:room-type:{roomTypeId:N}";
+                    var lockToken = (RedisValue)Guid.NewGuid().ToString("N");
+                    if (!await redisDatabase.LockTakeAsync(
+                        lockKey, lockToken, TimeSpan.FromMinutes(2)))
+                    {
+                        throw new RoomBookingInProgressException();
+                    }
+
+                    acquiredLocks.Add((lockKey, lockToken));
+                }
+                await _unitOfWork.BeginTransactionAsync();
+                transactionStarted = true;
                 decimal tongTien = 0;
                 var ctdps = new List<ChiTietDatPhong>();
                 var phongDats = new List<PhongDat>(); // Bảng lưu CTDP_Id và PhongId
@@ -493,7 +516,7 @@ namespace Booking.Service.Services.DatPhongs
                 // 7. Lưu tất cả thông tin vào DB
                 await _datPhongRepository.CreateBooking(datPhong, ctdps, phongDats);
 
-                    await _thanhToanRepository.CreatePayment(new ThanhToan
+                await _thanhToanRepository.CreatePayment(new ThanhToan
                 {
                     DatPhongId = datPhongId,
                     PhuongThuc = dp.PhuongThucThanhToan,
@@ -501,7 +524,17 @@ namespace Booking.Service.Services.DatPhongs
                     TrangThai = TrangThaiThanhToan.CHO_THANH_TOAN.ToString()
                 });
 
+                foreach (var (key, token) in acquiredLocks)
+                {
+                    if (!await redisDatabase.LockExtendAsync(
+                        key, token, TimeSpan.FromMinutes(2)))
+                    {
+                        throw new RoomBookingInProgressException();
+                    }
+                }
+
                 await _unitOfWork.CommitAsync();
+                transactionStarted = false;
                 await _notificationService.BookingSuccess(userId, datPhong);
                 var createdBooking = await _datPhongRepository.GetBookingById(datPhong.Id);
                 if (createdBooking?.KhachSan != null)
@@ -515,22 +548,34 @@ namespace Booking.Service.Services.DatPhongs
                 await _rabbitMQPublisher.PublishAsync(
                     "booking_email_queue",
                     new BookingCreatedEvent
-                {
-                    BookingId = datPhong.Id,
-                    HoTen = user.FullName,
-                    Email = user.Email,
-                    TenKhachSan = "Tên Khách Sạn",
-                    NgayNhanPhong = dp.NgayNhanPhong.Value,
-                    NgayTraPhong = dp.NgayTraPhong.Value,
-                    TongTien = tongTien
-                });
+                    {
+                        BookingId = datPhong.Id,
+                        HoTen = user.FullName,
+                        Email = user.Email,
+                        TenKhachSan = "Tên Khách Sạn",
+                        NgayNhanPhong = dp.NgayNhanPhong.Value,
+                        NgayTraPhong = dp.NgayTraPhong.Value,
+                        TongTien = tongTien
+                    });
 
                 return datPhong;
             }
-            catch (Exception ex)
+            catch
             {
-                await _unitOfWork.RollbackAsync();
+                if (transactionStarted)
+                {
+                    await _unitOfWork.RollbackAsync();
+                }
+
                 throw;
+            }
+            finally
+            {
+                for (var index = acquiredLocks.Count - 1; index >= 0; index--)
+                {
+                    var (key, token) = acquiredLocks[index];
+                    await redisDatabase.LockReleaseAsync(key, token);
+                }
             }
         }
 

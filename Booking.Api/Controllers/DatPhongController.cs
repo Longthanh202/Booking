@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Booking.Common.Shared.Enum.Booking;
+using Booking.Service.Services.DatPhongs;
 using Booking.Service.Services.Promotions;
 
 namespace Booking.Api.Controllers
@@ -38,6 +39,10 @@ namespace Booking.Api.Controllers
             try
             {
                 result = await _datPhongService.CreateBooking(input, Guid.Parse(userId));
+            }
+            catch (RoomBookingInProgressException ex)
+            {
+                return Conflict(new { message = ex.Message });
             }
             catch (PromotionNotApplicableException ex)
             {
@@ -132,7 +137,8 @@ namespace Booking.Api.Controllers
             }
 
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var data = await _datPhongService.GetBookingHistory(Guid.Parse(userId), pageIndex, pageSize);
+            var data = await _datPhongService.GetBookingHistory(
+                Guid.Parse(userId), pageIndex, pageSize, maDatPhong);
             return Ok(data);
         }
 
