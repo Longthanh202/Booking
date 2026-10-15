@@ -26,7 +26,8 @@ builder.Services.AddDIData(builder.Configuration);//DI Data
 builder.Services.AddDIService(builder.Configuration);//DI Service
 builder.Services.AddHttpContextAccessor();//DI HttpContextAccessor
 
-builder.Services.AddRedisRateLimiter("localhost:6379");
+builder.Services.AddRedisRateLimiter(
+    builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379");
 
 builder.Services.Configure<HostOptions>(options =>
 {

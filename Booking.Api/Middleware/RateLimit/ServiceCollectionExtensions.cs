@@ -1,4 +1,5 @@
 ﻿using StackExchange.Redis;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,7 +16,7 @@ namespace Booking.Api.Middleware.RateLimit
         public static IServiceCollection AddRedisRateLimiter(this IServiceCollection services, string redisConnectionString)
         {
             // Dùng chung 1 ConnectionMultiplexer (singleton) cho toàn app, KHÔNG tạo mới mỗi lần gọi
-            services.AddSingleton<IConnectionMultiplexer>(_ =>
+            services.TryAddSingleton<IConnectionMultiplexer>(_ =>
                 ConnectionMultiplexer.Connect(redisConnectionString));
 
             services.AddSingleton<IRateLimiter, RedisRateLimiter>();
