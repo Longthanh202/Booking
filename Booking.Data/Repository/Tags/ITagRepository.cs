@@ -8,6 +8,7 @@ namespace Booking.Data.Repository.Tags
         Task<List<Tag>> GetActiveTagsAsync();
         Task<List<Tag>> GetAllAsync();
         Task<Tag?> GetByIdAsync(Guid id);
+        Task<bool> AreActiveTagsAsync(IReadOnlyCollection<Guid> tagIds);
         Task<bool> SlugExistsAsync(string slug, Guid? exceptId = null);
         Task<(Tag? Tag, List<KhachSan> Hotels, int TotalCount)> GetHotelsBySlugAsync(string slug, int page, int pageSize);
         Task AddAsync(Tag tag);

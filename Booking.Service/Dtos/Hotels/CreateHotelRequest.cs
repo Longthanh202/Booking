@@ -21,5 +21,6 @@ namespace Booking.Service.Dtos.Hotels
         public string GioNhanPhong { get; set; }
         public string GioTraPhong { get; set; }
         public List<IFormFile> Files { get; set; }
+        public List<Guid>? TagIds { get; set; }
     }
 }

@@ -46,7 +46,7 @@ namespace Booking.Api.Controllers
             var result = await _khachSanService.CreateHotel(dto, Guid.Parse(userId));
             if (!result.Status)
             {
-                return BadRequest();
+                return BadRequest(new { message = result.Message });
             }
             return Ok(result);
         }

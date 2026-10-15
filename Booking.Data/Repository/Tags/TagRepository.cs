@@ -37,6 +37,13 @@ namespace Booking.Data.Repository.Tags
 
         public Task<Tag?> GetByIdAsync(Guid id) => _context.Tags.FindAsync(id).AsTask();
 
+        public async Task<bool> AreActiveTagsAsync(IReadOnlyCollection<Guid> tagIds)
+        {
+            var activeTagCount = await _context.Tags.CountAsync(tag =>
+                tagIds.Contains(tag.Id) && tag.IsActive);
+            return activeTagCount == tagIds.Count;
+        }
+
         public Task<bool> SlugExistsAsync(string slug, Guid? exceptId = null)
         {
             return _context.Tags.AnyAsync(tag => tag.Slug == slug && (!exceptId.HasValue || tag.Id != exceptId.Value));

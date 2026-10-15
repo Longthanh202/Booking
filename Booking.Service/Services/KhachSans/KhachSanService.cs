@@ -5,12 +5,14 @@ using Booking.Core.Model.KhachSanImage;
 using Booking.Core.Model.KhachSans;
 using Booking.Core.Model.LoaiPhongs;
 using Booking.Core.Model.TienIchs;
+using Booking.Core.Model.Tags;
 using Booking.Data;
 using Booking.Data.Connection;
 using Booking.Data.Repository.GiaPhongs;
 using Booking.Data.Repository.KhachSanImage;
 using Booking.Data.Repository.KhachSans;
 using Booking.Data.Repository.Redis;
+using Booking.Data.Repository.Tags;
 using Booking.Service.Dtos.Hotels;
 using Booking.Service.Dtos.Common;
 using Booking.Service.Dtos.HotelImages;
@@ -30,11 +32,13 @@ namespace Booking.Service.Services.KhachSans
         private readonly IUnitOfWork _unitOfWork;
         private readonly IGiaPhongRepository _giaPhongRepository;
         private readonly IRedisService _redisService;
+        private readonly ITagRepository _tagRepository;
 
         public KhachSanService(CloudinaryService cloudinaryService, IKhachSanRepository khachSanRepository,
             IKhachSanImageRepository khachSanImageRepository, IUnitOfWork unitOfWork, 
             IGiaPhongRepository giaPhongRepository,
-            IRedisService redisService)
+            IRedisService redisService,
+            ITagRepository tagRepository)
         {
             _cloudinaryService = cloudinaryService;
             _khachSanRepository = khachSanRepository;
@@ -42,6 +46,7 @@ namespace Booking.Service.Services.KhachSans
             _unitOfWork = unitOfWork;
             _giaPhongRepository = giaPhongRepository;
             _redisService = redisService;
+            _tagRepository = tagRepository;
         }
 
         public async Task<HotelDetailsResponse?> GetHotelDetails(Guid id)
@@ -349,20 +354,31 @@ namespace Booking.Service.Services.KhachSans
 
         public async Task<CreateHotelResponse> CreateHotel(CreateHotelRequest ks, Guid nguoiTao)
         {
+            if (!TimeSpan.TryParse(ks.GioNhanPhong, out var gioNhan) ||
+                !TimeSpan.TryParse(ks.GioTraPhong, out var gioTra))
+            {
+                return new CreateHotelResponse
+                {
+                    Status = false,
+                    Message = "Giờ nhận phòng hoặc giờ trả phòng không hợp lệ",
+                    Data = null
+                };
+            }
+
+            var tagIds = ks.TagIds?.Distinct().ToList() ?? new List<Guid>();
+            if (tagIds.Count > 0 && !await _tagRepository.AreActiveTagsAsync(tagIds))
+            {
+                return new CreateHotelResponse
+                {
+                    Status = false,
+                    Message = "Một hoặc nhiều tag không tồn tại hoặc đã bị ẩn.",
+                    Data = null
+                };
+            }
+
             await _unitOfWork.BeginTransactionAsync();
             try
             {
-                if (!TimeSpan.TryParse(ks.GioNhanPhong, out var gioNhan) ||
-                    !TimeSpan.TryParse(ks.GioTraPhong, out var gioTra))
-                {
-                    return new CreateHotelResponse
-                    {
-                        Status = false,
-                        Message = "Giờ nhận phòng hoặc giờ trả phòng không hợp lệ",
-                        Data = null
-                    };
-                }    
-
                 var images = new List<string>();
                 foreach (var file in ks.Files)
                 {
@@ -381,11 +397,15 @@ namespace Booking.Service.Services.KhachSans
                     ViDo = ks.ViDo,
                     KinhDo = ks.KinhDo,
                     SoSao = ks.SoSao,
-                    GioNhanPhong = Convert.ToDateTime(ks.GioNhanPhong).TimeOfDay,
-                    GioTraPhong = Convert.ToDateTime(ks.GioTraPhong).TimeOfDay,
+                    GioNhanPhong = gioNhan,
+                    GioTraPhong = gioTra,
                     TrangThai = TrangThaiKhachSan.CHO_DUYET.ToString(),
                     NguoiTao = nguoiTao,
-                    NgayTao = DateTime.Now
+                    NgayTao = DateTime.Now,
+                    HotelTags = tagIds.Select(tagId => new HotelTag
+                    {
+                        TagId = tagId
+                    }).ToList()
                 };
                 await _khachSanRepository.CreateHotel(KhachSan);
                 await _khachSanImageRepository.InsertKhachSanImage(khachSanId, images);
