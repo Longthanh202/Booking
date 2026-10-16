@@ -1,4 +1,6 @@
 ﻿using Booking.Core.Model.Users;
+using Booking.Core.Model.TaiKhoanNganHangs;
+using Booking.Core.Model.UserRoles;
 using Booking.Data.DBContext;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
@@ -47,6 +49,22 @@ namespace Booking.Data.Repository.Users
             await _context.UserLogins.AddAsync(userLogin);
             return userLogin;
         }
+
+        public async Task<bool> IsUsernameOrEmailTaken(string username, string email)
+        {
+            var normalizedUsername = username.Trim();
+            var normalizedEmail = email.Trim();
+            return await _context.UserLogins.AnyAsync(
+                       login => login.Username == normalizedUsername) ||
+                   await _context.UserProfiles.AnyAsync(
+                       profile => profile.Email == normalizedEmail);
+        }
+
+        public async Task AddUserRole(UserRole userRole) =>
+            await _context.UserRoles.AddAsync(userRole);
+
+        public async Task AddBankAccount(TaiKhoanNganHang bankAccount) =>
+            await _context.TaiKhoanNganHangs.AddAsync(bankAccount);
 
         public bool IsAuthenticated()
         {
@@ -173,9 +191,116 @@ namespace Booking.Data.Repository.Users
                 return false;
             }
 
+            if (status == 0 && await (
+                    from userRole in _context.UserRoles
+                    join role in _context.Roles on userRole.RoleId equals role.Id
+                    where userRole.UserId == userId &&
+                          role.RoleName == "Owner" &&
+                          profile.OwnerApprovalStatus != (int)OwnerRegistrationStatus.Approved
+                    select userRole.Id).AnyAsync())
+            {
+                return false;
+            }
+
             profile.IsDel = status;
             await _context.SaveChangesAsync();
             return true;
+        }
+
+        public async Task<(List<UserProfile> Users, int TotalCount)> GetOwnerRegistrations(
+            int? approvalStatus, string? keyword, int page, int pageSize)
+        {
+            var query =
+                from profile in _context.UserProfiles.AsNoTracking()
+                join login in _context.UserLogins on profile.UserLoginId equals login.Id
+                join userRole in _context.UserRoles on login.Id equals userRole.UserId
+                join role in _context.Roles on userRole.RoleId equals role.Id
+                where role.RoleName == "Owner"
+                select new UserProfile
+                {
+                    Id = profile.Id,
+                    UserLoginId = login.Id,
+                    Username = login.Username,
+                    FullName = profile.FullName,
+                    Phone = profile.Phone,
+                    Email = profile.Email,
+                    Address = profile.Address,
+                    IsDel = profile.IsDel,
+                    CreateAt = profile.CreateAt,
+                    OwnerApprovalStatus = profile.OwnerApprovalStatus,
+                    OwnerReviewNote = profile.OwnerReviewNote,
+                    OwnerReviewedAt = profile.OwnerReviewedAt,
+                    OwnerReviewedBy = profile.OwnerReviewedBy,
+                    BankAccount = _context.TaiKhoanNganHangs
+                        .Where(bank => bank.UserId == login.Id)
+                        .OrderByDescending(bank => bank.IsDefault)
+                        .ThenBy(bank => bank.CreatedDate)
+                        .Select(bank => new TaiKhoanNganHang
+                        {
+                            Id = bank.Id,
+                            UserId = bank.UserId,
+                            TenNganHang = bank.TenNganHang,
+                            SoTaiKhoan = bank.SoTaiKhoan,
+                            ChuTaiKhoan = bank.ChuTaiKhoan,
+                            ChiNhanh = bank.ChiNhanh,
+                            IsDefault = bank.IsDefault
+                        })
+                        .FirstOrDefault()
+                };
+
+            if (approvalStatus.HasValue)
+            {
+                query = query.Where(user => user.OwnerApprovalStatus == approvalStatus.Value);
+            }
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                var search = keyword.Trim();
+                query = query.Where(user =>
+                    (user.Username != null && user.Username.Contains(search)) ||
+                    (user.FullName != null && user.FullName.Contains(search)) ||
+                    (user.Email != null && user.Email.Contains(search)) ||
+                    (user.Phone != null && user.Phone.Contains(search)));
+            }
+
+            var totalCount = await query.CountAsync();
+            var users = await query
+                .OrderByDescending(user => user.CreateAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (users, totalCount);
+        }
+
+        public async Task<UserProfile?> ReviewOwnerRegistration(
+            Guid userId, int approvalStatus, string? reviewNote, Guid adminId)
+        {
+            var profile = await (
+                from userProfile in _context.UserProfiles
+                join userRole in _context.UserRoles on userProfile.UserLoginId equals userRole.UserId
+                join role in _context.Roles on userRole.RoleId equals role.Id
+                join login in _context.UserLogins on userProfile.UserLoginId equals login.Id
+                where login.Id == userId &&
+                      role.RoleName == "Owner" &&
+                      userProfile.OwnerApprovalStatus == 0
+                select new { userProfile, login.Username }).FirstOrDefaultAsync();
+
+            if (profile == null)
+            {
+                return null;
+            }
+
+            profile.userProfile.OwnerApprovalStatus = approvalStatus;
+            profile.userProfile.IsDel = approvalStatus == 1 ? 0 : 1;
+            profile.userProfile.OwnerReviewNote = reviewNote;
+            profile.userProfile.OwnerReviewedAt = DateTime.UtcNow;
+            profile.userProfile.OwnerReviewedBy = adminId;
+            await _context.SaveChangesAsync();
+
+            profile.userProfile.UserLoginId = userId;
+            profile.userProfile.Username = profile.Username;
+            return profile.userProfile;
         }
     }
 }

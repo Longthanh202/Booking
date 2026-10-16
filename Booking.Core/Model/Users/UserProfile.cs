@@ -1,4 +1,4 @@
-﻿using Booking.Core.Model.RolePermissions;
+using Booking.Core.Model.TaiKhoanNganHangs;
 using Booking.Core.Model.UserRoles;
 using System;
 using System.Collections.Generic;
@@ -23,12 +23,18 @@ namespace Booking.Core.Model.Users
         public DateTime? CreateAt { get; set; }
         public Guid? CreateBy { get; set; }
         public Guid? UserLoginId { get; set; }
+        public int? OwnerApprovalStatus { get; set; }
+        public string? OwnerReviewNote { get; set; }
+        public DateTime? OwnerReviewedAt { get; set; }
+        public Guid? OwnerReviewedBy { get; set; }
         [NotMapped]
         public Guid RoleId { get; set; }
         [NotMapped]
         public string? RoleName { get; set; }
         [NotMapped]
         public string? Username { get; set; }
+        [NotMapped]
+        public TaiKhoanNganHang? BankAccount { get; set; }
 
         public virtual UserLogin? UserLogin { get; set; }
         public virtual UserRole? UserRole { get; set; }

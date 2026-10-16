@@ -85,8 +85,10 @@ Thành công trả `200` với `{ "message": "Cập nhật trạng thái propert
 | Method và endpoint | Quyền | Tham số/body và kết quả |
 |---|---|---|
 | `GET /api/users/admin` | Admin | Query: `keyword` (tìm username/tên/email), `status` (`0` hoạt động, `1` khóa; bỏ trống = tất cả), `page` mặc định `1`, `pageSize` mặc định `20`, tối đa `100`. Trả `{ data: [{ userId, username, fullName, email, phone, roleName, isDel, createAt }], totalRow, totalPage, page, pageSize }`. |
-| `PUT /api/users/admin/{userId}/status` | Admin | Body `{ "isDel": 0 }` mở khóa, `{ "isDel": 1 }` khóa. Thành công trả message; không tìm thấy user trả `404`. Không thể tự khóa tài khoản Admin đang đăng nhập (`400`). |
-| `POST /api/users/role-permissions` | Admin | Body theo `RolePermissionRequest`: `{ "roleId": "<uuid>", "permissions": [...] }`; mỗi phần tử theo `RolePermissionDto`. Thành công `200`. Không có API gán role trực tiếp cho user trong controller hiện tại. |
+| `GET /api/users/admin/owner-registrations` | Admin | Query `status` (`0` chờ duyệt, `1` đã duyệt, `2` từ chối; bỏ trống = tất cả Owner), `keyword`, `page` (mặc định `1`), `pageSize` (mặc định `20`, tối đa `100`). Trả thông tin owner và tài khoản ngân hàng cùng trạng thái duyệt. |
+| `PUT /api/users/admin/owner-registrations/{userId}/approve` | Admin | Duyệt hồ sơ đang chờ, bật tài khoản để đăng nhập và đưa email thông báo vào `register_email_queue`. Hồ sơ không tồn tại/đã xử lý trả `409`. |
+| `PUT /api/users/admin/owner-registrations/{userId}/reject` | Admin | Body `{ "reason": "Thông tin tài khoản ngân hàng chưa hợp lệ" }`. Từ chối hồ sơ đang chờ, giữ tài khoản không thể đăng nhập và đưa email có lý do từ chối vào hàng đợi. |
+| `PUT /api/users/admin/{userId}/status` | Admin | Body `{ "isDel": 0 }` mở khóa, `{ "isDel": 1 }` khóa. Thành công trả message; tài khoản không tồn tại hoặc Owner chưa được duyệt không thể mở khóa qua endpoint này (`400`). Không thể tự khóa tài khoản Admin đang đăng nhập (`400`). |
 
 Ví dụ lọc user:
 

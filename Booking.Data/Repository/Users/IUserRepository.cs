@@ -1,4 +1,6 @@
 ﻿using Booking.Core.Model.Users;
+using Booking.Core.Model.TaiKhoanNganHangs;
+using Booking.Core.Model.UserRoles;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,5 +20,12 @@ namespace Booking.Data.Repository.Users
         Task<UserLogin> UpdatePassword(string username, string passage);
         Task<(List<UserProfile> Users, int TotalCount)> GetAdminUsers(string? keyword, int? status, int page, int pageSize);
         Task<bool> SetAccountStatus(Guid userId, int status);
+        Task<bool> IsUsernameOrEmailTaken(string username, string email);
+        Task AddUserRole(UserRole userRole);
+        Task AddBankAccount(TaiKhoanNganHang bankAccount);
+        Task<(List<UserProfile> Users, int TotalCount)> GetOwnerRegistrations(
+            int? approvalStatus, string? keyword, int page, int pageSize);
+        Task<UserProfile?> ReviewOwnerRegistration(
+            Guid userId, int approvalStatus, string? reviewNote, Guid adminId);
     }
 }

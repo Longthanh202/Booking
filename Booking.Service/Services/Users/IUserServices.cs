@@ -19,5 +19,10 @@ namespace Booking.Data.Repository.Users
         Task ConfirmPasswordReset(string username, string code, string newPassword);
         Task<AdminUserPageResponse> GetAdminUsers(string? keyword, int? status, int page, int pageSize);
         Task<bool> SetAccountStatus(Guid userId, int status);
+        Task<bool> RegisterOwner(OwnerRegistrationRequest request);
+        Task<OwnerRegistrationPageResponse> GetOwnerRegistrations(
+            int? approvalStatus, string? keyword, int page, int pageSize);
+        Task<bool> ReviewOwnerRegistration(
+            Guid userId, bool approved, string? reason, Guid adminId);
     }
 }

@@ -37,5 +37,8 @@ namespace Booking.Data.Repository.Roles
         {
             return await _context.Roles.FirstOrDefaultAsync(x => x.RoleName == "Customer");
         }
+
+        public Task<Role?> GetRoleOwner() =>
+            _context.Roles.FirstOrDefaultAsync(x => x.RoleName == "Owner");
     }
 }

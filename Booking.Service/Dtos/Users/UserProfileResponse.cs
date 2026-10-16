@@ -8,8 +8,8 @@ namespace Booking.Service.Dtos.Users
 {
     public class UserProfileResponse
     {
-        public string FullName { get; set; }
-
-        public List<string> Permissions { get; set; }
+        public string? FullName { get; set; }
+        public Guid RoleId { get; set; }
+        public string? RoleName { get; set; }
     }
 }

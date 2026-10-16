@@ -12,13 +12,33 @@ Tài liệu hợp đồng các endpoint Customer/public hiện có trong backend
 
 | Method và endpoint | Quyền | Request và response |
 |---|---|---|
-| `POST /api/users/register` | Public | JSON `{ "username": "...", "password": "...", "fullName": "...", "phone": "...", "address": "...", "email": "...", "createBy": null }`. Thành công trả `200` với dữ liệu request đã gửi; thất bại trả `400`. |
+| `POST /api/users/register` | Public | JSON `{ "username": "...", "password": "...", "fullName": "...", "phone": "...", "address": "...", "email": "...", "createBy": null }`. Thành công trả `200` với message; mật khẩu không được trả về. |
+| `POST /api/users/register-owner` | Public | Đăng ký tài khoản Owner kèm thông tin cá nhân và tài khoản ngân hàng (JSON mẫu bên dưới). Thành công trả `202`; tài khoản chưa thể đăng nhập cho đến khi Admin duyệt. Username/email đã tồn tại trả `409`; trường bắt buộc/không hợp lệ trả `400`. |
 | `POST /api/users/login` | Public | JSON `{ "username": "...", "password": "..." }`. Thành công trả `{ "status": true, "token": "<JWT>", "message": "..." }`; sai thông tin trả `400`. Endpoint có rate limit đăng nhập. |
 | `POST /api/auth/google-login` | Public | JSON `{ "idToken": "<Google ID token>" }`; token rỗng trả `400`. |
-| `GET /api/users/me` | Đã đăng nhập | Trả hồ sơ của user trong token; không nhận user ID từ client. |
+| `GET /api/users/me` | Đã đăng nhập | Trả `{ "fullName": "...", "roleId": "<uuid>", "roleName": "Customer" }` cho user hiện tại; không nhận user ID từ client. |
 | `POST /api/users/refresh-token` | Public/cookie | Không có body; dùng refresh-token cookie hiện có. Trả chuỗi JSON access token mới; cookie không hợp lệ trả `401`. |
 | `POST /api/users/forgot-password` | Public | JSON `{ "username": "..." }`. Thành công trả message chung để không tiết lộ tài khoản có tồn tại hay không. |
 | `POST /api/users/reset-password` | Public | JSON `{ "username": "...", "code": "...", "newPassword": "..." }`. Các trường đều bắt buộc; thiếu trường trả `400`. |
+
+Ví dụ đăng ký Owner:
+
+```json
+{
+  "username": "hotel.owner",
+  "password": "password123",
+  "fullName": "Nguyen Van A",
+  "phone": "0901234567",
+  "address": "1 Duong Mau, Ha Noi",
+  "email": "owner@example.com",
+  "bankName": "Vietcombank",
+  "bankAccountNumber": "0123456789",
+  "bankAccountHolder": "NGUYEN VAN A",
+  "bankBranch": "Ha Noi"
+}
+```
+
+Tài khoản Owner được tạo với trạng thái chờ duyệt. Trạng thái đăng ký: `0` chờ duyệt, `1` đã duyệt, `2` bị từ chối. Áp dụng thay đổi schema trước khi gọi API bằng script `docs/owner-registration.sql`.
 
 ## Khám phá khách sạn và dữ liệu filter
 

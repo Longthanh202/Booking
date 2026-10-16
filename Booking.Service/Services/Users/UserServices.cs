@@ -1,9 +1,10 @@
 ﻿using Booking.Common.Shared;
 using Booking.Core.Model.RefreshTokens;
 using Booking.Core.Model.Users;
+using Booking.Core.Model.TaiKhoanNganHangs;
+using Booking.Core.Model.UserRoles;
 using Booking.Data;
 using Booking.Data.Connection;
-using Booking.Data.Repository.Permissions;
 using Booking.Data.Repository.RabbitMQ;
 using Booking.Data.Repository.Redis;
 using Booking.Data.Repository.RefreshTokens;
@@ -25,7 +26,6 @@ using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Booking.Core.Model.Email;
 using Booking.Data.Repository.Emails;
@@ -41,7 +41,6 @@ namespace Booking.Service.Services.Users
         private readonly IRefreshTokenRepository _refreshTokenRepository;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IRedisService _redisService;
-        private readonly IPermissionRepository _permissionRepository;
         private readonly ITokenService _tokenService;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IRabbitMQPublisher _rabbitMQPublisher;
@@ -49,7 +48,7 @@ namespace Booking.Service.Services.Users
         private readonly IRoleRepository _roleRepository; 
         public UserServices(IUserRepository userRepository, ITokenService tokenService,
             IRefreshTokenRepository refreshTokenRepository, IHttpContextAccessor httpContextAccessor,
-            IRedisService redisService, IPermissionRepository permissionRepository, IUnitOfWork unitOfWork,
+            IRedisService redisService, IUnitOfWork unitOfWork,
             IRabbitMQPublisher rabbitMQPublisher, IEmailService emailService, IRoleRepository roleRepository) 
         {
             _userRepository = userRepository;
@@ -57,7 +56,6 @@ namespace Booking.Service.Services.Users
             _refreshTokenRepository = refreshTokenRepository;
             _httpContextAccessor = httpContextAccessor;
             _redisService = redisService;
-            _permissionRepository = permissionRepository;
             _tokenService = tokenService;
             _unitOfWork = unitOfWork;
             _rabbitMQPublisher = rabbitMQPublisher;
@@ -66,29 +64,6 @@ namespace Booking.Service.Services.Users
         }
         public async Task<UserProfileResponse> GetUserProfileById(Guid id, Guid roleId)
         {
-            var cacheKey = $"Permission_Role_{roleId}";
-            List<string>? permissionKeys;
-
-            var cacheValue = await _redisService.Get(cacheKey);
-
-            if (!string.IsNullOrEmpty(cacheValue))
-            {
-                permissionKeys = JsonSerializer.Deserialize<List<string>>(cacheValue);
-            }
-            else
-            {
-                var permissions = await _permissionRepository.GetPermissionsByUserId(id);
-
-                permissionKeys = permissions
-                    .Select(x => $"{x.ResourceName.ToLower()}_{x.Action.ToLower()}")
-                    .ToList();
-
-                await _redisService.SetObject(
-                    cacheKey,   
-                    permissionKeys,
-                    TimeSpan.FromMinutes(20));
-            }
-
             var user = await _userRepository.GetUserProfileById(id);
 
             if (user == null)
@@ -96,10 +71,17 @@ namespace Booking.Service.Services.Users
                 throw new KeyNotFoundException("Không tìm thấy thông tin người dùng.");
             }
 
+            var role = await _roleRepository.GetById(roleId);
+            if (role == null)
+            {
+                throw new KeyNotFoundException("Không tìm thấy role của người dùng.");
+            }
+
             return new UserProfileResponse
             {
                 FullName = user.FullName,
-                Permissions = permissionKeys!
+                RoleId = role.Id,
+                RoleName = role.RoleName
             };
         }   
 
@@ -133,6 +115,145 @@ namespace Booking.Service.Services.Users
 
         public Task<bool> SetAccountStatus(Guid userId, int status) =>
             _userRepository.SetAccountStatus(userId, status);
+
+        public async Task<bool> RegisterOwner(OwnerRegistrationRequest request)
+        {
+            if (await _userRepository.IsUsernameOrEmailTaken(request.Username, request.Email))
+            {
+                return false;
+            }
+
+            var ownerRole = await _roleRepository.GetRoleOwner();
+            if (ownerRole == null)
+            {
+                throw new InvalidOperationException("Chưa cấu hình role Owner trong hệ thống.");
+            }
+
+            var userId = Guid.NewGuid();
+            await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                await _userRepository.AddUserLogin(new UserLogin
+                {
+                    Id = userId,
+                    Username = request.Username.Trim(),
+                    Password = Hash.HashPassword(request.Password)
+                });
+
+                await _userRepository.AddUserProfile(new UserProfile
+                {
+                    Id = Guid.NewGuid(),
+                    UserLoginId = userId,
+                    FullName = request.FullName.Trim(),
+                    Phone = request.Phone.Trim(),
+                    Email = request.Email.Trim(),
+                    Address = request.Address.Trim(),
+                    IsDel = 1,
+                    OwnerApprovalStatus = (int)OwnerRegistrationStatus.Pending,
+                    CreateAt = DateTime.UtcNow
+                });
+
+                await _userRepository.AddUserRole(new UserRole
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    RoleId = ownerRole.Id
+                });
+
+                await _userRepository.AddBankAccount(new TaiKhoanNganHang
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    TenNganHang = request.BankName.Trim(),
+                    SoTaiKhoan = request.BankAccountNumber.Trim(),
+                    ChuTaiKhoan = request.BankAccountHolder.Trim(),
+                    ChiNhanh = string.IsNullOrWhiteSpace(request.BankBranch)
+                        ? null
+                        : request.BankBranch.Trim(),
+                    IsDefault = true
+                });
+
+                await _unitOfWork.CommitAsync();
+                return true;
+            }
+            catch
+            {
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
+        }
+
+        public async Task<OwnerRegistrationPageResponse> GetOwnerRegistrations(
+            int? approvalStatus, string? keyword, int page, int pageSize)
+        {
+            var (users, totalCount) = await _userRepository.GetOwnerRegistrations(
+                approvalStatus, keyword, page, pageSize);
+
+            return new OwnerRegistrationPageResponse
+            {
+                Data = users.Select(user => new OwnerRegistrationItemResponse
+                {
+                    UserId = user.UserLoginId.GetValueOrDefault(),
+                    Username = user.Username,
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    Phone = user.Phone,
+                    Address = user.Address,
+                    ApprovalStatus = user.OwnerApprovalStatus,
+                    ReviewNote = user.OwnerReviewNote,
+                    ReviewedAt = user.OwnerReviewedAt,
+                    CreatedAt = user.CreateAt,
+                    BankAccount = user.BankAccount == null
+                        ? null
+                        : new OwnerBankAccountResponse
+                        {
+                            BankName = user.BankAccount.TenNganHang,
+                            AccountNumber = user.BankAccount.SoTaiKhoan,
+                            AccountHolder = user.BankAccount.ChuTaiKhoan,
+                            Branch = user.BankAccount.ChiNhanh
+                        }
+                }).ToList(),
+                TotalRow = totalCount,
+                TotalPage = (int)Math.Ceiling(totalCount / (double)pageSize),
+                Page = page,
+                PageSize = pageSize
+            };
+        }
+
+        public async Task<bool> ReviewOwnerRegistration(
+            Guid userId, bool approved, string? reason, Guid adminId)
+        {
+            var status = approved
+                ? OwnerRegistrationStatus.Approved
+                : OwnerRegistrationStatus.Rejected;
+            var profile = await _userRepository.ReviewOwnerRegistration(
+                userId, (int)status, reason, adminId);
+            if (profile == null)
+            {
+                return false;
+            }
+
+            var decisionText = approved ? "đã được duyệt" : "bị từ chối";
+            var reasonText = approved || string.IsNullOrWhiteSpace(reason)
+                ? string.Empty
+                : $"\nLý do: {reason.Trim()}";
+
+            await _rabbitMQPublisher.PublishAsync(
+                "register_email_queue",
+                new SendEmailEvent
+                {
+                    ToEmail = profile.Email!,
+                    Subject = $"Thông báo kết quả đăng ký tài khoản Owner",
+                    Body = $"Xin chào {profile.FullName},\n\n" +
+                           $"Hồ sơ đăng ký tài khoản Owner của bạn {decisionText}." +
+                           reasonText +
+                           (approved
+                               ? "\n\nBạn có thể đăng nhập và sử dụng cổng Owner."
+                               : "\n\nVui lòng liên hệ bộ phận hỗ trợ nếu cần thêm thông tin.")
+                });
+
+            return true;
+        }
 
         public async Task<LoginResponse> Login(LoginRequest input)
         {

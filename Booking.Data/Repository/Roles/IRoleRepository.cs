@@ -13,5 +13,6 @@ namespace Booking.Data.Repository.Roles
         Task<Role> CheckRoleAdmin(Guid userId);
         Task<Role?> GetById(Guid id);
         Task<Role?> GetRoleCustomer();
+        Task<Role?> GetRoleOwner();
     }
 }
