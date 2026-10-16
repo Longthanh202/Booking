@@ -11,14 +11,11 @@ using Booking.Core.Model.KhachSanImage;
 using Booking.Core.Model.KhachSans;
 using Booking.Core.Model.LichSuVis;
 using Booking.Core.Model.LoaiPhongs;
-using Booking.Core.Model.Permissions;
 using Booking.Core.Model.PhongDats;
 using Booking.Core.Model.Phongs;
 using Booking.Core.Model.Provinces;
 using Booking.Core.Model.QuangCaos;
 using Booking.Core.Model.RefreshTokens;
-using Booking.Core.Model.Resources;
-using Booking.Core.Model.RolePermissions;
 using Booking.Core.Model.Roles;
 using Booking.Core.Model.TaiKhoanNganHangs;
 using Booking.Core.Model.TienIchs;
@@ -52,11 +49,8 @@ namespace Booking.Data.DBContext
             modelBuilder.Entity<Phong>().ToTable("Phong");
             modelBuilder.Entity<ChiTietDatPhong>().ToTable("ChiTietDatPhong");
             modelBuilder.Entity<ThanhToan>().ToTable("ThanhToan");
-            modelBuilder.Entity<Permission>().ToTable("Permissions"); // Khớp chữ 's' với SQL của bạn
             modelBuilder.Entity<RefreshToken>().ToTable("RefreshToken");
-            modelBuilder.Entity<Resources>().ToTable("Resources");
             modelBuilder.Entity<Role>().ToTable("Roles");
-            modelBuilder.Entity<RolePermission>().ToTable("RolePermissions"); // Khớp chữ 's' với SQL
             modelBuilder.Entity<TienIch>().ToTable("TienIch");
             modelBuilder.Entity<UserLogin>().ToTable("UserLogin");
             modelBuilder.Entity<UserProfile>().ToTable("UserProfile");
@@ -323,14 +317,11 @@ namespace Booking.Data.DBContext
         public DbSet<ChiTietDatPhong> ChiTietDatPhongs { get; set; } = null!;
         public DbSet<ThanhToan> ThanhToans { get; set; } = null!;
         public DbSet<KhachSanImages> KhachSanImages { get; set; } = null!;
-        public DbSet<Permission> Permissions { get; set; } = null!;
         public DbSet<Province> Provinces { get; set; } = null!;
         public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
-        public DbSet<RolePermission> RolePermissions { get; set; } = null!;
         public DbSet<TienIch> TienIches { get; set; } = null!;
         public DbSet<UserRole> UserRoles { get; set; } = null!;
         public DbSet<KhachSan_TienIch> KhachSan_TienIches { get; set; } = null!;
-        public DbSet<Resources> Resources { get; set; } = null!;
         public DbSet<Role> Roles { get; set; } = null!;
         public DbSet<TaiKhoanNganHang> TaiKhoanNganHangs { get; set; } = null!;
         public DbSet<GiaPhong> GiaPhongs { get; set; } = null!;

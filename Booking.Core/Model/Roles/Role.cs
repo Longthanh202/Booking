@@ -1,4 +1,3 @@
-﻿using Booking.Core.Model.RolePermissions;
 using Booking.Core.Model.UserRoles;
 using System;
 using System.Collections.Generic;
@@ -15,8 +14,6 @@ namespace Booking.Core.Model.Roles
         public string? Description { get; set; }
         public DateTime? CreateAt { get; set; }
         public Guid? CreateBy { get; set; }
-        public virtual ICollection<RolePermission> RolePermissions { get; set; }
-        = new List<RolePermission>();
         public virtual ICollection<UserRole> UserRoles { get; set; }
         = new List<UserRole>();
     }

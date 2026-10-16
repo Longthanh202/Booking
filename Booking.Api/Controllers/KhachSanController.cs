@@ -1,5 +1,4 @@
-﻿using Booking.Api.Attributes;
-using Booking.Common.Shared;
+﻿using Booking.Common.Shared;
 using Booking.Core.Model.KhachSans;
 using Booking.Core.Model.LoaiPhongs;
 using Booking.Core.Model.Phongs;

@@ -3,13 +3,11 @@ using Booking.Data.Repository.DatPhongs;
 using Booking.Data.Repository.Emails;
 using Booking.Data.Repository.KhachSans;
 using Booking.Data.Repository.LoaiPhongs;
-using Booking.Data.Repository.Permissions;
 using Booking.Data.Repository.Phongs;
 using Booking.Data.Repository.Provinces;
 using Booking.Data.Repository.RabbitMQ;
 using Booking.Data.Repository.Redis;
 using Booking.Data.Repository.RefreshTokens;
-using Booking.Data.Repository.RolePermissions;
 using Booking.Data.Repository.TienIchs;
 using Booking.Data.Repository.Users;
 using Booking.Service.Consumers.BookingCheckout;
@@ -27,13 +25,11 @@ using Booking.Service.Services.GiaPhongs;
 using Booking.Service.Services.LichSuVis;
 using Booking.Service.Services.LoaiPhongs;
 using Booking.Service.Services.Notifications;
-using Booking.Service.Services.Permissions;
 using Booking.Service.Services.Phongs;
 using Booking.Service.Services.Provinces;
 using Booking.Service.Services.RabbitMQ;
 using Booking.Service.Services.Redis;
 using Booking.Service.Services.RefreshTokens;
-using Booking.Service.Services.RolePermissions;
 using Booking.Service.Services.Roles;
 using Booking.Service.Services.TienIchs;
 using Booking.Service.Services.ThanhToans;
@@ -57,8 +53,6 @@ namespace Booking.Service
         IConfiguration configuration)
         {
             services.AddScoped<IUserServices, UserServices>();
-            services.AddScoped<IPermissionService, PermissionService>();
-            services.AddScoped<IRolePermissionService, RolePermissionService>();
             services.AddScoped<IKhachSanService, KhachSanService>();
             services.AddScoped<IGiaPhongService, GiaPhongService>();
             services.AddScoped<ITienIchService, TienIchService>();
