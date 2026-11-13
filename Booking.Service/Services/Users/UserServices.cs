@@ -298,7 +298,7 @@ namespace Booking.Service.Services.Users
                 await _refreshTokenRepository.InsertRefreshToken(new TokenLamMoi
                 {
                     UserId = user.Id,
-                    Token = refreshToken,
+                    Token = Hash.Argon2(refreshToken),
                     ExpiryDate = 30,
                     CreatedDate = DateTime.Now,
                     Status = 1,

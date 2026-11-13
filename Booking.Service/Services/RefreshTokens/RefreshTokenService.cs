@@ -1,4 +1,5 @@
-﻿using Booking.Core.Model.RefreshTokens;
+﻿using Booking.Common.Shared;
+using Booking.Core.Model.RefreshTokens;
 using Booking.Core.Model.TienIchs;
 using Booking.Core.Model.Users;
 using Booking.Data.Connection;
@@ -6,13 +7,7 @@ using Booking.Data.Repository.RefreshTokens;
 using Booking.Service.Dtos.Users;
 using Booking.Service.Services.Tokens;
 using Microsoft.AspNetCore.Http;
-using Org.BouncyCastle.Asn1.Ocsp;
-using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Booking.Service.Services.RefreshTokens
 {
@@ -50,7 +45,9 @@ namespace Booking.Service.Services.RefreshTokens
 
             var existingToken = await _refreshTokenRepository.GetValidRefreshToken(refreshToken);
 
-            if (existingToken == null)
+            bool checkRefreshToken = Hash.VerifyArgon2(refreshToken, existingToken.Token);
+
+            if (checkRefreshToken == false)
                 return null;
 
             var accessToken = _tokenService.GenerateAccessToken(new NguoiDung
