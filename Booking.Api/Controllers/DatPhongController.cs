@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Booking.Common.Shared.Enum.Booking;
 using Booking.Service.Services.DatPhongs;
 using Booking.Service.Services.Promotions;
+using Booking.Common.Shared.Func;
 
 namespace Booking.Api.Controllers
 {
@@ -120,7 +121,7 @@ namespace Booking.Api.Controllers
                 .Select(status => new
                 {
                     id = status.ToString(),
-                    name = status.ToString()
+                    name = BookingStatusName.GetStatusName(status),
                 }));
         }
 

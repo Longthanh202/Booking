@@ -394,13 +394,19 @@ namespace Booking.Service.Services.DatPhongs
         public async Task<DatPhong> CreateBooking(CreateBookingRequest dp, Guid userId)
         {
             if (!dp.NgayNhanPhong.HasValue || !dp.NgayTraPhong.HasValue ||
-                dp.NgayNhanPhong >= dp.NgayTraPhong || dp.DanhSachPhong == null || dp.DanhSachPhong.Count == 0)
+                dp.DanhSachPhong == null || dp.DanhSachPhong.Count == 0)
             {
                 throw new ArgumentException("Ngày nhận/trả phòng và danh sách phòng phải hợp lệ.");
             }
 
-            // Dùng .Value để ép về kiểu TimeSpan không null
-            int soNgayO = (dp.NgayTraPhong.Value - dp.NgayNhanPhong.Value).Days;
+            var ngayNhan = dp.NgayNhanPhong.Value.Date;
+            var ngayTra = dp.NgayTraPhong.Value.Date;
+            if (ngayNhan >= ngayTra)
+            {
+                throw new ArgumentException("Ngày nhận/trả phòng và danh sách phòng phải hợp lệ.");
+            }
+
+            int soNgayO = (ngayTra - ngayNhan).Days;
 
             var redisDatabase = _redis.GetDatabase();
             var acquiredLocks = new List<(RedisKey Key, RedisValue Token)>();
@@ -412,15 +418,18 @@ namespace Booking.Service.Services.DatPhongs
                     .Distinct()
                     .OrderBy(id => id))
                 {
-                    var lockKey = (RedisKey)$"booking:room-type:{roomTypeId:N}";
-                    var lockToken = (RedisValue)Guid.NewGuid().ToString("N");
-                    if (!await redisDatabase.LockTakeAsync(
-                        lockKey, lockToken, TimeSpan.FromMinutes(2)))
+                    for (var ngay = ngayNhan; ngay < ngayTra; ngay = ngay.AddDays(1))
                     {
-                        throw new RoomBookingInProgressException();
-                    }
+                        var lockKey = (RedisKey)$"booking:room-type:{roomTypeId:N}:date:{ngay:yyyyMMdd}";
+                        var lockToken = (RedisValue)Guid.NewGuid().ToString("N");
+                        if (!await redisDatabase.LockTakeAsync(
+                            lockKey, lockToken, TimeSpan.FromMinutes(2)))
+                        {
+                            throw new RoomBookingInProgressException();
+                        }
 
-                    acquiredLocks.Add((lockKey, lockToken));
+                        acquiredLocks.Add((lockKey, lockToken));
+                    }
                 }
                 await _unitOfWork.BeginTransactionAsync();
                 transactionStarted = true;
@@ -440,8 +449,8 @@ namespace Booking.Service.Services.DatPhongs
                     // 2. Kiểm tra & lấy danh sách phòng còn trống trong khoảng thời gian dp.NgayNhanPhong -> dp.NgayTraPhong
                     var phongTrongs = await _phongRepository.LayDanhSachPhongTrong(
                         item.LoaiPhongId,
-                        dp.NgayNhanPhong,
-                        dp.NgayTraPhong
+                        ngayNhan,
+                        ngayTra
                     );
 
                     if (phongTrongs.Count < item.SoLuong)
@@ -504,8 +513,8 @@ namespace Booking.Service.Services.DatPhongs
                     Id = datPhongId,
                     KhachHangId = userId,
                     KhachSanId = dp.KhachSanId,
-                    NgayNhanPhong = dp.NgayNhanPhong,
-                    NgayTraPhong = dp.NgayTraPhong,
+                    NgayNhanPhong = ngayNhan,
+                    NgayTraPhong = ngayTra,
                     TongTien = tongTien,
                     SoTienGiam = soTienGiam,
                     MaKhuyenMai = maKhuyenMai,
@@ -553,8 +562,8 @@ namespace Booking.Service.Services.DatPhongs
                         HoTen = user.FullName,
                         Email = user.Email,
                         TenKhachSan = "Tên Khách Sạn",
-                        NgayNhanPhong = dp.NgayNhanPhong.Value,
-                        NgayTraPhong = dp.NgayTraPhong.Value,
+                        NgayNhanPhong = ngayNhan,
+                        NgayTraPhong = ngayTra,
                         TongTien = tongTien
                     });
 
@@ -652,7 +661,8 @@ namespace Booking.Service.Services.DatPhongs
                 dto.hotelId,
                 dto.customerId,
                 dto.trangThai,
-                dto.ngayTao,
+                dto.ngayBatDau,
+                dto.ngayKetThuc,
                 dto.maDatPhong,
                 page,
                 pageSize);

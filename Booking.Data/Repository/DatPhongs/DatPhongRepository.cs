@@ -1,8 +1,10 @@
 ﻿using Booking.Common.Shared.Enum.Booking;
+using Booking.Common.Shared.Enum.Payment;
 using Booking.Core.Model.DatPhongs;
 using Booking.Core.Model.PhongDats;
 using Booking.Data.DBContext;
 using Microsoft.EntityFrameworkCore;
+using System.Data;
 
 namespace Booking.Data.Repository.DatPhongs
 {
@@ -117,19 +119,19 @@ namespace Booking.Data.Repository.DatPhongs
             return (items, totalCount);
         }
 
-        public async Task<List<Booking.Core.Model.Users.UserProfile>> GetCustomerOptionsByHotelId(
+        public async Task<List<Booking.Core.Model.Users.NguoiDung>> GetCustomerOptionsByHotelId(
             Guid hotelId,
             Guid ownerId)
         {
             return await (
                 from booking in _context.DatPhongs.AsNoTracking()
-                join profile in _context.UserProfiles.AsNoTracking()
+                join profile in _context.NguoiDungs.AsNoTracking()
                     on booking.KhachHangId equals profile.UserLoginId
                 where booking.KhachSanId == hotelId
                     && booking.KhachHangId.HasValue
                     && booking.KhachSan != null
                     && booking.KhachSan.NguoiTao == ownerId
-                select new Booking.Core.Model.Users.UserProfile
+                select new Booking.Core.Model.Users.NguoiDung
                 {
                     Id = profile.UserLoginId!.Value,
                     FullName = profile.FullName
@@ -196,6 +198,88 @@ namespace Booking.Data.Repository.DatPhongs
 
             return dp;
         }
+
+        public async Task<(int DeletedCount, int SkippedReferencedCount)> DeleteExpiredQrBookings(
+            DateTime createdBefore,
+            CancellationToken cancellationToken)
+        {
+            await using var transaction = await _context.Database.BeginTransactionAsync(
+                IsolationLevel.Serializable, cancellationToken);
+
+            var expiredBookings = await _context.DatPhongs
+                .Where(booking =>
+                    booking.NgayTao < createdBefore &&
+                    (booking.TrangThai == TrangThaiDatPhong.CHO_XAC_NHAN.ToString() ||
+                     booking.TrangThai == TrangThaiDatPhong.DA_HUY.ToString() ||
+                     booking.TrangThai == TrangThaiDatPhong.TU_CHOI.ToString()) &&
+                    booking.ThanhToans.Any(payment =>
+                        (payment.PhuongThuc == PhuongThucThanhToan.CHUYEN_KHOAN.ToString() ||
+                         payment.PhuongThuc == "QR") &&
+                        (payment.TrangThai == TrangThaiThanhToan.CHO_THANH_TOAN.ToString() ||
+                         payment.TrangThai == TrangThaiThanhToan.DA_HUY.ToString())))
+                .ToListAsync(cancellationToken);
+
+            if (expiredBookings.Count == 0)
+            {
+                await transaction.CommitAsync(cancellationToken);
+                return (0, 0);
+            }
+
+            var bookingIds = expiredBookings.Select(booking => booking.Id).ToList();
+            var referencedBookingIds = new HashSet<Guid>();
+
+            referencedBookingIds.UnionWith(await _context.HoaHongs
+                .Where(item => bookingIds.Contains(item.MaDatPhong))
+                .Select(item => item.MaDatPhong)
+                .Distinct()
+                .ToListAsync(cancellationToken));
+            referencedBookingIds.UnionWith(await _context.LichSuVis
+                .Where(item => item.MaDatPhong.HasValue && bookingIds.Contains(item.MaDatPhong.Value))
+                .Select(item => item.MaDatPhong!.Value)
+                .Distinct()
+                .ToListAsync(cancellationToken));
+            referencedBookingIds.UnionWith(await _context.ChiTietChiTraKhachSans
+                .Where(item => bookingIds.Contains(item.DatPhongId))
+                .Select(item => item.DatPhongId)
+                .Distinct()
+                .ToListAsync(cancellationToken));
+
+            var deletableBookings = expiredBookings
+                .Where(booking => !referencedBookingIds.Contains(booking.Id))
+                .ToList();
+            if (deletableBookings.Count == 0)
+            {
+                await transaction.CommitAsync(cancellationToken);
+                return (0, expiredBookings.Count);
+            }
+
+            var deletableBookingIds = deletableBookings.Select(booking => booking.Id).ToList();
+            var detailIds = await _context.ChiTietDatPhongs
+                .Where(detail => detail.DatPhongId.HasValue &&
+                    deletableBookingIds.Contains(detail.DatPhongId.Value))
+                .Select(detail => detail.Id)
+                .ToListAsync(cancellationToken);
+            var roomAssignments = await _context.phongDats
+                .Where(assignment => detailIds.Contains(assignment.ChiTietDatPhongId))
+                .ToListAsync(cancellationToken);
+            var bookingDetails = await _context.ChiTietDatPhongs
+                .Where(detail => detailIds.Contains(detail.Id))
+                .ToListAsync(cancellationToken);
+            var payments = await _context.ThanhToans
+                .Where(payment => payment.DatPhongId.HasValue &&
+                    deletableBookingIds.Contains(payment.DatPhongId.Value))
+                .ToListAsync(cancellationToken);
+
+            _context.phongDats.RemoveRange(roomAssignments);
+            _context.ChiTietDatPhongs.RemoveRange(bookingDetails);
+            _context.ThanhToans.RemoveRange(payments);
+            _context.DatPhongs.RemoveRange(deletableBookings);
+            await _context.SaveChangesAsync(cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+
+            return (deletableBookings.Count, expiredBookings.Count - deletableBookings.Count);
+        }
+
         public async Task<DatPhong?> GetBookingById(Guid id)
         {
             return await _context.DatPhongs
@@ -282,7 +366,8 @@ namespace Booking.Data.Repository.DatPhongs
             Guid? hotelId, 
             Guid? customerId,
             string? trangThai, 
-            DateTime? ngayTao,
+            DateTime? ngayBatDau,
+            DateTime? ngayKetThuc,
             string? maDatPhong,
             int pageIndex,
             int pageSize)
@@ -327,25 +412,18 @@ namespace Booking.Data.Repository.DatPhongs
                 query = query.Where(x => x.MaDatPhong != null && x.MaDatPhong.Contains(search));
             }
 
-            // Lọc theo ngày tạo (so sánh theo ngày, bỏ qua giờ/phút/giây)
-            if (ngayTao.HasValue)
+            if (ngayBatDau.HasValue)
             {
-                if (ngayTao.Value == DateTime.MinValue)
-                {
-                    // Không truyền ngày cụ thể -> lấy theo năm hiện tại
-                    var tuNgay = new DateTime(DateTime.Today.Year, 1, 1);
-                    var denNgay = tuNgay.AddYears(1);
+                var tuNgay = ngayBatDau.Value.Date;
 
-                    query = query.Where(x => x.NgayTao >= tuNgay && x.NgayTao < denNgay);
-                }
-                else
-                {
-                    // Có truyền ngày cụ thể -> lấy đúng ngày đó
-                    var tuNgay = ngayTao.Value.Date;
-                    var denNgay = tuNgay.AddDays(1);
+                query = query.Where(x => x.NgayTao >= tuNgay);
+            }
 
-                    query = query.Where(x => x.NgayTao >= tuNgay && x.NgayTao < denNgay);
-                }
+            if (ngayKetThuc.HasValue)
+            {
+                var denNgay = ngayKetThuc.Value.Date.AddDays(1);
+
+                query = query.Where(x => x.NgayTao < denNgay);
             }
 
             var totalCount = await query.CountAsync();
