@@ -10,7 +10,7 @@ using Booking.Data.Repository.DanhGias;
 using Booking.Data.Repository.GiaPhongs;
 using Booking.Data.Repository.HoaDonHoaHongs;
 using Booking.Data.Repository.HoaHongs;
-using Booking.Data.Repository.KhachSanImage;
+using Booking.Data.Repository.HotelImages;
 using Booking.Data.Repository.KhachSans;
 using Booking.Data.Repository.KhachSanTienIch;
 using Booking.Data.Repository.LichSuVis;

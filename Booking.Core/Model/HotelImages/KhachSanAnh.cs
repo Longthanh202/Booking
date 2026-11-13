@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Booking.Core.Model.KhachSanImage
+namespace Booking.Core.Model.HotelImages
 {
     public class KhachSanAnh
     {

@@ -19,7 +19,7 @@ using Booking.Service.Services.DatPhongs;
 using Booking.Service.Services.DanhGias;
 using Booking.Service.Services.Emails;
 using Booking.Service.Services.HoaHongs;
-using Booking.Service.Services.KhachSanImage;
+using Booking.Service.Services.HotelImages;
 using Booking.Service.Services.KhachSans;
 using Booking.Service.Services.GiaPhongs;
 using Booking.Service.Services.LichSuVis;
