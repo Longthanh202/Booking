@@ -1,4 +1,4 @@
-﻿using Booking.Core.Model.KhachSanImage;
+using Booking.Core.Model.HotelImages;
 using Booking.Core.Model.LoaiPhongs;
 using Booking.Core.Model.TienIchs;
 using Booking.Service.Dtos.HotelImages;

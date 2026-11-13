@@ -1,11 +1,11 @@
-﻿using Booking.Core.Model.KhachSanImage;
+using Booking.Core.Model.HotelImages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Booking.Data.Repository.KhachSanImage
+namespace Booking.Data.Repository.HotelImages
 {
     public interface IKhachSanImageRepository
     {

@@ -1,4 +1,4 @@
-﻿using Booking.Core.Model.KhachSanImage;
+using Booking.Core.Model.HotelImages;
 using Booking.Data.Connection;
 using Org.BouncyCastle.Crypto;
 using System;
@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Booking.Service.Services.KhachSanImage
+namespace Booking.Service.Services.HotelImages
 {
     public class KhachSanImageService : IKhachSanImageService
     {

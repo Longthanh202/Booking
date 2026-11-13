@@ -1,7 +1,7 @@
 ﻿using CloudinaryDotNet.Actions;
 using Booking.Common.Shared;
 using Booking.Common.Shared.Enum.Hotel;
-using Booking.Core.Model.KhachSanImage;
+using Booking.Core.Model.HotelImages;
 using Booking.Core.Model.KhachSans;
 using Booking.Core.Model.LoaiPhongs;
 using Booking.Core.Model.TienIchs;
@@ -9,7 +9,7 @@ using Booking.Core.Model.Tags;
 using Booking.Data;
 using Booking.Data.Connection;
 using Booking.Data.Repository.GiaPhongs;
-using Booking.Data.Repository.KhachSanImage;
+using Booking.Data.Repository.HotelImages;
 using Booking.Data.Repository.KhachSans;
 using Booking.Data.Repository.Redis;
 using Booking.Data.Repository.Tags;

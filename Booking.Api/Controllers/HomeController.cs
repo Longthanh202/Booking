@@ -4,7 +4,7 @@ using Booking.Data.Repository.KhachSans;
 using Booking.Data.Repository.LoaiPhongs;
 using Booking.Data.Repository.Redis;
 using Booking.Data.Repository.TienIchs;
-using Booking.Service.Services.KhachSanImage;
+using Booking.Service.Services.HotelImages;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using RabbitMQ.Client;

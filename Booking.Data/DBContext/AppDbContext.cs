@@ -7,7 +7,7 @@ using Booking.Core.Model.DatPhongs;
 using Booking.Core.Model.GiaPhongs;
 using Booking.Core.Model.HoaDonHoaHongs;
 using Booking.Core.Model.HoaHongs;
-using Booking.Core.Model.KhachSanImage;
+using Booking.Core.Model.HotelImages;
 using Booking.Core.Model.KhachSans;
 using Booking.Core.Model.LichSuVis;
 using Booking.Core.Model.LoaiPhongs;

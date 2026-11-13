@@ -3,7 +3,7 @@ using Booking.Core.Model.DanhGias;
 using Booking.Core.Model.DatPhongs;
 using Booking.Core.Model.HoaDonHoaHongs;
 using Booking.Core.Model.HoaHongs;
-using Booking.Core.Model.KhachSanImage;
+using Booking.Core.Model.HotelImages;
 using Booking.Core.Model.LoaiPhongs;
 using Booking.Core.Model.Provinces;
 using Booking.Core.Model.QuangCaos;
