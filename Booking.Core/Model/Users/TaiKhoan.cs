@@ -8,13 +8,13 @@ using System.Threading.Tasks;
 
 namespace Booking.Core.Model.Users
 {
-    public class UserLogin
+    public class TaiKhoan
     {
         [Key]
         public Guid Id { get; set; }
         public string? Username { get; set; }
         public string? Password { get; set; }
-        public virtual UserProfile? UserProfile { get; set; }
-        public virtual UserRole? UserRole { get; set; }
+        public virtual NguoiDung? NguoiDung { get; set; }
+        public virtual NguoiDung_VaiTro? NguoiDung_VaiTro { get; set; }
     }
 }

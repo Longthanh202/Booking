@@ -10,6 +10,6 @@ namespace Booking.Service.Services.Roles
 {
     public interface IRoleService
     {
-        Task<Role> CheckRoleAdmin(Guid userId);
+        Task<VaiTro> CheckRoleAdmin(Guid userId);
     }
 }

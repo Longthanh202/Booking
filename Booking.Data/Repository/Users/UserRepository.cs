@@ -22,11 +22,11 @@ namespace Booking.Data.Repository.Users
             _context = context;
             _httpContextAccessor = httpContextAccessor;
         }
-        public async Task<UserProfile?> GetUserProfileById(Guid id)
+        public async Task<NguoiDung?> GetUserProfileById(Guid id)
         {
-            var user = await _context.UserProfiles
+            var user = await _context.NguoiDungs
                 .Where(u => u.UserLoginId == id)
-                .Select(u => new UserProfile
+                .Select(u => new NguoiDung
                 {
                     Id = u.Id,
                     FullName = u.FullName,
@@ -38,15 +38,29 @@ namespace Booking.Data.Repository.Users
             return user;
         }
 
-        public async Task<UserProfile> AddUserProfile(UserProfile user)
+        public async Task<TaiKhoan> GetUserLoginByUserName(string userName)
         {
-            await _context.UserProfiles.AddAsync(user);        
+            var user = await _context.TaiKhoans
+                .Where(o => o.Username == userName)
+                .Select(o => new TaiKhoan
+                {
+                    Id = o.Id,
+                    Username = o.Username,
+                    Password = o.Password
+                })
+                .FirstOrDefaultAsync();
             return user;
         }
 
-        public async Task<UserLogin> AddUserLogin(UserLogin userLogin)
+        public async Task<NguoiDung> AddUserProfile(NguoiDung user)
         {
-            await _context.UserLogins.AddAsync(userLogin);
+            await _context.NguoiDungs.AddAsync(user);
+            return user;
+        }
+
+        public async Task<TaiKhoan> AddUserLogin(TaiKhoan userLogin)
+        {
+            await _context.TaiKhoans.AddAsync(userLogin);
             return userLogin;
         }
 
@@ -54,14 +68,14 @@ namespace Booking.Data.Repository.Users
         {
             var normalizedUsername = username.Trim();
             var normalizedEmail = email.Trim();
-            return await _context.UserLogins.AnyAsync(
+            return await _context.TaiKhoans.AnyAsync(
                        login => login.Username == normalizedUsername) ||
-                   await _context.UserProfiles.AnyAsync(
+                   await _context.NguoiDungs.AnyAsync(
                        profile => profile.Email == normalizedEmail);
         }
 
-        public async Task AddUserRole(UserRole userRole) =>
-            await _context.UserRoles.AddAsync(userRole);
+        public async Task AddUserRole(NguoiDung_VaiTro userRole) =>
+            await _context.NguoiDung_VaiTros.AddAsync(userRole);
 
         public async Task AddBankAccount(TaiKhoanNganHang bankAccount) =>
             await _context.TaiKhoanNganHangs.AddAsync(bankAccount);
@@ -71,13 +85,13 @@ namespace Booking.Data.Repository.Users
             return _httpContextAccessor.HttpContext?.User?.Identity?.IsAuthenticated ?? false;
         }
 
-        public async Task<UserProfile> FindUserByUsernameForPasswordReset(string username)
+        public async Task<NguoiDung> FindUserByUsernameForPasswordReset(string username)
         {
             return await (
-                    from ul in _context.UserLogins
-                    join up in _context.UserProfiles on ul.Id equals up.UserLoginId
+                    from ul in _context.TaiKhoans
+                    join up in _context.NguoiDungs on ul.Id equals up.UserLoginId
                     where ul.Username == username && up.IsDel == 0
-                    select new UserProfile
+                    select new NguoiDung
                     {
                         Id = ul.Id,
                         FullName = up.FullName,
@@ -87,11 +101,11 @@ namespace Booking.Data.Repository.Users
                     }).FirstOrDefaultAsync();
         }
 
-        public async Task<UserLogin> UpdatePassword(
+        public async Task<TaiKhoan> UpdatePassword(
             string username,
             string password)
         {
-            var user = await _context.UserLogins
+            var user = await _context.TaiKhoans
                 .FirstOrDefaultAsync(x => x.Username == username);
 
             if (user == null)
@@ -100,23 +114,23 @@ namespace Booking.Data.Repository.Users
             }
 
             user.Password = Booking.Common.Shared.Hash.HashPassword(password);
-            _context.UserLogins.Update(user);
+            _context.TaiKhoans.Update(user);
 
             await _context.SaveChangesAsync();
 
             return user;
         }
 
-        public async Task<UserProfile?> Login(string userName, string passWord)
+        public async Task<NguoiDung?> Login(string userName, string passWord)
         {
             var result =  await (
-                 from ul in _context.UserLogins
-                 join up in _context.UserProfiles on ul.Id equals up.UserLoginId
-                 join ur in _context.UserRoles on ul.Id equals ur.UserId
-                 join r in _context.Roles on ur.RoleId equals r.Id
+                 from ul in _context.TaiKhoans
+                 join up in _context.NguoiDungs on ul.Id equals up.UserLoginId
+                 join ur in _context.NguoiDung_VaiTros on ul.Id equals ur.UserId
+                 join r in _context.VaiTros on ur.RoleId equals r.Id
                  where ul.Username == userName && ul.Password == passWord
                  && up.IsDel == 0
-             select new UserProfile
+             select new NguoiDung
              {
                  Id = ul.Id,
                  FullName = up.FullName,
@@ -130,20 +144,20 @@ namespace Booking.Data.Repository.Users
             return result;
         }
 
-        public async Task<(List<UserProfile> Users, int TotalCount)> GetAdminUsers(
+        public async Task<(List<NguoiDung> Users, int TotalCount)> GetAdminUsers(
             string? keyword,
             int? status,
             int page,
             int pageSize)
         {
             var query =
-                from profile in _context.UserProfiles.AsNoTracking()
-                join login in _context.UserLogins on profile.UserLoginId equals login.Id
-                join userRole in _context.UserRoles on login.Id equals userRole.UserId into userRoleGroup
+                from profile in _context.NguoiDungs.AsNoTracking()
+                join login in _context.TaiKhoans on profile.UserLoginId equals login.Id
+                join userRole in _context.NguoiDung_VaiTros on login.Id equals userRole.UserId into userRoleGroup
                 from userRole in userRoleGroup.DefaultIfEmpty()
-                join role in _context.Roles on userRole.RoleId equals role.Id into roleGroup
+                join role in _context.VaiTros on userRole.RoleId equals role.Id into roleGroup
                 from role in roleGroup.DefaultIfEmpty()
-                select new UserProfile
+                select new NguoiDung
                 {
                     Id = profile.Id,
                     UserLoginId = login.Id,
@@ -184,7 +198,7 @@ namespace Booking.Data.Repository.Users
 
         public async Task<bool> SetAccountStatus(Guid userId, int status)
         {
-            var profile = await _context.UserProfiles
+            var profile = await _context.NguoiDungs
                 .FirstOrDefaultAsync(user => user.UserLoginId == userId);
             if (profile == null)
             {
@@ -192,8 +206,8 @@ namespace Booking.Data.Repository.Users
             }
 
             if (status == 0 && await (
-                    from userRole in _context.UserRoles
-                    join role in _context.Roles on userRole.RoleId equals role.Id
+                    from userRole in _context.NguoiDung_VaiTros
+                    join role in _context.VaiTros on userRole.RoleId equals role.Id
                     where userRole.UserId == userId &&
                           role.RoleName == "Owner" &&
                           profile.OwnerApprovalStatus != (int)OwnerRegistrationStatus.Approved
@@ -207,16 +221,16 @@ namespace Booking.Data.Repository.Users
             return true;
         }
 
-        public async Task<(List<UserProfile> Users, int TotalCount)> GetOwnerRegistrations(
+        public async Task<(List<NguoiDung> Users, int TotalCount)> GetOwnerRegistrations(
             int? approvalStatus, string? keyword, int page, int pageSize)
         {
             var query =
-                from profile in _context.UserProfiles.AsNoTracking()
-                join login in _context.UserLogins on profile.UserLoginId equals login.Id
-                join userRole in _context.UserRoles on login.Id equals userRole.UserId
-                join role in _context.Roles on userRole.RoleId equals role.Id
+                from profile in _context.NguoiDungs.AsNoTracking()
+                join login in _context.TaiKhoans on profile.UserLoginId equals login.Id
+                join userRole in _context.NguoiDung_VaiTros on login.Id equals userRole.UserId
+                join role in _context.VaiTros on userRole.RoleId equals role.Id
                 where role.RoleName == "Owner"
-                select new UserProfile
+                select new NguoiDung
                 {
                     Id = profile.Id,
                     UserLoginId = login.Id,
@@ -273,14 +287,14 @@ namespace Booking.Data.Repository.Users
             return (users, totalCount);
         }
 
-        public async Task<UserProfile?> ReviewOwnerRegistration(
+        public async Task<NguoiDung?> ReviewOwnerRegistration(
             Guid userId, int approvalStatus, string? reviewNote, Guid adminId)
         {
             var profile = await (
-                from userProfile in _context.UserProfiles
-                join userRole in _context.UserRoles on userProfile.UserLoginId equals userRole.UserId
-                join role in _context.Roles on userRole.RoleId equals role.Id
-                join login in _context.UserLogins on userProfile.UserLoginId equals login.Id
+                from userProfile in _context.NguoiDungs
+                join userRole in _context.NguoiDung_VaiTros on userProfile.UserLoginId equals userRole.UserId
+                join role in _context.VaiTros on userRole.RoleId equals role.Id
+                join login in _context.TaiKhoans on userProfile.UserLoginId equals login.Id
                 where login.Id == userId &&
                       role.RoleName == "Owner" &&
                       userProfile.OwnerApprovalStatus == 0

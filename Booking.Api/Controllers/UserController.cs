@@ -83,9 +83,9 @@ namespace Booking.Api.Controllers
         }
 
         [HttpPost("refresh-token")]
-        public async Task<IActionResult> RefreshToken()
+        public async Task<IActionResult> TokenLamMoi()
         {
-            string accessToken = await _refreshTokenService.RefreshToken();
+            string accessToken = await _refreshTokenService.TokenLamMoi();
             if(string.IsNullOrEmpty(accessToken))
             {
                 return Unauthorized(new { message = "Invalid refresh token" });

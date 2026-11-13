@@ -24,6 +24,7 @@ using Booking.Core.Model.Users;
 using Booking.Core.Model.ViKhachSans;
 using Booking.Core.Model.Tags;
 using Microsoft.EntityFrameworkCore;
+using Booking.Core.Model.GiayToTuyThans;
 
 namespace Booking.Data.DBContext
 {
@@ -49,18 +50,18 @@ namespace Booking.Data.DBContext
             modelBuilder.Entity<Phong>().ToTable("Phong");
             modelBuilder.Entity<ChiTietDatPhong>().ToTable("ChiTietDatPhong");
             modelBuilder.Entity<ThanhToan>().ToTable("ThanhToan");
-            modelBuilder.Entity<RefreshToken>().ToTable("RefreshToken");
-            modelBuilder.Entity<Role>().ToTable("Roles");
+            modelBuilder.Entity<TokenLamMoi>().ToTable("TokenLamMoi");
+            modelBuilder.Entity<VaiTro>().ToTable("VaiTro");
             modelBuilder.Entity<TienIch>().ToTable("TienIch");
-            modelBuilder.Entity<UserLogin>().ToTable("UserLogin");
-            modelBuilder.Entity<UserProfile>().ToTable("UserProfile");
-            modelBuilder.Entity<UserRole>().ToTable("UserRoles");
-            modelBuilder.Entity<KhachSanImages>().ToTable("KhachSanImages");
+            modelBuilder.Entity<TaiKhoan>().ToTable("TaiKhoan");
+            modelBuilder.Entity<NguoiDung>().ToTable("NguoiDung");
+            modelBuilder.Entity<NguoiDung_VaiTro>().ToTable("NguoiDung_VaiTro");
+            modelBuilder.Entity<KhachSanAnh>().ToTable("KhachSanAnh");
             modelBuilder.Entity<KhachSan_TienIch>().ToTable("KhachSan_TienIch");
             modelBuilder.Entity<TaiKhoanNganHang>().ToTable("TaiKhoanNganHang");
             modelBuilder.Entity<GiaPhong>().ToTable("GiaPhong");
             modelBuilder.Entity<PhongDat>().ToTable("PhongDat");
-            modelBuilder.Entity<ExternalLogin>().ToTable("ExternalLogins");
+            modelBuilder.Entity<DangNhapNgoai>().ToTable("DangNhapNgoai");
             modelBuilder.Entity<HoaHong>().ToTable("HoaHong");
             modelBuilder.Entity<ViKhachSan>().ToTable("ViKhachSan");
             modelBuilder.Entity<LichSuVi>().ToTable("LichSuVi");
@@ -70,19 +71,35 @@ namespace Booking.Data.DBContext
             modelBuilder.Entity<ChiTietHoaDonHoaHong>().ToTable("ChiTietHoaDonHoaHong");
             modelBuilder.Entity<GoiQuangCao>().ToTable("GoiQuangCao");
             modelBuilder.Entity<KhachSanQuangCao>().ToTable("KhachSanQuangCao");
-            modelBuilder.Entity<Tag>().ToTable("Tags");
-            modelBuilder.Entity<HotelTag>().ToTable("HotelTags");
-            modelBuilder.Entity<RoomAvailabilityBlock>().ToTable("RoomAvailabilityBlocks");
-            modelBuilder.Entity<HotelPromotion>().ToTable("HotelPromotions");
+            modelBuilder.Entity<TheTag>().ToTable("TheTag");
+            modelBuilder.Entity<KhachSan_TheTag>().ToTable("KhachSan_TheTag");
+            modelBuilder.Entity<KhoaPhong>().ToTable("KhoaPhong");
+            modelBuilder.Entity<KhuyenMaiKhachSan>().ToTable("KhuyenMaiKhachSan");
+            modelBuilder.Entity<GiayToTuyThan>().ToTable("GiayToTuyThan");
 
-            modelBuilder.Entity<Province>().ToTable("provinces");          
+            modelBuilder.Entity<TinhThanh>().ToTable("TinhThanh");
 
 
             // --- 2. CẤU HÌNH KHÓA CHÍNH RIÊNG BIỆT TRƯỚC ---
-            modelBuilder.Entity<Province>().HasKey(p => p.code);
+            modelBuilder.Entity<TinhThanh>().HasKey(p => p.code);
 
-            // SỬA LỖI: UserRole dùng Id làm khóa chính theo cấu trúc bảng SQL của bạn
-            modelBuilder.Entity<UserRole>().HasKey(x => x.Id);
+            // SỬA LỖI: NguoiDung_VaiTro dùng Id làm khóa chính theo cấu trúc bảng SQL của bạn
+            modelBuilder.Entity<NguoiDung_VaiTro>().HasKey(x => x.Id);
+
+            modelBuilder.Entity<NguoiDung>()
+                .HasOne(x => x.TaiKhoan)
+                .WithOne(x => x.NguoiDung)
+                .HasForeignKey<NguoiDung>(x => x.UserLoginId);
+
+            modelBuilder.Entity<NguoiDung_VaiTro>()
+                .HasOne(x => x.VaiTro)
+                .WithMany(x => x.NguoiDung_VaiTros)
+                .HasForeignKey(x => x.RoleId);
+
+            modelBuilder.Entity<DangNhapNgoai>()
+                .HasOne(x => x.TaiKhoan)
+                .WithMany()
+                .HasForeignKey(x => x.UserLoginId);
 
 
             // --- 3. CẤU HÌNH MỐI QUAN HỆ (RELATIONSHIPS) ---
@@ -101,28 +118,28 @@ namespace Booking.Data.DBContext
                     .HasForeignKey(x => x.TienIchId);
             });
 
-            modelBuilder.Entity<Tag>(entity =>
+            modelBuilder.Entity<TheTag>(entity =>
             {
                 entity.HasKey(x => x.Id);
                 entity.HasIndex(x => x.Slug).IsUnique();
             });
 
-            modelBuilder.Entity<HotelTag>(entity =>
+            modelBuilder.Entity<KhachSan_TheTag>(entity =>
             {
                 entity.HasKey(x => new { x.HotelId, x.TagId });
 
                 entity.HasOne(x => x.Hotel)
-                    .WithMany(x => x.HotelTags)
+                    .WithMany(x => x.KhachSan_TheTags)
                     .HasForeignKey(x => x.HotelId)
                     .OnDelete(DeleteBehavior.Cascade);
 
-                entity.HasOne(x => x.Tag)
-                    .WithMany(x => x.HotelTags)
+                entity.HasOne(x => x.TheTag)
+                    .WithMany(x => x.KhachSan_TheTags)
                     .HasForeignKey(x => x.TagId)
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            modelBuilder.Entity<RoomAvailabilityBlock>(entity =>
+            modelBuilder.Entity<KhoaPhong>(entity =>
             {
                 entity.HasKey(x => x.Id);
                 entity.HasIndex(x => new { x.RoomId, x.StartAt, x.EndAt });
@@ -132,7 +149,7 @@ namespace Booking.Data.DBContext
                     .OnDelete(DeleteBehavior.Cascade);
             });
 
-            modelBuilder.Entity<HotelPromotion>(entity =>
+            modelBuilder.Entity<KhuyenMaiKhachSan>(entity =>
             {
                 entity.HasKey(x => x.Id);
                 entity.HasIndex(x => new { x.HotelId, x.Code }).IsUnique();
@@ -153,11 +170,11 @@ namespace Booking.Data.DBContext
                     .HasForeignKey(x => x.KhachSanId);
             });
 
-            // Quan hệ 1 - Nhiều: KhachSan -> KhachSanImages
-            modelBuilder.Entity<KhachSanImages>(entity =>
+            // Quan hệ 1 - Nhiều: KhachSan -> KhachSanAnh
+            modelBuilder.Entity<KhachSanAnh>(entity =>
             {
                 entity.HasOne(x => x.KhachSan)
-                    .WithMany(x => x.KhachSanImages)
+                    .WithMany(x => x.KhachSanAnhs)
                     .HasForeignKey(x => x.KhachSanId);
             });
 
@@ -178,19 +195,19 @@ namespace Booking.Data.DBContext
                         .OnDelete(DeleteBehavior.Restrict);
                     });
 
-            modelBuilder.Entity<UserRole>()
-                .HasOne(ur => ur.UserLogin)
-                .WithOne(ul => ul.UserRole)            // UserLogin chỉ có 1 UserRole duy nhất
-                .HasForeignKey<UserRole>(ur => ur.UserId); // Khóa ngoại đặt tại bảng UserRole (cột UserId)
+            modelBuilder.Entity<NguoiDung_VaiTro>()
+                .HasOne(ur => ur.TaiKhoan)
+                .WithOne(ul => ul.NguoiDung_VaiTro)            // TaiKhoan chỉ có 1 NguoiDung_VaiTro duy nhất
+                .HasForeignKey<NguoiDung_VaiTro>(ur => ur.UserId); // Khóa ngoại đặt tại bảng NguoiDung_VaiTro (cột UserId)
 
-            modelBuilder.Entity<UserProfile>()
-                .HasOne(p => p.UserRole)
-                .WithOne(r => r.UserProfile)
-                .HasForeignKey<UserRole>(r => r.Id);
+            modelBuilder.Entity<NguoiDung>()
+                .HasOne(p => p.NguoiDung_VaiTro)
+                .WithOne(r => r.NguoiDung)
+                .HasForeignKey<NguoiDung_VaiTro>(r => r.Id);
 
-            // Liên kết KhachSan -> Province qua trường ngoại lai ThanhPho mapping với code của Province
+            // Liên kết KhachSan -> TinhThanh qua trường ngoại lai ThanhPho mapping với code của TinhThanh
             modelBuilder.Entity<KhachSan>()
-                .HasOne(x => x.Province)
+                .HasOne(x => x.TinhThanh)
                 .WithMany()
                 .HasForeignKey(x => x.ThanhPho)
                 .HasPrincipalKey(x => x.code);
@@ -299,34 +316,48 @@ namespace Booking.Data.DBContext
                     .OnDelete(DeleteBehavior.Restrict);
             });
 
+            modelBuilder.Entity<GiayToTuyThan>(e =>
+            {
+                e.ToTable("GiayToTuyThan");
+                e.Property(x => x.LoaiGiayTo).HasConversion<byte>();
+                e.Property(x => x.TrangThaiXacMinh).HasConversion<byte>();
+                e.Property(x => x.SoGiayToHash).HasColumnType("binary(32)");
+                e.Property(x => x.NgayTao).HasDefaultValueSql("SYSUTCDATETIME()");
+
+                e.HasOne(x => x.NguoiDung)
+                 .WithMany(u => u.GiayToTuyThans)
+                 .HasForeignKey(x => x.UserProfileId);
+
+                e.HasQueryFilter(x => !x.IsDel);   // tự lọc bản ghi đã xóa mềm
+            });
         }
 
         // --- 4. ĐĂNG KÝ CÁC DBSET ---
-        public DbSet<UserProfile> UserProfiles { get; set; } = null!;
-        public DbSet<UserLogin> UserLogins { get; set; } = null!;
+        public DbSet<NguoiDung> NguoiDungs { get; set; } = null!;
+        public DbSet<TaiKhoan> TaiKhoans { get; set; } = null!;
         public DbSet<Banner> Banners { get; set; } = null!;
         public DbSet<DatPhong> DatPhongs { get; set; } = null!;
         public DbSet<DanhGia> DanhGias { get; set; } = null!;
         public DbSet<KhachSan> KhachSans { get; set; } = null!;
-        public DbSet<Tag> Tags { get; set; } = null!;
-        public DbSet<HotelTag> HotelTags { get; set; } = null!;
-        public DbSet<RoomAvailabilityBlock> RoomAvailabilityBlocks { get; set; } = null!;
-        public DbSet<HotelPromotion> HotelPromotions { get; set; } = null!;
+        public DbSet<TheTag> TheTags { get; set; } = null!;
+        public DbSet<KhachSan_TheTag> KhachSan_TheTags { get; set; } = null!;
+        public DbSet<KhoaPhong> KhoaPhongs { get; set; } = null!;
+        public DbSet<KhuyenMaiKhachSan> KhuyenMaiKhachSans { get; set; } = null!;
         public DbSet<LoaiPhong> LoaiPhongs { get; set; } = null!;
         public DbSet<Phong> Phongs { get; set; } = null!;
         public DbSet<ChiTietDatPhong> ChiTietDatPhongs { get; set; } = null!;
         public DbSet<ThanhToan> ThanhToans { get; set; } = null!;
-        public DbSet<KhachSanImages> KhachSanImages { get; set; } = null!;
-        public DbSet<Province> Provinces { get; set; } = null!;
-        public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
+        public DbSet<KhachSanAnh> KhachSanAnhs { get; set; } = null!;
+        public DbSet<TinhThanh> TinhThanhs { get; set; } = null!;
+        public DbSet<TokenLamMoi> TokenLamMois { get; set; } = null!;
         public DbSet<TienIch> TienIches { get; set; } = null!;
-        public DbSet<UserRole> UserRoles { get; set; } = null!;
+        public DbSet<NguoiDung_VaiTro> NguoiDung_VaiTros { get; set; } = null!;
         public DbSet<KhachSan_TienIch> KhachSan_TienIches { get; set; } = null!;
-        public DbSet<Role> Roles { get; set; } = null!;
+        public DbSet<VaiTro> VaiTros { get; set; } = null!;
         public DbSet<TaiKhoanNganHang> TaiKhoanNganHangs { get; set; } = null!;
         public DbSet<GiaPhong> GiaPhongs { get; set; } = null!;
         public DbSet<PhongDat> phongDats { get; set; } = null!;
-        public DbSet<ExternalLogin> ExternalLogins { get; set; } = null!;
+        public DbSet<DangNhapNgoai> DangNhapNgoais { get; set; } = null!;
         public DbSet<HoaHong> HoaHongs { get; set; }
         public DbSet<ViKhachSan> ViKhachSans { get; set; }
         public DbSet<LichSuVi> LichSuVis { get; set; }
@@ -336,5 +367,6 @@ namespace Booking.Data.DBContext
         public DbSet<ChiTietHoaDonHoaHong> ChiTietHoaDonHoaHongs { get; set; }
         public DbSet<GoiQuangCao> GoiQuangCaos { get; set; }
         public DbSet<KhachSanQuangCao> KhachSanQuangCaos { get; set; }
+        public DbSet<GiayToTuyThan> GiayToTuyThans { get; set; }
     }
 }

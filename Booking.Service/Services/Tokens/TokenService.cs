@@ -21,7 +21,7 @@ namespace Booking.Service.Services.Tokens
             _configuration = configuration;
         }
 
-        public string GenerateAccessToken(UserProfile user)
+        public string GenerateAccessToken(NguoiDung user)
         {           
             var jwt = _configuration.GetSection("Jwt");
 

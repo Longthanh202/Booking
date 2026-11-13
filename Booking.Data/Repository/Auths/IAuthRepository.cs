@@ -10,10 +10,10 @@ namespace Booking.Data.Repository.Auths
 {
     public interface IAuthRepository
     {
-        Task<ExternalLogin?> GetExternalLoginAsync(string provider, string providerKey);
-        Task<UserProfile?> GetProfileByEmailAsync(string email);
-        Task CreateUserWithSocialAsync(UserLogin userLogin, UserProfile userProfile, UserRole userRole, ExternalLogin externalLogin);
-        Task AddExternalLoginAsync(ExternalLogin externalLogin);
+        Task<DangNhapNgoai?> GetExternalLoginAsync(string provider, string providerKey);
+        Task<NguoiDung?> GetProfileByEmailAsync(string email);
+        Task CreateUserWithSocialAsync(TaiKhoan userLogin, NguoiDung userProfile, NguoiDung_VaiTro userRole, DangNhapNgoai externalLogin);
+        Task AddExternalLoginAsync(DangNhapNgoai externalLogin);
         Task SaveChangesAsync();
     }
 }

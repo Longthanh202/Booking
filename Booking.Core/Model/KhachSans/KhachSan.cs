@@ -37,13 +37,13 @@ namespace Booking.Core.Model.KhachSans
         public TimeSpan? GioTraPhong { get; set; }
         public string? TrangThai { get; set; }
         public DateTime? NgayTao { get; set; }
-        public Province Province { get; set; }
-        public virtual ICollection<KhachSanImages> KhachSanImages { get; set; } = new List<KhachSanImages>();
+        public TinhThanh TinhThanh { get; set; }
+        public virtual ICollection<KhachSanAnh> KhachSanAnhs { get; set; } = new List<KhachSanAnh>();
         public virtual ICollection<LoaiPhong> LoaiPhongs { get; set; } = new List<LoaiPhong>();
         public virtual ICollection<DatPhong> DatPhongs { get; set; } = new List<DatPhong>();
         public virtual ICollection<DanhGia> DanhGias { get; set; } = new List<DanhGia>();
         public virtual ICollection<KhachSanQuangCao> KhachSanQuangCaos { get; set; } = new List<KhachSanQuangCao>();
-        public virtual ICollection<HotelTag> HotelTags { get; set; } = new List<HotelTag>();
+        public virtual ICollection<KhachSan_TheTag> KhachSan_TheTags { get; set; } = new List<KhachSan_TheTag>();
 
         // Mối quan hệ Nhiều - Nhiều qua bảng trung gian
         public virtual ICollection<KhachSan_TienIch> KhachSan_TienIches { get; set; } = new List<KhachSan_TienIch>();

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Booking.Core.Model.KhachSanImage
 {
-    public class KhachSanImages
+    public class KhachSanAnh
     {
         [Key]
         public long Id { get; set; }

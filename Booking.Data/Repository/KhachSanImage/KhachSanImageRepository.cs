@@ -16,18 +16,18 @@ namespace Booking.Data.Repository.KhachSanImage
         {
             _context = context;
         }
-        public async Task<List<KhachSanImages>> GetHotelImages(List<Guid> ids)
+        public async Task<List<KhachSanAnh>> GetHotelImages(List<Guid> ids)
         {
-            return await _context.KhachSanImages
+            return await _context.KhachSanAnhs
                 .Where(x => ids.Contains(x.KhachSanId))
                 .ToListAsync();
         }
 
-        public async Task<List<KhachSanImages>> GetListImageByKhachSanId(Guid khachSanId)
+        public async Task<List<KhachSanAnh>> GetListImageByKhachSanId(Guid khachSanId)
         {
-            return await _context.KhachSanImages
+            return await _context.KhachSanAnhs
                 .Where(x => x.KhachSanId == khachSanId)
-                .Select(x => new KhachSanImages
+                .Select(x => new KhachSanAnh
                 {
                     Id = x.Id,
                     Url = x.Url
@@ -40,18 +40,18 @@ namespace Booking.Data.Repository.KhachSanImage
             if (urls == null || !urls.Any())
                 return;
 
-            var images = urls.Select(url => new KhachSanImages
+            var images = urls.Select(url => new KhachSanAnh
             {             
                 KhachSanId = khachSanId,
                 Url = url,              
             }).ToList();
 
-            await _context.KhachSanImages.AddRangeAsync(images);
+            await _context.KhachSanAnhs.AddRangeAsync(images);
         }
 
-        public Task<KhachSanImages?> GetImageForOwner(long imageId, Guid hotelId, Guid ownerId)
+        public Task<KhachSanAnh?> GetImageForOwner(long imageId, Guid hotelId, Guid ownerId)
         {
-            return _context.KhachSanImages.FirstOrDefaultAsync(image =>
+            return _context.KhachSanAnhs.FirstOrDefaultAsync(image =>
                 image.Id == imageId && image.KhachSanId == hotelId &&
                 image.KhachSan != null && image.KhachSan.NguoiTao == ownerId);
         }
@@ -60,7 +60,7 @@ namespace Booking.Data.Repository.KhachSanImage
         {
             var image = await GetImageForOwner(imageId, hotelId, ownerId);
             if (image == null) return false;
-            _context.KhachSanImages.Remove(image);
+            _context.KhachSanAnhs.Remove(image);
             await _context.SaveChangesAsync();
             return true;
         }

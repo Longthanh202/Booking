@@ -19,7 +19,7 @@ namespace Booking.Service.Services.Promotions
         public async Task<List<HotelPromotionResponse>?> GetForOwner(Guid ownerId, Guid hotelId)
         {
             if (!await OwnsHotel(ownerId, hotelId)) return null;
-            var items = await _context.HotelPromotions.AsNoTracking()
+            var items = await _context.KhuyenMaiKhachSans.AsNoTracking()
                 .Where(promotion => promotion.HotelId == hotelId)
                 .OrderByDescending(promotion => promotion.CreatedAt)
                 .ToListAsync();
@@ -30,10 +30,10 @@ namespace Booking.Service.Services.Promotions
         {
             if (!await OwnsHotel(ownerId, hotelId) || !IsValid(request)) return null;
             var code = request.Code.Trim().ToUpperInvariant();
-            if (await _context.HotelPromotions.AnyAsync(promotion =>
+            if (await _context.KhuyenMaiKhachSans.AnyAsync(promotion =>
                 promotion.HotelId == hotelId && promotion.Code == code)) return null;
 
-            var promotion = new HotelPromotion
+            var promotion = new KhuyenMaiKhachSan
             {
                 Id = Guid.NewGuid(),
                 HotelId = hotelId,
@@ -49,19 +49,19 @@ namespace Booking.Service.Services.Promotions
                 CreatedBy = ownerId,
                 CreatedAt = DateTime.UtcNow
             };
-            await _context.HotelPromotions.AddAsync(promotion);
+            await _context.KhuyenMaiKhachSans.AddAsync(promotion);
             await _context.SaveChangesAsync();
             return Map(promotion);
         }
 
         public async Task<HotelPromotionResponse?> Update(Guid ownerId, Guid promotionId, SaveHotelPromotionRequest request)
         {
-            var promotion = await _context.HotelPromotions.FirstOrDefaultAsync(item =>
+            var promotion = await _context.KhuyenMaiKhachSans.FirstOrDefaultAsync(item =>
                 item.Id == promotionId && item.Hotel.NguoiTao == ownerId);
             if (promotion == null || !IsValid(request)) return null;
 
             var code = request.Code.Trim().ToUpperInvariant();
-            if (await _context.HotelPromotions.AnyAsync(item =>
+            if (await _context.KhuyenMaiKhachSans.AnyAsync(item =>
                 item.HotelId == promotion.HotelId && item.Id != promotionId && item.Code == code)) return null;
 
             promotion.Code = code;
@@ -78,7 +78,7 @@ namespace Booking.Service.Services.Promotions
 
         public async Task<bool> Deactivate(Guid ownerId, Guid promotionId)
         {
-            var promotion = await _context.HotelPromotions.FirstOrDefaultAsync(item =>
+            var promotion = await _context.KhuyenMaiKhachSans.FirstOrDefaultAsync(item =>
                 item.Id == promotionId && item.Hotel.NguoiTao == ownerId);
             if (promotion == null) return false;
             promotion.IsActive = false;
@@ -90,7 +90,7 @@ namespace Booking.Service.Services.Promotions
         {
             var normalizedCode = code.Trim().ToUpperInvariant();
             var now = DateTime.UtcNow;
-            var promotion = await _context.HotelPromotions.AsNoTracking().FirstOrDefaultAsync(item =>
+            var promotion = await _context.KhuyenMaiKhachSans.AsNoTracking().FirstOrDefaultAsync(item =>
                 item.HotelId == hotelId && item.Code == normalizedCode && item.IsActive &&
                 item.StartsAt <= now && item.EndsAt > now);
             if (promotion == null || (promotion.MinBookingAmount.HasValue && subtotal < promotion.MinBookingAmount.Value))
@@ -129,7 +129,7 @@ namespace Booking.Service.Services.Promotions
                 (!request.MaxDiscountAmount.HasValue || request.MaxDiscountAmount > 0);
         }
 
-        private static HotelPromotionResponse Map(HotelPromotion promotion) => new()
+        private static HotelPromotionResponse Map(KhuyenMaiKhachSan promotion) => new()
         {
             Id = promotion.Id,
             HotelId = promotion.HotelId,

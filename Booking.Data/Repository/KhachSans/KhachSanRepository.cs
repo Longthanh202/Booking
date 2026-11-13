@@ -19,9 +19,9 @@ namespace Booking.Data.Repository.KhachSans
             return await _context.KhachSans
                 .AsNoTracking() // Tăng tốc độ đọc, không track để lưu cache thừa
                 .AsSplitQuery() // Tách các truy vấn con ra để tránh lỗi Cartesian explosion
-                .Include(ks => ks.Province)
+                .Include(ks => ks.TinhThanh)
                 .Include(ks => ks.LoaiPhongs)
-                .Include(ks => ks.KhachSanImages)
+                .Include(ks => ks.KhachSanAnhs)
                 .Include(ks => ks.KhachSan_TienIches)
                     .ThenInclude(kst => kst.TienIch) // Đi sâu vào lấy data bảng TienIch
                 .FirstOrDefaultAsync(ks => ks.Id == id) ?? null;
@@ -66,7 +66,7 @@ namespace Booking.Data.Repository.KhachSans
 
                 query =
                     from ks in query
-                    join p in _context.Provinces
+                    join p in _context.TinhThanhs
                         on ks.ThanhPho equals p.code into pGroup
                     from p in pGroup.DefaultIfEmpty()
                     where ks.TenKhachSan.Contains(kw)

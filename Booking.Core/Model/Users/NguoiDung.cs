@@ -1,3 +1,4 @@
+using Booking.Core.Model.GiayToTuyThans;
 using Booking.Core.Model.TaiKhoanNganHangs;
 using Booking.Core.Model.UserRoles;
 using System;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 namespace Booking.Core.Model.Users
 {
     
-    public class UserProfile
+    public class NguoiDung
     {
         [Key]
         public Guid Id { get; set; }
@@ -36,7 +37,8 @@ namespace Booking.Core.Model.Users
         [NotMapped]
         public TaiKhoanNganHang? BankAccount { get; set; }
 
-        public virtual UserLogin? UserLogin { get; set; }
-        public virtual UserRole? UserRole { get; set; }
+        public virtual TaiKhoan? TaiKhoan { get; set; }
+        public virtual NguoiDung_VaiTro? NguoiDung_VaiTro { get; set; }
+        public ICollection<GiayToTuyThan> GiayToTuyThans { get; set; } = new List<GiayToTuyThan>();
     }
 }

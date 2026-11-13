@@ -18,7 +18,7 @@ namespace Booking.Service.Services.KhachSanImage
         {
             _executor = executor;
         }
-        public async Task<IEnumerable<KhachSanImages>> GetHotelImages(List<Guid> ids)
+        public async Task<IEnumerable<KhachSanAnh>> GetHotelImages(List<Guid> ids)
         {
             var tb = new DataTable();
             tb.Columns.Add("Id", typeof(Guid));
@@ -34,16 +34,16 @@ namespace Booking.Service.Services.KhachSanImage
                     Value = tb
                 }
             };
-            return await _executor.QueryAsync<KhachSanImages>("sp_GetHotelImages", arr);
+            return await _executor.QueryAsync<KhachSanAnh>("sp_GetHotelImages", arr);
         }
 
-        public async Task<IEnumerable<KhachSanImages>> GetListImageByKhachSanId(Guid khachSanId)
+        public async Task<IEnumerable<KhachSanAnh>> GetListImageByKhachSanId(Guid khachSanId)
         {
             var arr = new[]
             {
                 new SqlParameter("@KhachSanId", khachSanId)
             };
-            return await _executor.QueryAsync<KhachSanImages>("sp_GetListImageByKhachSanId", arr);
+            return await _executor.QueryAsync<KhachSanAnh>("sp_GetListImageByKhachSanId", arr);
         }
     }
 }

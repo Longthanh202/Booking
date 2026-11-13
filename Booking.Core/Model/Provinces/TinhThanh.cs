@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Booking.Core.Model.Provinces
 {
-    public class Province
+    public class TinhThanh
     {
         [Key]
         public string? code { get; set; }    

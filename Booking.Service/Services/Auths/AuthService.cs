@@ -54,14 +54,14 @@ namespace Booking.Service.Services.Auths
 
             // 2. Tìm liên kết Social đã tồn tại
             var externalLogin = await _authRepository.GetExternalLoginAsync("Google", googleSubId);
-            UserLogin userLogin;
-            UserProfile? userProfile;
+            TaiKhoan userLogin;
+            NguoiDung? userProfile;
 
             if (externalLogin != null)
             {
                 // 🌟 TRƯỜNG HỢP 1: Đã từng đăng nhập bằng Google trước đó
-                userLogin = externalLogin.UserLogin!;
-                userProfile = userLogin.UserProfile;
+                userLogin = externalLogin.TaiKhoan!;
+                userProfile = userLogin.NguoiDung;
             }
             else
             {
@@ -71,10 +71,10 @@ namespace Booking.Service.Services.Auths
                 if (existingProfile != null)
                 {
                     // 🌟 TRƯỜNG HỢP 2: Đã có tài khoản Email -> Liên kết thêm Google
-                    userLogin = existingProfile.UserLogin!;
+                    userLogin = existingProfile.TaiKhoan!;
                     userProfile = existingProfile;          
 
-                    var newExternalLogin = new ExternalLogin
+                    var newExternalLogin = new DangNhapNgoai
                     {
                         Id = Guid.NewGuid(),
                         UserLoginId = userLogin.Id,
@@ -91,14 +91,14 @@ namespace Booking.Service.Services.Auths
                     // 🌟 TRƯỜNG HỢP 3: Khách hàng mới -> Tạo toàn bộ thông tin
                     var newLoginId = Guid.NewGuid();
 
-                    userLogin = new UserLogin
+                    userLogin = new TaiKhoan
                     {
                         Id = newLoginId,
                         Username = email,
                         Password = null
                     };
 
-                    userProfile = new UserProfile
+                    userProfile = new NguoiDung
                     {
                         Id = Guid.NewGuid(),
                         UserLoginId = newLoginId,
@@ -108,14 +108,14 @@ namespace Booking.Service.Services.Auths
                         IsDel = 0
                     };
 
-                    var userRole = new UserRole
+                    var userRole = new NguoiDung_VaiTro
                     {
                         Id = Guid.NewGuid(),
                         UserId = newLoginId,
                         RoleId = defaultRoleId
                     };
 
-                    var newExternalLogin = new ExternalLogin
+                    var newExternalLogin = new DangNhapNgoai
                     {
                         Id = Guid.NewGuid(),
                         UserLoginId = newLoginId,

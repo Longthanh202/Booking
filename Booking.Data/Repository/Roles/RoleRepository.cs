@@ -17,28 +17,28 @@ namespace Booking.Data.Repository.Roles
         {
             _context = context;
         }
-        public async Task<Role?> CheckRoleAdmin(Guid userId)
+        public async Task<VaiTro?> CheckRoleAdmin(Guid userId)
         {
             return await (
-                from ur in _context.UserRoles
-                join r in _context.Roles
+                from ur in _context.NguoiDung_VaiTros
+                join r in _context.VaiTros
                     on ur.RoleId equals r.Id
                 where ur.UserId == userId && r.RoleName == "Admin"
                 select r
             ).FirstOrDefaultAsync();
         }
 
-        public async Task<Role?> GetById(Guid id)
+        public async Task<VaiTro?> GetById(Guid id)
         {
-            return await _context.Roles.FirstOrDefaultAsync(x => x.Id == id);
+            return await _context.VaiTros.FirstOrDefaultAsync(x => x.Id == id);
         }
 
-        public async Task<Role?> GetRoleCustomer()
+        public async Task<VaiTro?> GetRoleCustomer()
         {
-            return await _context.Roles.FirstOrDefaultAsync(x => x.RoleName == "Customer");
+            return await _context.VaiTros.FirstOrDefaultAsync(x => x.RoleName == "Customer");
         }
 
-        public Task<Role?> GetRoleOwner() =>
-            _context.Roles.FirstOrDefaultAsync(x => x.RoleName == "Owner");
+        public Task<VaiTro?> GetRoleOwner() =>
+            _context.VaiTros.FirstOrDefaultAsync(x => x.RoleName == "Owner");
     }
 }
