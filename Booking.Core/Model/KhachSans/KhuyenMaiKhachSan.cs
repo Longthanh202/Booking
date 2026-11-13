@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Booking.Core.Model.KhachSans
 {
-    public class HotelPromotion
+    public class KhuyenMaiKhachSan
     {
         [Key]
         public Guid Id { get; set; }

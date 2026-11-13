@@ -20,7 +20,7 @@ namespace Booking.Service.Services.Provinces
         {
            _provinceRepository = provinceRepository;
         }
-        public async Task<List<Province>> GetProvinces()
+        public async Task<List<TinhThanh>> GetProvinces()
         {
             return await _provinceRepository.GetProvinces();
         }

@@ -84,7 +84,7 @@ namespace Booking.Data.Repository.LoaiPhongs
                         .Select(pd => pd.PhongId)
                         .Distinct()
                         .ToListAsync();
-                    var blockedRoomIds = await _context.RoomAvailabilityBlocks
+                    var blockedRoomIds = await _context.KhoaPhongs
                         .Where(block => block.Room.LoaiPhongId == loaiPhong.Id &&
                             block.StartAt < ngayTra && block.EndAt > ngayNhan)
                         .Select(block => block.RoomId)

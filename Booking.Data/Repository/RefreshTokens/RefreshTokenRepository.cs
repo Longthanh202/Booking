@@ -16,9 +16,9 @@ namespace Booking.Data.Repository.RefreshTokens
         {
             _context = context;
         }
-        public async Task<RefreshToken?> GetValidRefreshToken(string token)
+        public async Task<TokenLamMoi?> GetValidRefreshToken(string token)
         {
-            return await _context.RefreshTokens
+            return await _context.TokenLamMois
                 .AsNoTracking()
                 .FirstOrDefaultAsync(x =>
                 x.Status == 1 &&
@@ -28,7 +28,7 @@ namespace Booking.Data.Repository.RefreshTokens
                 x.CreatedDate.Value > DateTime.Now.AddDays(-x.ExpiryDate.Value));
         }
 
-        public async Task<RefreshToken> InsertRefreshToken(RefreshToken refreshToken)
+        public async Task<TokenLamMoi> InsertRefreshToken(TokenLamMoi refreshToken)
         {
             await _context.AddAsync(refreshToken);
             await _context.SaveChangesAsync();

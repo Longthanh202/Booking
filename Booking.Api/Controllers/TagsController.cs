@@ -28,7 +28,7 @@ namespace Booking.Api.Controllers
             }
 
             var result = await _tagService.GetHotelsBySlugAsync(slug, page, pageSize);
-            return result == null ? NotFound(new { message = "Tag không tồn tại hoặc đã bị ẩn." }) : Ok(result);
+            return result == null ? NotFound(new { message = "TheTag không tồn tại hoặc đã bị ẩn." }) : Ok(result);
         }
 
         [Authorize(Roles = "Admin")]
@@ -51,7 +51,7 @@ namespace Booking.Api.Controllers
         {
             var result = await _tagService.UpdateAsync(id, request);
             return result == null
-                ? BadRequest(new { message = "Tag không tồn tại, dữ liệu không hợp lệ hoặc slug đã tồn tại." })
+                ? BadRequest(new { message = "TheTag không tồn tại, dữ liệu không hợp lệ hoặc slug đã tồn tại." })
                 : Ok(result);
         }
 
@@ -66,7 +66,7 @@ namespace Booking.Api.Controllers
         {
             return await _tagService.ReplaceHotelsAsync(id, request.HotelIds)
                 ? NoContent()
-                : BadRequest(new { message = "Tag hoặc một trong các khách sạn không tồn tại." });
+                : BadRequest(new { message = "TheTag hoặc một trong các khách sạn không tồn tại." });
         }
     }
 }

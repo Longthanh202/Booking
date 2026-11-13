@@ -19,7 +19,7 @@ namespace Booking.Service.Services.Roles
         {
             _roleRepository = roleRepository;
         }
-        public async Task<Role> CheckRoleAdmin(Guid userId)
+        public async Task<VaiTro> CheckRoleAdmin(Guid userId)
         {
             return await _roleRepository.CheckRoleAdmin(userId);
         }

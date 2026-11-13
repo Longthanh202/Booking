@@ -10,9 +10,9 @@ namespace Booking.Data.Repository.Roles
 {
     public interface IRoleRepository
     {
-        Task<Role> CheckRoleAdmin(Guid userId);
-        Task<Role?> GetById(Guid id);
-        Task<Role?> GetRoleCustomer();
-        Task<Role?> GetRoleOwner();
+        Task<VaiTro> CheckRoleAdmin(Guid userId);
+        Task<VaiTro?> GetById(Guid id);
+        Task<VaiTro?> GetRoleCustomer();
+        Task<VaiTro?> GetRoleOwner();
     }
 }

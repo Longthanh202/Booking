@@ -30,6 +30,7 @@ using Booking.Data.Repository.ViKhachSans;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Booking.Data.Repository.GiayToTuyThans;
 
 namespace Booking.Data
 {
@@ -72,7 +73,8 @@ namespace Booking.Data
             services.AddScoped<IChiTietHoaDonHoaHongRepository, ChiTietHoaDonHoaHongRepository>();
             services.AddScoped<ITaiKhoanNganHangRepository, TaiKhoanNganHangRepository>();
             services.AddScoped<IQuangCaoRepository, QuangCaoRepository>();
-                        services.AddScoped<ITagRepository, TagRepository>();
+            services.AddScoped<ITagRepository, TagRepository>();
+            services.AddScoped<IGiayToTuyThanRepository, GiayToTuyThanRepository>();
             return services;
         }
     }

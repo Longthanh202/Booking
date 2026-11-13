@@ -29,17 +29,17 @@ namespace Booking.Service.Services.RefreshTokens
             _tokenService = tokenService;
         }
 
-        public async Task<RefreshToken> GetValidRefreshToken(string token)
+        public async Task<TokenLamMoi> GetValidRefreshToken(string token)
         {
             return await _refreshTokenRepository.GetValidRefreshToken(token);
         }
 
-        public async Task<RefreshToken> InsertRefreshToken(RefreshToken refreshToken)
+        public async Task<TokenLamMoi> InsertRefreshToken(TokenLamMoi refreshToken)
         {
             return await _refreshTokenRepository.InsertRefreshToken(refreshToken);
         }
 
-        public async Task<string?> RefreshToken()
+        public async Task<string?> TokenLamMoi()
         {
             var refreshToken = _httpContextAccessor.HttpContext?
                 .Request
@@ -53,7 +53,7 @@ namespace Booking.Service.Services.RefreshTokens
             if (existingToken == null)
                 return null;
 
-            var accessToken = _tokenService.GenerateAccessToken(new UserProfile
+            var accessToken = _tokenService.GenerateAccessToken(new NguoiDung
             {
                 Id = existingToken.UserId.Value,
                 FullName = existingToken.FullName,

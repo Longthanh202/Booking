@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Booking.Core.Model.Phongs
 {
-    public class RoomAvailabilityBlock
+    public class KhoaPhong
     {
         [Key]
         public Guid Id { get; set; }

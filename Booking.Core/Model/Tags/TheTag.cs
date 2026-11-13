@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Booking.Core.Model.Tags
 {
-    public class Tag
+    public class TheTag
     {
         [Key]
         public Guid Id { get; set; }
@@ -20,6 +20,6 @@ namespace Booking.Core.Model.Tags
         public int SortOrder { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
-        public virtual ICollection<HotelTag> HotelTags { get; set; } = new List<HotelTag>();
+        public virtual ICollection<KhachSan_TheTag> KhachSan_TheTags { get; set; } = new List<KhachSan_TheTag>();
     }
 }
