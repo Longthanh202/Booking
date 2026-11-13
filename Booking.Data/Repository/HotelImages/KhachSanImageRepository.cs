@@ -1,4 +1,4 @@
-﻿using Booking.Core.Model.KhachSanImage;
+using Booking.Core.Model.HotelImages;
 using Booking.Data.DBContext;
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Booking.Data.Repository.KhachSanImage
+namespace Booking.Data.Repository.HotelImages
 {
     public class KhachSanImageRepository : IKhachSanImageRepository
     {
