@@ -29,17 +29,17 @@ namespace Booking.Service.Services.Tags
 
             return new TagHotelsPageResponse
             {
-                Tag = MapTag(tag),
+                TheTag = MapTag(tag),
                 Data = hotels.Select(hotel => new TagHotelResponse
                 {
                     Id = hotel.Id,
                     TenKhachSan = hotel.TenKhachSan,
                     MoTa = hotel.MoTa,
                     DiaChi = hotel.DiaChi,
-                    ThanhPho = hotel.Province?.name ?? hotel.ThanhPho,
+                    ThanhPho = hotel.TinhThanh?.name ?? hotel.ThanhPho,
                     SoSao = hotel.SoSao,
                     TrangThai = hotel.TrangThai,
-                    Urls = hotel.KhachSanImages.Where(image => image.Url != null).Select(image => image.Url!).ToList()
+                    Urls = hotel.KhachSanAnhs.Where(image => image.Url != null).Select(image => image.Url!).ToList()
                 }).ToList(),
                 TotalRow = totalCount,
                 TotalPage = (int)Math.Ceiling(totalCount / (double)pageSize),
@@ -55,7 +55,7 @@ namespace Booking.Service.Services.Tags
                 return null;
             }
 
-            var tag = new Tag
+            var tag = new TheTag
             {
                 Id = Guid.NewGuid(),
                 Name = request.Name.Trim(),
@@ -110,9 +110,9 @@ namespace Booking.Service.Services.Tags
             !string.IsNullOrWhiteSpace(request.Slug) &&
             ValidSlug.IsMatch(request.Slug.Trim());
 
-        private static List<TagResponse> MapTags(IEnumerable<Tag> tags) => tags.Select(MapTag).ToList();
+        private static List<TagResponse> MapTags(IEnumerable<TheTag> tags) => tags.Select(MapTag).ToList();
 
-        private static TagResponse MapTag(Tag tag) => new()
+        private static TagResponse MapTag(TheTag tag) => new()
         {
             Id = tag.Id,
             Name = tag.Name,
@@ -120,7 +120,7 @@ namespace Booking.Service.Services.Tags
             Description = tag.Description,
             SortOrder = tag.SortOrder,
             IsActive = tag.IsActive,
-            HotelCount = tag.HotelTags.Count
+            HotelCount = tag.KhachSan_TheTags.Count
         };
     }
 }

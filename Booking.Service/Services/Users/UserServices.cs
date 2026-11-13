@@ -133,14 +133,14 @@ namespace Booking.Service.Services.Users
             await _unitOfWork.BeginTransactionAsync();
             try
             {
-                await _userRepository.AddUserLogin(new UserLogin
+                await _userRepository.AddUserLogin(new TaiKhoan
                 {
                     Id = userId,
                     Username = request.Username.Trim(),
                     Password = Hash.HashPassword(request.Password)
                 });
 
-                await _userRepository.AddUserProfile(new UserProfile
+                await _userRepository.AddUserProfile(new NguoiDung
                 {
                     Id = Guid.NewGuid(),
                     UserLoginId = userId,
@@ -153,7 +153,7 @@ namespace Booking.Service.Services.Users
                     CreateAt = DateTime.UtcNow
                 });
 
-                await _userRepository.AddUserRole(new UserRole
+                await _userRepository.AddUserRole(new NguoiDung_VaiTro
                 {
                     Id = Guid.NewGuid(),
                     UserId = userId,
@@ -266,78 +266,88 @@ namespace Booking.Service.Services.Users
                     Message = "Username hoặc Password không được để trống"
                 };
             }
-            string passwordHash = Hash.HashPassword(input.Password);
-            var user = await _userRepository.Login(input.Username, passwordHash);
-            if (user == null)
+            var userLogin = await _userRepository.GetUserLoginByUserName(input.Username);
+            bool checkPassWord = Hash.VerifyArgon2(input.Password, userLogin.Password);
+            if(checkPassWord == true)
             {
-                return new LoginResponse
+                var user = await _userRepository.Login(input.Username, userLogin.Password);
+                if (user == null)
                 {
-                    Status = false,
-                    Token = null,
-                    Message = "Username hoặc Password không đúng"
+                    return new LoginResponse
+                    {
+                        Status = false,
+                        Token = null,
+                        Message = "Username hoặc Password không đúng"
+                    };
+                }
+
+                var userProfile = new NguoiDung
+                {
+                    Id = user.Id,
+                    FullName = user.FullName,
+                    Phone = user.Phone,
+                    Email = user.Email,
+                    Address = user.Address,
+                    RoleId = user.RoleId,
+                    RoleName = user.RoleName
                 };
-            }
 
-            var userProfile = new UserProfile
-            {
-                Id = user.Id,
-                FullName = user.FullName,
-                Phone = user.Phone,
-                Email = user.Email,
-                Address = user.Address,
-                RoleId = user.RoleId,
-                RoleName = user.RoleName
-            };
+                var token = _tokenService.GenerateAccessToken(user);
+                var refreshToken = _tokenService.GenerateRefreshToken();
 
-            var token = _tokenService.GenerateAccessToken(user);
-            var refreshToken = _tokenService.GenerateRefreshToken();
-
-            await _refreshTokenRepository.InsertRefreshToken(new RefreshToken
-            {
-                UserId = user.Id,
-                Token = refreshToken,
-                ExpiryDate = 30,
-                CreatedDate = DateTime.Now,
-                Status = 1,
-                FullName = user.FullName,
-                RoleId = user.RoleId,
-                RoleName = user.RoleName,
-
-            });
-
-            _httpContextAccessor.HttpContext?.Response.Cookies.Append(
-                "refreshToken",
-                refreshToken,
-                new CookieOptions
+                await _refreshTokenRepository.InsertRefreshToken(new TokenLamMoi
                 {
-                    HttpOnly = true,
-                    Secure = true,
-                    SameSite = SameSiteMode.Strict,
-                    Expires = DateTime.UtcNow.AddDays(30)
+                    UserId = user.Id,
+                    Token = refreshToken,
+                    ExpiryDate = 30,
+                    CreatedDate = DateTime.Now,
+                    Status = 1,
+                    FullName = user.FullName,
+                    RoleId = user.RoleId,
+                    RoleName = user.RoleName,
+
                 });
 
+                _httpContextAccessor.HttpContext?.Response.Cookies.Append(
+                    "refreshToken",
+                    refreshToken,
+                    new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = true,
+                        SameSite = SameSiteMode.Strict,
+                        Expires = DateTime.UtcNow.AddDays(30)
+                    });
+
+                return new LoginResponse
+                {
+                    Status = true,
+                    Token = token,
+                    Message = "Đăng nhập thành công"
+                };
+            }
             return new LoginResponse
             {
-                Status = true,
-                Token = token,
-                Message = "Đăng nhập thành công"
+                Status = false,
+                Token = "",
+                Message = "Đăng nhập thất bại, sai mật khẩu"
             };
         }
 
-        public async Task<UserProfile> Register(RegisterUserRequest user)
+        public async Task<NguoiDung> Register(RegisterUserRequest user)
         {
             await _unitOfWork.BeginTransactionAsync();
             try
             {
                 var userLoginId = Guid.NewGuid();
                 var roleCustomer = await _roleRepository.GetRoleCustomer();
-                await _userRepository.AddUserLogin(new UserLogin
+                await _userRepository.AddUserLogin(new TaiKhoan
                 {
                     Id = userLoginId,
                     Username = user.Username,
-                    Password = Hash.HashPassword(user.Password),
+                    Password = Hash.Argon2(user.Password),
                 });
-                var profile = new UserProfile
+                var profile = new NguoiDung
                 {
                     Id = Guid.NewGuid(),                   
                     FullName = user.FullName,

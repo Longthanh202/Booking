@@ -26,7 +26,7 @@ namespace Booking.Api.Controllers
                 return BadRequest(new { message = "IdToken không được để trống!" });
             }
 
-            // Lấy Default RoleId (VD: Role Khách hàng) từ appsettings.json
+            // Lấy Default RoleId (VD: VaiTro Khách hàng) từ appsettings.json
             Guid defaultRoleId = Guid.Parse(_config["AppSettings:DefaultCustomerRoleId"]!);
 
             var response = await _authService.LoginWithGoogleAsync(request.IdToken, defaultRoleId);

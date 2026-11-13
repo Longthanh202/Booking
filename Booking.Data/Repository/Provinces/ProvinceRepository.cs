@@ -16,9 +16,9 @@ namespace Booking.Data.Repository.Provinces
         {
             _dbContext = dbContext;
         }
-        public async Task<List<Province>> GetProvinces()
+        public async Task<List<TinhThanh>> GetProvinces()
         {
-            return await _dbContext.Provinces.ToListAsync();
+            return await _dbContext.TinhThanhs.ToListAsync();
         }
     }
 }

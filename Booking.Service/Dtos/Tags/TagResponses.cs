@@ -25,7 +25,7 @@ namespace Booking.Service.Dtos.Tags
 
     public class TagHotelsPageResponse
     {
-        public TagResponse Tag { get; set; } = new();
+        public TagResponse TheTag { get; set; } = new();
         public List<TagHotelResponse> Data { get; set; } = new();
         public int TotalRow { get; set; }
         public int TotalPage { get; set; }

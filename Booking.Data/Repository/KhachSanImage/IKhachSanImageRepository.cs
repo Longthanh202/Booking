@@ -9,10 +9,10 @@ namespace Booking.Data.Repository.KhachSanImage
 {
     public interface IKhachSanImageRepository
     {
-        Task<List<KhachSanImages>> GetHotelImages(List<Guid> ids);
-        Task<List<KhachSanImages>> GetListImageByKhachSanId(Guid khachSanId);
+        Task<List<KhachSanAnh>> GetHotelImages(List<Guid> ids);
+        Task<List<KhachSanAnh>> GetListImageByKhachSanId(Guid khachSanId);
         Task InsertKhachSanImage(Guid khachSanId, List<string> Url);
-        Task<KhachSanImages?> GetImageForOwner(long imageId, Guid hotelId, Guid ownerId);
+        Task<KhachSanAnh?> GetImageForOwner(long imageId, Guid hotelId, Guid ownerId);
         Task<bool> DeleteImageForOwner(long imageId, Guid hotelId, Guid ownerId);
     }
 }

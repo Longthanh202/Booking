@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 
 namespace Booking.Core.Model.Users
 {
-    public class ExternalLogin
+    public class DangNhapNgoai
     {
         [Key]
         public Guid Id { get; set; }
 
         public Guid UserLoginId { get; set; }
-        public virtual UserLogin? UserLogin { get; set; }
+        public virtual TaiKhoan? TaiKhoan { get; set; }
 
         public string Provider { get; set; } = string.Empty;
         public string ProviderKey { get; set; } = string.Empty;

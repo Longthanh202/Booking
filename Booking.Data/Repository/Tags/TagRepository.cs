@@ -15,43 +15,43 @@ namespace Booking.Data.Repository.Tags
             _context = context;
         }
 
-        public Task<List<Tag>> GetActiveTagsAsync()
+        public Task<List<TheTag>> GetActiveTagsAsync()
         {
-            return _context.Tags.AsNoTracking()
+            return _context.TheTags.AsNoTracking()
                 .Where(tag => tag.IsActive)
                 .OrderBy(tag => tag.SortOrder)
                 .ThenBy(tag => tag.Name)
-                .Include(tag => tag.HotelTags.Where(link =>
+                .Include(tag => tag.KhachSan_TheTags.Where(link =>
                     link.Hotel.TrangThai == TrangThaiKhachSan.DA_DUYET.ToString()))
                 .ToListAsync();
         }
 
-        public Task<List<Tag>> GetAllAsync()
+        public Task<List<TheTag>> GetAllAsync()
         {
-            return _context.Tags.AsNoTracking()
+            return _context.TheTags.AsNoTracking()
                 .OrderBy(tag => tag.SortOrder)
                 .ThenBy(tag => tag.Name)
-                .Include(tag => tag.HotelTags)
+                .Include(tag => tag.KhachSan_TheTags)
                 .ToListAsync();
         }
 
-        public Task<Tag?> GetByIdAsync(Guid id) => _context.Tags.FindAsync(id).AsTask();
+        public Task<TheTag?> GetByIdAsync(Guid id) => _context.TheTags.FindAsync(id).AsTask();
 
         public async Task<bool> AreActiveTagsAsync(IReadOnlyCollection<Guid> tagIds)
         {
-            var activeTagCount = await _context.Tags.CountAsync(tag =>
+            var activeTagCount = await _context.TheTags.CountAsync(tag =>
                 tagIds.Contains(tag.Id) && tag.IsActive);
             return activeTagCount == tagIds.Count;
         }
 
         public Task<bool> SlugExistsAsync(string slug, Guid? exceptId = null)
         {
-            return _context.Tags.AnyAsync(tag => tag.Slug == slug && (!exceptId.HasValue || tag.Id != exceptId.Value));
+            return _context.TheTags.AnyAsync(tag => tag.Slug == slug && (!exceptId.HasValue || tag.Id != exceptId.Value));
         }
 
-        public async Task<(Tag? Tag, List<KhachSan> Hotels, int TotalCount)> GetHotelsBySlugAsync(string slug, int page, int pageSize)
+        public async Task<(TheTag? TheTag, List<KhachSan> Hotels, int TotalCount)> GetHotelsBySlugAsync(string slug, int page, int pageSize)
         {
-            var tag = await _context.Tags.AsNoTracking()
+            var tag = await _context.TheTags.AsNoTracking()
                 .FirstOrDefaultAsync(item => item.Slug == slug && item.IsActive);
             if (tag == null)
             {
@@ -61,22 +61,22 @@ namespace Booking.Data.Repository.Tags
             var query = _context.KhachSans.AsNoTracking()
                 .Where(hotel =>
                     hotel.TrangThai == TrangThaiKhachSan.DA_DUYET.ToString() &&
-                    hotel.HotelTags.Any(link => link.TagId == tag.Id));
+                    hotel.KhachSan_TheTags.Any(link => link.TagId == tag.Id));
             var totalCount = await query.CountAsync();
             var hotels = await query
                 .OrderByDescending(hotel => hotel.NgayTao)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Include(hotel => hotel.KhachSanImages)
-                .Include(hotel => hotel.Province)
+                .Include(hotel => hotel.KhachSanAnhs)
+                .Include(hotel => hotel.TinhThanh)
                 .ToListAsync();
 
             return (tag, hotels, totalCount);
         }
 
-        public async Task AddAsync(Tag tag)
+        public async Task AddAsync(TheTag tag)
         {
-            await _context.Tags.AddAsync(tag);
+            await _context.TheTags.AddAsync(tag);
         }
 
         public async Task<bool> SaveChangesAsync()
@@ -87,7 +87,7 @@ namespace Booking.Data.Repository.Tags
 
         public async Task<bool> ReplaceHotelsAsync(Guid tagId, List<Guid> hotelIds)
         {
-            var tag = await _context.Tags.FirstOrDefaultAsync(item => item.Id == tagId);
+            var tag = await _context.TheTags.FirstOrDefaultAsync(item => item.Id == tagId);
             if (tag == null)
             {
                 return false;
@@ -99,9 +99,9 @@ namespace Booking.Data.Repository.Tags
                 return false;
             }
 
-            var currentLinks = await _context.HotelTags.Where(link => link.TagId == tagId).ToListAsync();
-            _context.HotelTags.RemoveRange(currentLinks);
-            await _context.HotelTags.AddRangeAsync(hotelIds.Select(hotelId => new HotelTag
+            var currentLinks = await _context.KhachSan_TheTags.Where(link => link.TagId == tagId).ToListAsync();
+            _context.KhachSan_TheTags.RemoveRange(currentLinks);
+            await _context.KhachSan_TheTags.AddRangeAsync(hotelIds.Select(hotelId => new KhachSan_TheTag
             {
                 HotelId = hotelId,
                 TagId = tagId

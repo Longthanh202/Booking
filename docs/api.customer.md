@@ -91,7 +91,7 @@ Body tạo booking:
 
 `maKhuyenMai` tùy chọn. Mỗi dòng phòng gồm ID loại phòng và số lượng cần đặt. Không gửi `customerId`; backend xác định khách từ access token.
 
-Backend dùng Redis khóa loại phòng trong lúc kiểm tra phòng trống và lưu booking để các request đồng thời không gán cùng phòng. Khóa tự hết hạn sau 2 phút nếu tiến trình không giải phóng được.
+Backend chuẩn hóa ngày nhận/trả về ngày lịch, rồi dùng Redis khóa theo loại phòng và từng đêm lưu trú trong lúc kiểm tra phòng trống và lưu booking. Vì vậy, booking cùng loại phòng chỉ chặn nhau khi khoảng ngày giao nhau; ngày trả phòng không tính là một đêm lưu trú. Khóa tự hết hạn sau 2 phút nếu tiến trình không giải phóng được.
 
 ## Thanh toán và đánh giá
 
@@ -101,6 +101,8 @@ Backend dùng Redis khóa loại phòng trong lúc kiểm tra phòng trống và
 | `GET /api/payments/booking/{bookingId}/qr` | Customer | Lấy QR/thông tin thanh toán của booking; không có khoản chờ thanh toán hoặc tài khoản nhận tiền mặc định trả `404`. |
 | `POST /api/reviews` | Customer | Tạo review bằng body `{ "khachSanId": "<uuid>", "soSao": 5, "noiDung": "..." }`. Chỉ được đánh giá sau khi hoàn tất booking; dữ liệu sai trả `400`. |
 | `GET /api/reviews/mine` | Customer | Danh sách review của user hiện tại. |
+
+Booking thanh toán chuyển khoản/QR chưa thanh toán hoặc đã thanh toán thất bại sẽ được dọn cùng các chi tiết liên quan nếu đã quá 7 ngày. Tác vụ chạy hàng tuần; booking đã có tham chiếu tài chính được giữ lại.
 
 ## Lỗi và realtime
 

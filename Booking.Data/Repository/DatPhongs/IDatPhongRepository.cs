@@ -1,17 +1,15 @@
 ﻿using Booking.Core.Model.DatPhongs;
 using Booking.Core.Model.PhongDats;
 using Booking.Core.Model.Users;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Booking.Data.Repository.DatPhongs
 {
     public interface IDatPhongRepository
     {
         Task<DatPhong> CreateBooking(DatPhong dp, List<ChiTietDatPhong> ctdp, List<PhongDat> phongDats);
+        Task<(int DeletedCount, int SkippedReferencedCount)> DeleteExpiredQrBookings(
+            DateTime createdBefore,
+            CancellationToken cancellationToken);
         Task<DatPhong?> GetBookingById(Guid id);
         Task<DatPhong?> GetCustomerBookingById(Guid id, Guid customerId);
         Task<bool> CancelBooking(Guid id, Guid customerId);
@@ -31,7 +29,8 @@ namespace Booking.Data.Repository.DatPhongs
             Guid? hotelId, 
             Guid? customerId,
             string? trangThai, 
-            DateTime? ngayTao,
+            DateTime? ngayBatDau,
+            DateTime? ngayKetThuc,
             string? maDatPhong,
             int pageIndex,
             int pageSize);
@@ -41,7 +40,7 @@ namespace Booking.Data.Repository.DatPhongs
             string? maDatPhong,
             int pageIndex,
             int pageSize);
-        Task<List<UserProfile>> GetCustomerOptionsByHotelId(Guid hotelId, Guid ownerId);
+        Task<List<NguoiDung>> GetCustomerOptionsByHotelId(Guid hotelId, Guid ownerId);
         Task<DatPhong> CheckIn(Guid id);
         Task<DatPhong> ConfirmBooking(Guid id);
         Task<(int datPhong, double tongTien)> GetOwnerBookingStatistics(Guid hotelId, DateTime batDau, DateTime ketThuc, string trangThai);

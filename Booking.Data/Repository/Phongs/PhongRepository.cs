@@ -39,7 +39,7 @@ namespace Booking.Data.Repository.Phongs
                     pd.ChiTietDatPhong.DatPhong.NgayNhanPhong < ngayTra.Value &&
                     pd.ChiTietDatPhong.DatPhong.NgayTraPhong > ngayNhan.Value
                 ))
-                .Where(p => !_context.RoomAvailabilityBlocks.Any(block =>
+                .Where(p => !_context.KhoaPhongs.Any(block =>
                     block.RoomId == p.Id && block.StartAt < ngayTra.Value && block.EndAt > ngayNhan.Value))
                 .ToListAsync();
         }

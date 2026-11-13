@@ -10,7 +10,7 @@ namespace Booking.Service.Services.Tokens
 {
     public interface ITokenService
     {
-        string GenerateAccessToken(UserProfile user);
+        string GenerateAccessToken(NguoiDung user);
 
         string GenerateRefreshToken();
     }

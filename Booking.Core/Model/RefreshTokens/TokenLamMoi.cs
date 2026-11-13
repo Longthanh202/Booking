@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Booking.Core.Model.RefreshTokens
 {
-    public class RefreshToken
+    public class TokenLamMoi
     {
         public long Id { get; set; }
         public Guid? UserId { get; set; }

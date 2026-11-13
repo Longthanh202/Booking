@@ -9,7 +9,7 @@ namespace Booking.Service.Services.KhachSanImage
 {
     public interface IKhachSanImageService
     {
-        Task<IEnumerable<KhachSanImages>> GetHotelImages(List<Guid> ids);
-        Task<IEnumerable<KhachSanImages>> GetListImageByKhachSanId(Guid khachSanId);
+        Task<IEnumerable<KhachSanAnh>> GetHotelImages(List<Guid> ids);
+        Task<IEnumerable<KhachSanAnh>> GetListImageByKhachSanId(Guid khachSanId);
     }
 }

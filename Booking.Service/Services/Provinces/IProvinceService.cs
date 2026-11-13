@@ -9,6 +9,6 @@ namespace Booking.Data.Repository.Provinces
 {
     public interface IProvinceService
     {
-        Task<List<Province>> GetProvinces();
+        Task<List<TinhThanh>> GetProvinces();
     }
 }

@@ -43,6 +43,9 @@ using Booking.Service.Services.Promotions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
+using Booking.Service.Services.GiayToTuyThans;
+using Booking.Core.Model.Options;
+using Booking.Service.Services.Cryptos;
 
 namespace Booking.Service
 {
@@ -79,6 +82,7 @@ namespace Booking.Service
                         services.AddScoped<ITagService, TagService>();
                         services.AddScoped<IOwnerPortalService, OwnerPortalService>();
                         services.AddScoped<IHotelPromotionService, HotelPromotionService>();
+                        services.AddHostedService<UnpaidQrBookingCleanupService>();
             
             var redisEnabled = configuration.GetValue<bool>("Redis:Enabled");
             if (redisEnabled)
@@ -109,6 +113,10 @@ namespace Booking.Service
                 services.AddHostedService<SendEmailBookingConsumer>();
                 services.AddHostedService<BookingCheckoutConsumner>();
             }
+
+            services.AddScoped<IGiayToTuyThanService, GiayToTuyThanService>();
+            services.Configure<CryptoOptions>(configuration.GetSection(CryptoOptions.SectionName));
+            services.AddSingleton<ICryptoService, CryptoService>();
             return services;
         }
     }

@@ -14,7 +14,7 @@ namespace Booking.Data.Repository.Users
         Task<LoginResponse> Login(LoginRequest input);
         Task<UserProfileResponse> GetUserProfileById(Guid id, Guid roleId);
         bool IsAuthenticated();
-        Task<UserProfile> Register(RegisterUserRequest user);
+        Task<NguoiDung> Register(RegisterUserRequest user);
         Task RequestPasswordReset(string username);
         Task ConfirmPasswordReset(string username, string code, string newPassword);
         Task<AdminUserPageResponse> GetAdminUsers(string? keyword, int? status, int page, int pageSize);

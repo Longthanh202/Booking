@@ -69,7 +69,7 @@ namespace Booking.Service.Services.KhachSans
                 SoSao = khachSan.SoSao,
                 GioNhanPhong = khachSan.GioNhanPhong,
                 GioTraPhong = khachSan.GioTraPhong,
-                TenThanhPho = khachSan.Province?.full_name ?? string.Empty,
+                TenThanhPho = khachSan.TinhThanh?.full_name ?? string.Empty,
                 TienIchs = khachSan.KhachSan_TienIches
                     .Where(kst => kst.TienIch != null)
                     .Select(kst => new AmenityDto
@@ -78,7 +78,7 @@ namespace Booking.Service.Services.KhachSans
                         TenTienIch = kst.TienIch.TenTienIch,
                         Icon = kst.TienIch.Icon
                     }).ToList(),
-                KhachSanImages = khachSan.KhachSanImages.Select(img => new HotelImageDto
+                KhachSanImages = khachSan.KhachSanAnhs.Select(img => new HotelImageDto
                 {
                     Id = img.Id,
                     Url = img.Url
@@ -402,7 +402,7 @@ namespace Booking.Service.Services.KhachSans
                     TrangThai = TrangThaiKhachSan.CHO_DUYET.ToString(),
                     NguoiTao = nguoiTao,
                     NgayTao = DateTime.Now,
-                    HotelTags = tagIds.Select(tagId => new HotelTag
+                    KhachSan_TheTags = tagIds.Select(tagId => new KhachSan_TheTag
                     {
                         TagId = tagId
                     }).ToList()

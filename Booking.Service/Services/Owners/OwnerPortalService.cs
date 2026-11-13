@@ -177,12 +177,12 @@ namespace Booking.Service.Services.Owners
 
             var customerIds = bookings.Where(booking => booking.KhachHangId.HasValue)
                 .Select(booking => booking.KhachHangId!.Value).Distinct().ToList();
-            var customers = await _context.UserProfiles.AsNoTracking()
+            var customers = await _context.NguoiDungs.AsNoTracking()
                 .Where(profile => profile.UserLoginId.HasValue && customerIds.Contains(profile.UserLoginId.Value))
                 .Select(profile => new { UserId = profile.UserLoginId!.Value, profile.FullName })
                 .ToDictionaryAsync(profile => profile.UserId, profile => profile.FullName);
 
-            var blocks = await _context.RoomAvailabilityBlocks.AsNoTracking()
+            var blocks = await _context.KhoaPhongs.AsNoTracking()
                 .Where(block => block.StartAt < to && block.EndAt > from &&
                     block.Room.LoaiPhong != null && block.Room.LoaiPhong.KhachSanId == hotelId)
                 .Include(block => block.Room)
@@ -236,14 +236,14 @@ namespace Booking.Service.Services.Owners
                 link.ChiTietDatPhong.DatPhong.TrangThai != TrangThaiDatPhong.TU_CHOI.ToString() &&
                 link.ChiTietDatPhong.DatPhong.NgayNhanPhong < request.EndAt &&
                 link.ChiTietDatPhong.DatPhong.NgayTraPhong > request.StartAt);
-            var hasBlock = await _context.RoomAvailabilityBlocks.AnyAsync(block =>
+            var hasBlock = await _context.KhoaPhongs.AnyAsync(block =>
                 block.RoomId == roomId && block.StartAt < request.EndAt && block.EndAt > request.StartAt);
             if (hasBooking || hasBlock)
             {
                 return null;
             }
 
-            var block = new RoomAvailabilityBlock
+            var block = new KhoaPhong
             {
                 Id = Guid.NewGuid(),
                 RoomId = roomId,
@@ -253,7 +253,7 @@ namespace Booking.Service.Services.Owners
                 CreatedBy = ownerId,
                 CreatedAt = DateTime.UtcNow
             };
-            await _context.RoomAvailabilityBlocks.AddAsync(block);
+            await _context.KhoaPhongs.AddAsync(block);
             await _context.SaveChangesAsync();
 
             return new RoomAvailabilityBlockResponse
@@ -268,7 +268,7 @@ namespace Booking.Service.Services.Owners
 
         public async Task<bool> DeleteRoomBlock(Guid ownerId, Guid blockId)
         {
-            var block = await _context.RoomAvailabilityBlocks.FirstOrDefaultAsync(item =>
+            var block = await _context.KhoaPhongs.FirstOrDefaultAsync(item =>
                 item.Id == blockId && item.Room.LoaiPhong != null &&
                 item.Room.LoaiPhong.KhachSan != null && item.Room.LoaiPhong.KhachSan.NguoiTao == ownerId);
             if (block == null)
@@ -276,7 +276,7 @@ namespace Booking.Service.Services.Owners
                 return false;
             }
 
-            _context.RoomAvailabilityBlocks.Remove(block);
+            _context.KhoaPhongs.Remove(block);
             await _context.SaveChangesAsync();
             return true;
         }

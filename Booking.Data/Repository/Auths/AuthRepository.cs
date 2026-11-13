@@ -15,32 +15,32 @@ namespace Booking.Data.Repository.Auths
             _context = context;
         }
 
-        public async Task<ExternalLogin?> GetExternalLoginAsync(string provider, string providerKey)
+        public async Task<DangNhapNgoai?> GetExternalLoginAsync(string provider, string providerKey)
         {
-            return await _context.Set<ExternalLogin>()
-                .Include(el => el.UserLogin)
-                    .ThenInclude(ul => ul.UserProfile)
+            return await _context.Set<DangNhapNgoai>()
+                .Include(el => el.TaiKhoan)
+                    .ThenInclude(ul => ul.NguoiDung)
                 .FirstOrDefaultAsync(el => el.Provider == provider && el.ProviderKey == providerKey);
         }
 
-        public async Task<UserProfile?> GetProfileByEmailAsync(string email)
+        public async Task<NguoiDung?> GetProfileByEmailAsync(string email)
         {
-            return await _context.UserProfiles
-                .Include(p => p.UserLogin)
+            return await _context.NguoiDungs
+                .Include(p => p.TaiKhoan)
                 .FirstOrDefaultAsync(p => p.Email == email);
         }
 
-        public async Task CreateUserWithSocialAsync(UserLogin userLogin, UserProfile userProfile, UserRole userRole, ExternalLogin externalLogin)
+        public async Task CreateUserWithSocialAsync(TaiKhoan userLogin, NguoiDung userProfile, NguoiDung_VaiTro userRole, DangNhapNgoai externalLogin)
         {
-            await _context.UserLogins.AddAsync(userLogin);
-            await _context.UserProfiles.AddAsync(userProfile);
-            await _context.Set<UserRole>().AddAsync(userRole);
-            await _context.Set<ExternalLogin>().AddAsync(externalLogin);
+            await _context.TaiKhoans.AddAsync(userLogin);
+            await _context.NguoiDungs.AddAsync(userProfile);
+            await _context.Set<NguoiDung_VaiTro>().AddAsync(userRole);
+            await _context.Set<DangNhapNgoai>().AddAsync(externalLogin);
         }
 
-        public async Task AddExternalLoginAsync(ExternalLogin externalLogin)
+        public async Task AddExternalLoginAsync(DangNhapNgoai externalLogin)
         {
-            await _context.Set<ExternalLogin>().AddAsync(externalLogin);
+            await _context.Set<DangNhapNgoai>().AddAsync(externalLogin);
         }
 
         public async Task SaveChangesAsync()
